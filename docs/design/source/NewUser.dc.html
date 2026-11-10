@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Today – new user</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ember.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0;background:#0f0f10}</style>
+</helmet>
+<div class="app" style="min-height: 1300px">
+  <dc-import name="Titlebar" focus="{{no}}" hint-size="100%,58px"></dc-import>
+  <div class="row">
+    <dc-import name="Sidebar" active="today" fresh="{{yes}}" hint-size="232px,1000px"></dc-import>
+    <main class="panel">
+      <div class="hd">
+        <div><h1 class="h1">Today</h1><div class="date">Thursday, 5 November 2026 · day 1</div></div>
+      </div>
+      <div class="tile flex wrap g6" style="margin-top: -8px; font-size: 14px; padding: 12px 14px">
+        <span>Welcome, Zihad. Your system is set up: 4 areas, 3 goals, 4 habits and 1 project. Start with one thing below.</span>
+      </div>
+
+      <section class="dark">
+        <div class="flex between wrap g12">
+          <div>
+            <div class="meta">Life line</div>
+            <div class="flex g10" style="align-items: baseline; margin-top: 4px"><span class="score" style="color: #fff">58</span><span style="font-size: 15px; color: #9a9a9e; font-weight: 400">/ 100</span><span class="chip" style="background: #262628; color: #9a9a9e">Starting estimate</span></div>
+            <div class="meta">From your setup ratings. It will move as your logs come in.</div>
+          </div>
+          <div style="text-align: right"><div class="item" style="color: #fff">Day 1 of 14</div><div class="meta" style="margin-top: 3px">before the line is drawn</div></div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); gap: 6px; margin-top: 20px">
+          <span style="height: 40px; border-radius: 6px; background: #ff5a1f"></span>
+          <sc-for list="{{rest}}" as="r" hint-placeholder-count="13"><span style="height: 40px; border-radius: 6px; background: #1e1e20"></span></sc-for>
+        </div>
+        <div class="flex between meta" style="margin-top: 10px"><span>Today</span><span>Desired: 90 by Dec 2027</span><span>19 Nov · first line</span></div>
+      </section>
+
+      <section>
+        <div class="sh"><h2 class="h2"><dc-import name="Icon" i="check" hint-size="16px,16px"></dc-import>Getting started</h2><span class="meta">0 of 5 · about 4 minutes</span></div>
+        <div class="col g6">
+          <div class="tile flex wrap g12"><span class="ring" aria-hidden="true"></span><div class="grow"><div class="item">Log last night’s sleep</div><div class="meta" style="margin-top: 3px">Also fills in Wake by 7:00</div></div><div class="flex g6"><input class="input" style="width: 96px; height: 30px; background: #fff" placeholder="Bed 11:30"><input class="input" style="width: 96px; height: 30px; background: #fff" placeholder="Up 6:40"><button class="btn">Save</button></div></div>
+          <div class="tile flex wrap g12"><span class="ring" aria-hidden="true"></span><div class="grow"><div class="item">Tick your first habit</div><div class="meta" style="margin-top: 3px">Tap a ring below when it is done</div></div></div>
+          <div class="tile flex wrap g12"><span class="ring" aria-hidden="true"></span><div class="grow"><div class="item">Start a focus session on “UI research”</div><div class="meta" style="margin-top: 3px">Time goes to the task and the project</div></div><a href="Focus.dc.html" class="btn soft" style="background: #fff"><dc-import name="Icon" i="play" s="14" hint-size="14px,14px"></dc-import>Start</a></div>
+          <div class="tile flex wrap g12"><span class="ring" aria-hidden="true"></span><div class="grow"><div class="item">Try the launcher</div><div class="meta" style="margin-top: 3px">Press <kbd class="kbd" style="background: #fff">Ctrl K</kbd> and type “meditated”</div></div></div>
+          <div class="tile flex wrap g12"><span class="ring" aria-hidden="true"></span><div class="grow"><div class="item">Connect a calendar</div><div class="meta" style="margin-top: 3px">Optional · brings your meetings into Today</div></div><a href="Settings.dc.html" class="btn soft" style="background: #fff">Connect</a></div>
+        </div>
+      </section>
+
+      <section>
+        <div class="sh"><h2 class="h2"><dc-import name="Icon" i="habit" hint-size="16px,16px"></dc-import>Habits</h2><span class="meta">0 of 4 today</span></div>
+        <div class="grid s">
+          <sc-for list="{{habits}}" as="h" hint-placeholder-count="4">
+            <div class="tile">
+              <div class="flex between"><span class="h3">{{h}}</span><button class="ring" aria-label="Complete {{h}}"></button></div>
+              <div class="wk" style="margin-top: 12px"><i class="t"></i><i class="s"></i><i class="s"></i><i class="s"></i><i class="s"></i><i class="s"></i><i class="s"></i></div>
+              <div class="meta" style="margin-top: 10px">First day · no history yet</div>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+
+      <div class="two">
+        <section>
+          <div class="sh"><h2 class="h2"><dc-import name="Icon" i="calendar" hint-size="16px,16px"></dc-import>Schedule</h2></div>
+          <div class="tile" style="background: transparent; box-shadow: inset 0 0 0 1.5px #e9e7e1; text-align: center; padding: 32px 20px">
+            <div class="item">Nothing planned today</div>
+            <p class="meta" style="margin: 6px 0 14px">Add a time block, or connect a calendar to see meetings here.</p>
+            <div class="flex g8" style="justify-content: center"><button class="btn"><dc-import name="Icon" i="plus" s="14" w="1.9" hint-size="14px,14px"></dc-import>Time block</button><button class="btn soft">Connect calendar</button></div>
+          </div>
+        </section>
+        <section>
+          <div class="sh"><h2 class="h2"><dc-import name="Icon" i="insight" hint-size="16px,16px"></dc-import>Insights</h2></div>
+          <div class="tile" style="padding: 18px">
+            <div class="item">Collecting data</div>
+            <p class="meta" style="margin: 6px 0 12px; line-height: 18px">Insights start after 14 days of logs, so early patterns are not mistaken for real ones.</p>
+            <div class="bar"><i style="width: 7%; background: #c9c6be"></i></div>
+            <div class="meta" style="margin-top: 8px">Day 1 of 14 · first insight around 19 Nov</div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <aside class="rail">
+      <section>
+        <div class="sh"><h2 class="h2"><dc-import name="Icon" i="tasks" hint-size="16px,16px"></dc-import>Tasks</h2></div>
+        <div class="list">
+          <div class="trow"><span class="ring hi" aria-hidden="true"></span><div><div class="item">UI research</div><div class="meta" style="margin-top: 3px">From setup · no date</div></div></div>
+          <div class="trow"><span class="ring md" aria-hidden="true"></span><div><div class="item">Define data model</div><div class="meta" style="margin-top: 3px">From setup · no date</div></div></div>
+          <div class="trow"><span class="ring" aria-hidden="true"></span><div><div class="item">Write product brief</div><div class="meta" style="margin-top: 3px">From setup · no date</div></div></div>
+        </div>
+        <button class="add" style="margin-top: 12px"><dc-import name="Icon" i="calendar" s="14" hint-size="14px,14px"></dc-import>Give them dates</button>
+      </section>
+      <section>
+        <div class="sh"><h2 class="h2"><dc-import name="Icon" i="folder" hint-size="16px,16px"></dc-import>Projects</h2></div>
+        <div class="tile"><div class="flex between"><span class="item">Build Life System app</span><span class="meta">0%</span></div><div class="bar" style="margin: 8px 0 6px"><i style="width: 0"></i></div><div class="meta">0 of 3 tasks · no time yet</div></div>
+      </section>
+      <section>
+        <div class="sh"><h2 class="h2"><dc-import name="Icon" i="goal" hint-size="16px,16px"></dc-import>Goals</h2></div>
+        <div class="col g8 meta">
+          <div class="flex between"><span style="color: #111">Profitable software business</span><span>Dec 2027</span></div>
+          <div class="flex between"><span style="color: #111">Run a half marathon</span><span>Jun 2027</span></div>
+          <div class="flex between"><span style="color: #111">Lead my first client project</span><span>Dec 2026</span></div>
+        </div>
+      </section>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1300}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { yes: true, no: false, rest: [1,2,3,4,5,6,7,8,9,10,11,12,13], habits: ['Wake by 7:00', 'Read book', 'Meditate', 'Master skill'] };
+  }
+}
+</script>
+</body>
+</html>

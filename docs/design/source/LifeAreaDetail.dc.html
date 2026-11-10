@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Life area – Health</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ember.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0;background:#0f0f10}</style>
+</helmet>
+<div class="app" style="min-height: 1300px">
+  <dc-import name="Titlebar" hint-size="100%,58px"></dc-import>
+  <div class="row">
+    <dc-import name="Sidebar" active="health" hint-size="232px,1000px"></dc-import>
+    <main class="panel">
+      <div class="hd">
+        <div>
+          <a href="LifeAreas.dc.html" class="flex g6 meta" style="margin-bottom: 8px"><dc-import name="Icon" i="left" s="14" hint-size="14px,14px"></dc-import>Life areas</a>
+          <div class="flex g12"><span class="itile" style="width: 40px; height: 40px; border-radius: 10px; background: #e3f5e9; color: #23804a"><dc-import name="Icon" i="heart" s="20" w="1.6" hint-size="20px,20px"></dc-import></span><h1 class="h1">Health</h1></div>
+          <div class="flex wrap g6" style="margin-top: 10px"><span class="tag">Priority: High</span><span class="tag">1 goal · 3 habits · 1 project</span></div>
+        </div>
+        <div class="flex g8" style="margin-top: 26px"><button class="btn soft"><dc-import name="Icon" i="edit" s="14" hint-size="14px,14px"></dc-import>Rename or recolour</button></div>
+      </div>
+
+      <section class="dark">
+        <div class="flex between wrap g12">
+          <div>
+            <div class="meta">Health score</div>
+            <div class="flex g10" style="align-items: baseline"><span class="score" style="color: #fff">58</span><span style="font-size: 15px; color: #9a9a9e; font-weight: 400">/ 100 · target 80</span><span class="chip t-dk">+5 in 30 days</span></div>
+          </div>
+          <div class="seg dk" role="group" aria-label="Range"><button aria-pressed="false">30 days</button><button aria-pressed="true">90 days</button><button aria-pressed="false">Year</button></div>
+        </div>
+        <svg viewBox="0 0 760 160" style="display: block; width: 100%; height: auto; margin-top: 14px; font-family: Inter, sans-serif" role="img" aria-label="Health score over 90 days, from 49 to 58. Target 80.">
+          <path d="M0 140H760" stroke="#2a2a2c"></path>
+          <path d="M0 28H760" stroke="#6a6a6e" stroke-dasharray="4 5"></path><text x="760" y="22" fill="#9a9a9e" font-size="11" text-anchor="end">Target 80</text>
+          <path d="M0 112 L60 106 L120 116 L180 104 L240 99 L300 108 L360 96 L420 101 L480 92 L540 98 L600 88 L660 90 L720 78" fill="none" stroke="#ff5a1f" stroke-width="2" stroke-linejoin="round"></path>
+          <circle cx="720" cy="78" r="5" fill="#ff5a1f" stroke="#fff" stroke-width="2"></circle>
+          <text x="0" y="156" fill="#9a9a9e" font-size="11">7 Aug</text><text x="360" y="156" fill="#9a9a9e" font-size="11" text-anchor="middle">21 Sep</text><text x="720" y="156" fill="#ff5a1f" font-size="11" text-anchor="middle" font-weight="600">Now</text>
+        </svg>
+      </section>
+
+      <section>
+        <div class="sh"><h2 class="h2"><dc-import name="Icon" i="analytics" hint-size="16px,16px"></dc-import>What makes up 58</h2><span class="tag">Formula is a proposal</span></div>
+        <div class="grid">
+          <div class="tile"><div class="flex between"><span class="meta">Habits · 40%</span><span class="item num">70</span></div><div class="bar" style="margin: 10px 0 8px"><i style="width: 70%"></i></div><div class="meta">Wake by 7:00 87% · Meditate 53%</div></div>
+          <div class="tile"><div class="flex between"><span class="meta">Goals · 40%</span><span class="item num">45</span></div><div class="bar" style="margin: 10px 0 8px"><i style="width: 45%"></i></div><div class="meta">Run a half marathon: 20% done, on pace</div></div>
+          <div class="tile"><div class="flex between"><span class="meta">Self-check · 20%</span><span class="item num">60</span></div><div class="bar" style="margin: 10px 0 8px"><i style="width: 60%"></i></div><div class="meta">You rated 6 of 10 on 1 Nov</div></div>
+        </div>
+        <p class="meta" style="margin: 10px 0 0">70 × 0.4 + 45 × 0.4 + 60 × 0.2 = 58</p>
+      </section>
+
+      <div class="two">
+        <section>
+          <div class="sh"><h2 class="h2"><dc-import name="Icon" i="trend" hint-size="16px,16px"></dc-import>What moved it, 30 days</h2></div>
+          <div class="col g8">
+            <div class="tile flex between g8"><span class="item">Wake by 7:00 kept on 26 of 30 days</span><span class="tag t-gr">+3</span></div>
+            <div class="tile flex between g8"><span class="item">Fitness routine: first task done</span><span class="tag t-gr">+2</span></div>
+            <div class="tile flex between g8"><span class="item">Meditate below half for 2 weeks in Oct</span><span class="tag t-em">−1</span></div>
+          </div>
+        </section>
+        <section>
+          <div class="sh"><h2 class="h2"><dc-import name="Icon" i="sleep" hint-size="16px,16px"></dc-import>Sleep, part of Health</h2></div>
+          <div class="tile">
+            <div class="flex between"><span class="meta">Average, 14 nights</span><span class="item num">6h 52m</span></div>
+            <div class="flex between" style="margin-top: 8px"><span class="meta">Consistency</span><span class="item num">82%</span></div>
+            <div class="flex between" style="margin-top: 8px"><span class="meta">Nights under 7h, 30 days</span><span class="item num">11</span></div>
+            <a href="Sleep.dc.html" class="meta" style="display: inline-block; margin-top: 10px; color: #111; text-decoration: underline">Open Sleep</a>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <aside class="rail">
+      <section>
+        <div class="sh"><h2 class="h2"><dc-import name="Icon" i="goal" hint-size="16px,16px"></dc-import>Goals</h2></div>
+        <div class="tile flex g12 top"><span class="itile" style="background: #e3f5e9; color: #23804a"><dc-import name="Icon" i="run" w="1.5" hint-size="16px,16px"></dc-import></span><div class="grow"><div class="flex between"><span class="item">Run a half marathon</span><span class="meta">20%</span></div><div class="bar" style="margin: 8px 0 6px"><i style="width: 20%"></i></div><div class="meta">Jun 2027 · on track</div></div></div>
+      </section>
+      <section>
+        <div class="sh"><h2 class="h2"><dc-import name="Icon" i="habit" hint-size="16px,16px"></dc-import>Habits</h2></div>
+        <div class="col g8">
+          <div class="tile flex between"><span class="flex g10 item"><span class="ring done" aria-hidden="true"></span>Wake by 7:00</span><span class="meta">87%</span></div>
+          <a href="HabitDetail.dc.html" class="tile flex between"><span class="flex g10 item"><span class="ring" aria-hidden="true"></span>Meditate</span><span class="meta">53%</span></a>
+          <div class="tile flex between"><span class="flex g10 item"><span class="ring" aria-hidden="true"></span>No phone after 10 PM</span><span class="meta soft">Paused</span></div>
+        </div>
+      </section>
+      <section>
+        <div class="sh"><h2 class="h2"><dc-import name="Icon" i="folder" hint-size="16px,16px"></dc-import>Projects</h2></div>
+        <div class="tile flex g12 top"><span class="itile" style="background: #e3f5e9; color: #23804a"><dc-import name="Icon" i="activity" w="2" hint-size="16px,16px"></dc-import></span><div class="grow"><div class="flex between"><span class="item">Fitness routine</span><span class="meta">25%</span></div><div class="bar" style="margin: 8px 0 6px"><i style="width: 25%"></i></div><div class="meta">1 of 4 tasks · 6h 10m</div></div></div>
+      </section>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1300}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

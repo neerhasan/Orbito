@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Setup 2 – Goals</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ember.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0;background:#0f0f10}</style>
+</helmet>
+<div class="app solo" style="min-height: 1000px">
+  <div class="flex wrap g12 between" style="padding: 8px 10px 16px">
+    <div class="flex g8">
+      <div style="width: 26px; height: 26px; border-radius: 8px; background: #ff5a1f; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 11.5L6 8l2.5 2L12 6"></path><circle cx="13" cy="5" r="1.2" fill="#fff" stroke="none"></circle></svg></div>
+      <span style="font-size: 14px; font-weight: 600">Life System</span>
+    </div>
+    <div class="flex g10" aria-label="Step 2 of 3">
+      <span style="font-size: 12px; color: #9a9a9e">Step 2 of 3 · Goals</span>
+      <span style="width: 48px; height: 4px; border-radius: 3px; background: #f5f5f4"></span>
+      <span style="width: 48px; height: 4px; border-radius: 3px; background: #ff5a1f"></span>
+      <span style="width: 48px; height: 4px; border-radius: 3px; background: #262628"></span>
+    </div>
+  </div>
+
+  <div class="row" style="padding-left: 8px">
+    <main class="panel" style="padding: 36px 40px">
+      <div>
+        <h1 class="h1">What do you want to reach, and by when?</h1>
+        <p class="lead" style="margin: 10px 0 0; color: #77746e; font-weight: 400; max-width: 680px">Give each goal a date and one way to tell it is done. One or two is enough to start.</p>
+      </div>
+
+      <div class="col g12">
+        <div class="tile p flex g14">
+          <span class="itile" style="background: #fbf0d5; color: #9a6a00"><dc-import name="Icon" i="briefcase" hint-size="16px,16px"></dc-import></span>
+          <div class="grow">
+            <div class="item" style="font-weight: 600">Profitable software business</div>
+            <div class="flex wrap g6" style="margin-top: 6px"><span class="tag t-am">Financial Freedom</span><span class="meta">Long term · by Dec 2027 · Done when: 3 months in profit</span></div>
+          </div>
+          <button class="ib" aria-label="Edit goal"><dc-import name="Icon" i="edit" hint-size="16px,16px"></dc-import></button>
+        </div>
+        <div class="tile p flex g14">
+          <span class="itile" style="background: #e3f5e9; color: #23804a"><dc-import name="Icon" i="run" hint-size="16px,16px"></dc-import></span>
+          <div class="grow">
+            <div class="item" style="font-weight: 600">Run a half marathon</div>
+            <div class="flex wrap g6" style="margin-top: 6px"><span class="tag t-gr">Health</span><span class="meta">Medium term · by Jun 2027 · Done when: finish 21.1 km</span></div>
+          </div>
+          <button class="ib" aria-label="Edit goal"><dc-import name="Icon" i="edit" hint-size="16px,16px"></dc-import></button>
+        </div>
+
+        <form class="tile p" style="background: #fff; box-shadow: inset 0 0 0 1.5px #111; display: flex; flex-direction: column; gap: 14px">
+          <div class="flex between"><span class="h3">New goal</span><span class="cap ink">Press Enter to add</span></div>
+          <div class="field"><label class="lbl" for="g1">Goal</label><input id="g1" class="input" value="Lead my first client project end to end"></div>
+          <div class="flex wrap g12">
+            <div class="field" style="flex: 1 1 180px"><span class="lbl">Life area</span><div class="input" style="justify-content: space-between"><span class="flex g8"><span class="dot" style="background: #2b62d9"></span>Career</span><dc-import name="Icon" i="down" s="14" hint-size="14px,14px"></dc-import></div></div>
+            <div class="field" style="flex: 1 1 140px"><span class="lbl">Target date</span><div class="input" style="justify-content: space-between">Dec 2026<dc-import name="Icon" i="calendar" s="14" hint-size="14px,14px"></dc-import></div></div>
+            <div class="field" style="flex: 1 1 200px"><span class="lbl">Term</span><div class="seg" style="width: 100%"><button type="button" aria-pressed="true">Short</button><button type="button" aria-pressed="false">Medium</button><button type="button" aria-pressed="false">Long</button></div></div>
+          </div>
+          <div class="field"><label class="lbl" for="g4">Done when</label><input id="g4" class="input" placeholder="One measurable sign, e.g. “project delivered and invoiced”"></div>
+          <div class="flex g8"><button class="btn" type="submit">Add goal</button><button class="btn ghost" type="button">Cancel</button></div>
+        </form>
+      </div>
+    </main>
+
+    <aside class="rail" style="padding: 28px 24px">
+      <div>
+        <h2 class="h2">Your areas</h2>
+        <p class="meta" style="margin: 6px 0 0">A goal can link to more than one area.</p>
+      </div>
+      <div class="col g10">
+        <div class="flex between tile"><span class="flex g8 item"><span class="dot" style="background: #23a35a"></span>Health</span><span class="meta">1 goal</span></div>
+        <div class="flex between tile"><span class="flex g8 item"><span class="dot" style="background: #2b62d9"></span>Career</span><span class="meta">Adding…</span></div>
+        <div class="flex between tile"><span class="flex g8 item"><span class="dot" style="background: #e0a400"></span>Financial Freedom</span><span class="meta">1 goal</span></div>
+        <div class="flex between tile"><span class="flex g8 item"><span class="dot" style="background: #c65bd6"></span>Family</span><span class="meta soft">No goal · fine</span></div>
+      </div>
+      <div class="col g8">
+        <span class="cap ink">Terms</span>
+        <div class="meta">Short: under 3 months</div>
+        <div class="meta">Medium: 3 to 12 months</div>
+        <div class="meta">Long: over a year</div>
+      </div>
+      <div class="flex g8" style="margin-top: auto">
+        <a href="Setup1.dc.html" class="btn l ghost">Back</a>
+        <a href="Setup3.dc.html" class="btn l grow" style="font-size: 14px">Continue</a>
+      </div>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

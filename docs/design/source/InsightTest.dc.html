@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>14-day test</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ember.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0;background:#0f0f10}</style>
+</helmet>
+<div class="app" style="min-height: 1300px">
+  <dc-import name="Titlebar" hint-size="100%,58px"></dc-import>
+  <div class="row">
+    <dc-import name="Sidebar" active="insights" hint-size="232px,1000px"></dc-import>
+    <main class="panel">
+      <div class="hd">
+        <div>
+          <a href="Insights.dc.html" class="flex g6 meta" style="margin-bottom: 8px"><dc-import name="Icon" i="left" s="14" hint-size="14px,14px"></dc-import>Insights</a>
+          <h1 class="h1">Tests</h1>
+          <div class="date">Try one change for 14 days, then compare with the 14 days before.</div>
+        </div>
+      </div>
+
+      <!-- Loop -->
+      <div class="flex wrap g6" aria-label="Test loop">
+        <span class="chip">Read logs</span><span class="soft">→</span>
+        <span class="chip">Enough data?</span><span class="soft">→</span>
+        <span class="chip">Label the pattern</span><span class="soft">→</span>
+        <span class="chip">Show insight</span><span class="soft">→</span>
+        <span class="chip t-em">Run 14-day test</span><span class="soft">→</span>
+        <span class="chip">Compare before and after</span><span class="soft">→</span>
+        <span class="chip">Keep, or try another</span>
+      </div>
+
+      <!-- In progress -->
+      <section class="tile p" style="background: #fff1eb">
+        <div class="flex between wrap g8">
+          <div><span class="tag t-em">In progress</span><h2 style="margin: 8px 0 0; font-size: 20px; line-height: 26px; font-weight: 700">Phone in another room, 3 to 5 PM</h2><div class="meta" style="margin-top: 4px">Testing: “Phone use causes the afternoon focus dip” · Hypothesis</div></div>
+          <div style="text-align: right"><div class="stat">Day 5 of 14</div><div class="meta">1 to 14 November</div></div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); gap: 6px; margin-top: 16px">
+          <sc-for list="{{days}}" as="d" hint-placeholder-count="14">
+            <div class="col g4" style="align-items: center"><span style="width: 100%; height: 30px; border-radius: 6px; background: {{d.bg}}; box-shadow: {{d.sh}}"></span><span class="cap">{{d.n}}</span></div>
+          </sc-for>
+        </div>
+        <div class="flex wrap g12 meta" style="margin-top: 10px"><span class="flex g6"><i class="dot" style="background: #111"></i>Did it</span><span class="flex g6"><i class="dot" style="background: #c9c6be"></i>Skipped</span><span class="flex g6"><i class="dot" style="box-shadow: inset 0 0 0 1.6px #ff5a1f"></i>Today</span></div>
+        <div class="tile" style="background: #fff; margin-top: 14px; display: flex; gap: 10px">
+          <dc-import name="Icon" i="clock" hint-size="16px,16px"></dc-import>
+          <span class="meta" style="color: #111">Too early to compare. Results appear after day 14 so a few good days don’t look like proof.</span>
+        </div>
+        <div class="flex g8" style="margin-top: 12px"><button class="btn">Log today: did it</button><button class="btn soft" style="background: #fff">Skipped today</button><button class="btn ghost">Stop test</button></div>
+      </section>
+
+      <!-- Result -->
+      <section class="dark">
+        <div class="flex between wrap g8">
+          <div><span class="tag t-gr">Finished · supports the hypothesis</span><h2 style="margin: 8px 0 0; font-size: 20px; line-height: 26px; font-weight: 700; color: #fff">Meditate right after waking</h2><div class="meta" style="margin-top: 4px">7 to 20 September · compared with 24 Aug to 6 Sep</div></div>
+        </div>
+        <div class="flex wrap g24" style="margin-top: 20px; align-items: flex-end">
+          <div class="col g8" style="flex: 0 0 160px">
+            <span class="meta">Before</span>
+            <div style="height: 160px; display: flex; align-items: flex-end"><span style="width: 64px; height: 46px; border-radius: 6px; background: #6a6a6e"></span></div>
+            <span class="stat" style="color: #fff">29%</span><span class="meta">4 of 14 days</span>
+          </div>
+          <div class="col g8" style="flex: 0 0 160px">
+            <span class="meta">During test</span>
+            <div style="height: 160px; display: flex; align-items: flex-end"><span style="width: 64px; height: 102px; border-radius: 6px; background: #f5f5f4"></span></div>
+            <span class="stat" style="color: #fff">64%</span><span class="meta">9 of 14 days</span>
+          </div>
+          <div class="col g10" style="flex: 1 1 280px">
+            <div class="item" style="color: #fff; line-height: 20px">Meditation more than doubled while the change was in place.</div>
+            <p class="meta" style="margin: 0; line-height: 18px">One test over 14 days. It supports the idea but does not prove it: other things changed too, like 2 fewer client meetings.</p>
+            <div class="tile" style="background: #262628; color: #f5f5f4">
+              <div class="item">What happened next</div>
+              <p class="meta" style="margin: 6px 0 0; line-height: 18px">You kept it for 3 weeks, then moved Meditate back to 2 PM on 12 October. The insight you see today followed.</p>
+            </div>
+            <div class="flex g8"><a href="InsightDetail.dc.html" class="btn inv">Bring it back</a><button class="btn" style="background: #262628">Try another change</button></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <aside class="rail">
+      <section>
+        <div class="sh"><h2 class="h2"><dc-import name="Icon" i="list" hint-size="16px,16px"></dc-import>Test history</h2></div>
+        <div class="col g8">
+          <div class="tile"><div class="flex between g8"><span class="item">Phone in another room</span><span class="tag t-em">Day 5</span></div><div class="meta" style="margin-top: 4px">Focus 3 to 5 PM</div></div>
+          <div class="tile"><div class="flex between g8"><span class="item">Meditate after waking</span><span class="tag t-gr">Helped</span></div><div class="meta" style="margin-top: 4px">29% → 64% · Sep</div></div>
+          <div class="tile"><div class="flex between g8"><span class="item">No coffee after 2 PM</span><span class="tag">No change</span></div><div class="meta" style="margin-top: 4px">Sleep 6h 40m → 6h 44m · Aug</div></div>
+        </div>
+      </section>
+      <section class="tile">
+        <div class="h3">How a result is judged</div>
+        <div class="col g8" style="margin-top: 10px">
+          <div class="flex g8 top"><span class="tag t-gr">Helped</span><span class="meta">Better by 15 points or more, on 10+ logged days</span></div>
+          <div class="flex g8 top"><span class="tag">No change</span><span class="meta">Within 15 points either way</span></div>
+          <div class="flex g8 top"><span class="tag t-em">Worse</span><span class="meta">Down by 15 points or more</span></div>
+        </div>
+        <p class="meta" style="margin: 10px 0 0">Proposed thresholds. You can change them in Settings.</p>
+      </section>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1300}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var st = ['d', 's', 'd', 'd', 't', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f'];
+    return {
+      days: st.map(function (s, i) {
+        return { n: String(i + 1), bg: s === 'd' ? '#111111' : s === 's' ? '#c9c6be' : s === 't' ? '#ffffff' : 'rgba(255,255,255,0.6)', sh: s === 't' ? 'inset 0 0 0 1.6px #ff5a1f' : 'none' };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Welcome</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ember.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0;background:#0f0f10}</style>
+</helmet>
+<div class="app solo" style="min-height: 900px; display: flex; flex-direction: column">
+  <div class="flex g8" style="padding: 12px 10px">
+    <div style="width: 26px; height: 26px; border-radius: 8px; background: #ff5a1f; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 11.5L6 8l2.5 2L12 6"></path><circle cx="13" cy="5" r="1.2" fill="#fff" stroke="none"></circle></svg></div>
+    <span style="font-size: 14px; font-weight: 600">Life System</span>
+  </div>
+  <div style="flex: 1; display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch">
+    <section style="flex: 1 1 520px; min-width: 0; padding: 72px 64px; display: flex; flex-direction: column; justify-content: center; gap: 28px">
+      <h1 style="margin: 0; font-size: 52px; line-height: 58px; font-weight: 700; letter-spacing: -0.03em; max-width: 620px">Plan your days. Measure them. See what actually works.</h1>
+      <p class="lead" style="margin: 0; color: #9a9a9e; max-width: 540px; font-weight: 400; font-size: 16px; line-height: 24px">Goals, tasks, habits, sleep and focus time in one place. Life System looks for patterns in your own records and tells you how sure it is.</p>
+      <div class="flex wrap g6" aria-label="Core loop">
+        <span class="chip" style="background: #1e1e20; color: #f5f5f4">Measure</span><span style="color: #6a6a6e">→</span>
+        <span class="chip" style="background: #1e1e20; color: #f5f5f4">Track</span><span style="color: #6a6a6e">→</span>
+        <span class="chip" style="background: #1e1e20; color: #f5f5f4">Analyze</span><span style="color: #6a6a6e">→</span>
+        <span class="chip" style="background: #1e1e20; color: #f5f5f4">Understand</span><span style="color: #6a6a6e">→</span>
+        <span class="chip" style="background: #1e1e20; color: #f5f5f4">Identify</span><span style="color: #6a6a6e">→</span>
+        <span class="chip" style="background: #1e1e20; color: #f5f5f4">Improve</span><span style="color: #6a6a6e">→</span>
+        <span class="chip t-dk">Repeat</span>
+      </div>
+    </section>
+    <section style="flex: 1 1 440px; min-width: 0; background: #fbfaf7; color: #111; border-radius: 18px; padding: 56px; display: flex; flex-direction: column; justify-content: center; gap: 22px">
+      <div class="dark" style="padding: 20px 22px">
+        <div class="meta">Life line · sample</div>
+        <div class="flex g10" style="margin-top: 2px; align-items: baseline"><span class="score" style="color: #fff">62</span><span style="color: #9a9a9e; font-size: 15px; font-weight: 400">/ 100</span><span class="chip t-dk">Building</span></div>
+        <svg viewBox="0 0 360 80" style="display: block; width: 100%; height: auto; margin-top: 8px" aria-hidden="true">
+          <path d="M0 64 L30 58 L60 66 L90 52 L120 56 L150 44 L180 48 L210 38 L240 34" fill="none" stroke="#ff5a1f" stroke-width="2" stroke-linejoin="round"></path>
+          <path d="M240 34 L350 12" stroke="#8a8a8e" stroke-width="1.6" stroke-dasharray="0.5 5" stroke-linecap="round"></path>
+          <circle cx="240" cy="34" r="4.5" fill="#ff5a1f" stroke="#fff" stroke-width="2"></circle>
+          <circle cx="350" cy="12" r="5" fill="#141415" stroke="#fff" stroke-width="2"></circle>
+        </svg>
+        <div class="meta" style="margin-top: 8px">Where you are, where you want to be, and the path between.</div>
+      </div>
+      <div class="col g10">
+        <a href="Signup.dc.html" class="btn l full" style="font-size: 14px">Create an account</a>
+        <a href="Login.dc.html" class="btn l soft full" style="font-size: 14px">Log in</a>
+      </div>
+      <div class="col g8">
+        <div class="flex g8 meta"><dc-import name="Icon" i="lock" s="14" hint-size="14px,14px"></dc-import>Your records are private to you. Export everything at any time.</div>
+        <div class="flex g8 meta"><dc-import name="Icon" i="insight" s="14" hint-size="14px,14px"></dc-import>Insights wait for enough data and say when a link is only a correlation.</div>
+      </div>
+    </section>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

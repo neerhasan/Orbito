@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Title bar</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ember.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<header style="width: 100%; min-height: 58px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 12px 0 12px 16px; background: #0f0f10; color: #f5f5f4; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-weight: 500">
+  <div style="flex: 1 1 200px; display: flex; align-items: center; gap: 6px">
+    <div style="width: 26px; height: 26px; border-radius: 8px; background: #ff5a1f; display: flex; align-items: center; justify-content: center; flex: none">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#ffffff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 11.5L6 8l2.5 2L12 6"></path><circle cx="13" cy="5" r="1.2" fill="#ffffff" stroke="none"></circle></svg>
+    </div>
+    <span style="font-size: 14px; line-height: 17px; font-weight: 600; margin: 0 22px 0 4px">Life System</span>
+    <button class="ib" aria-label="Toggle sidebar" style="color: #9a9a9e"><dc-import name="Icon" i="sidebar" hint-size="16px,16px"></dc-import></button>
+    <button class="ib" aria-label="Back" style="color: #9a9a9e"><dc-import name="Icon" i="left" hint-size="16px,16px"></dc-import></button>
+    <button class="ib" aria-label="Forward" style="color: #9a9a9e"><dc-import name="Icon" i="right" hint-size="16px,16px"></dc-import></button>
+  </div>
+  <button aria-label="Open Quick Launcher (Ctrl K)" style="flex: 0 1 480px; min-width: 240px; height: 34px; border: 0; border-radius: 10px; background: #1e1e20; color: #9a9a9e; display: flex; align-items: center; gap: 8px; padding: 0 8px 0 12px; text-align: left">
+    <dc-import name="Icon" i="search" hint-size="16px,16px"></dc-import>
+    <span style="flex: 1; font-size: 13px; line-height: 16px; font-weight: 400">Search, add or log anything…</span>
+    <kbd class="kbd dk">Ctrl K</kbd>
+  </button>
+  <div style="flex: 1 1 200px; display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding-right: 8px">
+    <sc-if value="{{focus}}" hint-placeholder-val="{{true}}">
+      <div style="height: 34px; border-radius: 10px; background: #1e1e20; display: flex; align-items: center; gap: 8px; padding: 0 4px 0 12px">
+        <span style="width: 7px; height: 7px; border-radius: 9999px; background: #ff5a1f; flex: none"></span>
+        <span style="font-size: 13px; line-height: 16px">Deep work</span>
+        <span class="num" style="font-size: 13px; line-height: 16px; font-weight: 600; color: #ff5a1f">00:32:14</span>
+        <button class="ib" aria-label="Pause focus timer" style="color: #f5f5f4"><dc-import name="Icon" i="pause" w="1.9" hint-size="16px,16px"></dc-import></button>
+      </div>
+    </sc-if>
+    <button class="btn inv" style="height: 34px; border-radius: 10px; font-size: 13px; font-weight: 600"><dc-import name="Icon" i="plus" w="1.9" hint-size="16px,16px"></dc-import>New</button>
+    <button aria-label="Account: Zihad" style="width: 32px; height: 32px; border: 0; border-radius: 9999px; background: #262628; color: #f5f5f4; font-size: 13px; font-weight: 600; padding: 0">Z</button>
+  </div>
+</header>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"focus":{"editor":"boolean","default":true},"$preview":{"width":1440,"height":58}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { focus: this.props.focus ?? true };
+  }
+}
+</script>
+</body>
+</html>

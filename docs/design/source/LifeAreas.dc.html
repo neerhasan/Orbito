@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Life areas</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ember.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0;background:#0f0f10}</style>
+</helmet>
+<div class="app" style="min-height: 1200px">
+  <dc-import name="Titlebar" hint-size="100%,58px"></dc-import>
+  <div class="row">
+    <dc-import name="Sidebar" active="" hint-size="232px,1000px"></dc-import>
+    <main class="panel">
+      <div class="hd">
+        <div><h1 class="h1">Life areas</h1><div class="date">4 active · they feed your Life line score</div></div>
+        <button class="btn" style="margin-top: 6px"><dc-import name="Icon" i="plus" s="14" w="1.9" hint-size="14px,14px"></dc-import>Add area</button>
+      </div>
+
+      <div class="col g8">
+        <div class="flex g12 cap ink" style="padding: 0 16px">
+          <span style="width: 16px"></span><span class="grow">Area</span><span style="width: 110px">Priority</span><span style="width: 200px">Now vs target</span><span style="width: 120px">Linked</span><span style="width: 28px"></span>
+        </div>
+        <sc-for list="{{areas}}" as="a" hint-placeholder-count="4">
+          <div class="tile flex g12" style="padding: 14px 16px">
+            <span style="color: #a8a59e; display: flex; cursor: grab" aria-label="Drag to reorder"><dc-import name="Icon" i="drag" hint-size="16px,16px"></dc-import></span>
+            <a href="{{a.href}}" class="grow flex g10" style="min-width: 0"><span class="itile" style="background: {{a.bg}}; color: {{a.fg}}"><dc-import name="Icon" i="{{a.icon}}" hint-size="16px,16px"></dc-import></span><span class="item" style="font-weight: 600">{{a.n}}</span></a>
+            <div style="width: 110px"><div class="seg" style="background: #fff"><button aria-pressed="{{a.lo}}" style="padding: 4px 7px">Low</button><button aria-pressed="{{a.md}}" style="padding: 4px 7px">Med</button><button aria-pressed="{{a.hi}}" style="padding: 4px 7px">High</button></div></div>
+            <div style="width: 200px">
+              <div style="position: relative"><div class="bar"><i style="width: {{a.now}}%; background: {{a.c}}"></i></div><span style="position: absolute; left: {{a.t}}%; top: -4px; width: 2px; height: 13px; border-radius: 1px; background: #111"></span></div>
+              <div class="meta" style="margin-top: 6px">Now {{a.now}} · Target {{a.t}}</div>
+            </div>
+            <span class="meta" style="width: 120px">{{a.links}}</span>
+            <button class="ib" aria-label="More options for {{a.n}}"><dc-import name="Icon" i="more" hint-size="16px,16px"></dc-import></button>
+          </div>
+        </sc-for>
+      </div>
+
+      <section>
+        <div class="sh"><h2 class="h2"><dc-import name="Icon" i="plus" hint-size="16px,16px"></dc-import>Suggested areas</h2><span class="meta">Add only what you will track</span></div>
+        <div class="flex wrap g8">
+          <button class="add"><dc-import name="Icon" i="spark" s="14" hint-size="14px,14px"></dc-import>Mind</button>
+          <button class="add"><dc-import name="Icon" i="user" s="14" hint-size="14px,14px"></dc-import>Relationships</button>
+          <button class="add"><dc-import name="Icon" i="book" s="14" hint-size="14px,14px"></dc-import>Learning</button>
+          <button class="add"><dc-import name="Icon" i="sun" s="14" hint-size="14px,14px"></dc-import>Spirituality</button>
+          <button class="add"><dc-import name="Icon" i="today" s="14" hint-size="14px,14px"></dc-import>Fun</button>
+          <button class="add"><dc-import name="Icon" i="area" s="14" hint-size="14px,14px"></dc-import>Environment</button>
+          <button class="add" style="background: transparent; box-shadow: inset 0 0 0 1.5px #e9e7e1"><dc-import name="Icon" i="edit" s="14" hint-size="14px,14px"></dc-import>Name your own</button>
+        </div>
+        <p class="meta" style="margin: 12px 0 0">3 to 8 areas is easier to keep up with. This is a suggestion, never a limit.</p>
+      </section>
+    </main>
+
+    <aside class="rail">
+      <section class="dark" style="padding: 18px 20px">
+        <div class="flex between"><span class="item" style="color: #fff">How scores work</span><span class="chip t-dk">Proposal</span></div>
+        <p class="meta" style="margin: 10px 0 0; line-height: 18px">Each area’s Now score, 0 to 100, blends three things from its last 30 days:</p>
+        <div class="col g8" style="margin-top: 12px">
+          <div class="flex between meta"><span style="color: #f5f5f4">Habit consistency</span><span>40%</span></div>
+          <div class="flex between meta"><span style="color: #f5f5f4">Goal progress vs time used</span><span>40%</span></div>
+          <div class="flex between meta"><span style="color: #f5f5f4">Your monthly self-check</span><span>20%</span></div>
+        </div>
+        <div style="height: 1px; background: #2a2a2c; margin: 14px 0"></div>
+        <p class="meta" style="margin: 0; line-height: 18px">Life line = average of area scores, weighted by priority (High 3, Med 2, Low 1).</p>
+        <p class="meta" style="margin: 8px 0 0; line-height: 18px">(58×3 + 71×3 + 40×3 + 66×2) ÷ 11 = <span style="color: #fff">58</span> today.</p>
+      </section>
+      <section class="tile" style="background: #fbf0d5">
+        <div class="flex g8 item"><dc-import name="Icon" i="alert" hint-size="16px,16px"></dc-import>Score check</div>
+        <p class="meta" style="margin: 6px 0 0; line-height: 18px; color: #5e4300">The dashboard sample shows 62. With this formula and these area scores it would be 58. Decide the formula, then the sample numbers follow.</p>
+      </section>
+      <section>
+        <div class="sh"><h2 class="h2">Monthly self-check</h2><span class="meta">Due 1 Dec</span></div>
+        <p class="meta" style="margin: 0; line-height: 18px">Once a month, rate each area 1 to 10 in under a minute. It keeps the score honest about things the app cannot log.</p>
+      </section>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1200}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var A = [
+      ['Health', 'heart', '#e3f5e9', '#23804a', '#23a35a', 58, 80, 'hi', '1 goal · 3 habits', 'LifeAreaDetail.dc.html'],
+      ['Career', 'briefcase', '#e4edfd', '#2b62d9', '#2b62d9', 71, 90, 'hi', '1 goal · 1 habit', '#'],
+      ['Financial Freedom', 'coin', '#fbf0d5', '#9a6a00', '#e0a400', 40, 85, 'hi', '1 goal · 1 project', '#'],
+      ['Family', 'family', '#f7e6fa', '#9b3aab', '#c65bd6', 66, 80, 'md', '0 goals · 1 task', '#']
+    ];
+    return { areas: A.map(function (x) { return { n: x[0], icon: x[1], bg: x[2], fg: x[3], c: x[4], now: x[5], t: x[6], hi: x[7] === 'hi' ? 'true' : 'false', md: x[7] === 'md' ? 'true' : 'false', lo: 'false', links: x[8], href: x[9] }; }) };
+  }
+}
+</script>
+</body>
+</html>

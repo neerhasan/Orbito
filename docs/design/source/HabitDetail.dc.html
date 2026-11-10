@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Habit – Meditate</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ember.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0;background:#0f0f10}</style>
+</helmet>
+<div class="app" style="min-height: 1400px">
+  <dc-import name="Titlebar" hint-size="100%,58px"></dc-import>
+  <div class="row">
+    <dc-import name="Sidebar" active="habits" hint-size="232px,1000px"></dc-import>
+    <main class="panel">
+      <div class="hd">
+        <div>
+          <a href="Habits.dc.html" class="flex g6 meta" style="margin-bottom: 8px"><dc-import name="Icon" i="left" s="14" hint-size="14px,14px"></dc-import>Habits</a>
+          <div class="flex g12"><button class="ring lg" aria-label="Mark Meditate done today"></button><h1 class="h1">Meditate</h1></div>
+          <div class="flex wrap g6" style="margin-top: 8px"><span class="tag t-gr">Health</span><span class="tag">Daily · 10 min</span><span class="tag t-gr">Linked block: Meditation 2:00 PM</span></div>
+        </div>
+        <div class="flex g8" style="margin-top: 26px">
+          <div class="seg" role="group" aria-label="Period"><button aria-pressed="false">Week</button><button aria-pressed="true">30 days</button><button aria-pressed="false">Year</button></div>
+          <button class="btn soft"><dc-import name="Icon" i="edit" s="14" hint-size="14px,14px"></dc-import>Edit</button>
+        </div>
+      </div>
+
+      <div class="grid s">
+        <div class="tile"><div class="meta">Consistency</div><div class="stat" style="margin-top: 6px">53%</div><div class="meta" style="margin-top: 6px">16 of 30 days</div></div>
+        <div class="tile"><div class="meta">Previous 30 days</div><div class="stat" style="margin-top: 6px">47%</div><div class="meta" style="margin-top: 6px">+6 points</div></div>
+        <div class="tile"><div class="meta">Last done</div><div class="stat" style="margin-top: 6px">Tue</div><div class="meta" style="margin-top: 6px">3 Nov · open today</div></div>
+        <div class="tile"><div class="meta">Best run</div><div class="stat" style="margin-top: 6px">9 days</div><div class="meta" style="margin-top: 6px">14 to 22 Sep</div></div>
+      </div>
+
+      <!-- Main story -->
+      <section class="dark">
+        <div class="flex between wrap g12">
+          <div class="flex g8"><span class="tag t-vi">Correlation</span><span class="tag" style="background: #262628; color: #9a9a9e">Cause not proven</span><span class="tag" style="background: #262628; color: #9a9a9e">30 days · Sleep and habit logs</span></div>
+          <span class="meta">Strongest link found</span>
+        </div>
+        <h2 style="margin: 14px 0 0; font-size: 22px; line-height: 28px; font-weight: 600; letter-spacing: -0.01em; max-width: 620px">You meditate far more often on days you are up by 6:30.</h2>
+        <div class="flex wrap g24" style="margin-top: 20px">
+          <div style="flex: 1 1 220px">
+            <div class="flex between meta"><span>Up by 6:30 · 21 days</span><span style="color: #fff">71% · 15 days</span></div>
+            <div style="height: 8px; border-radius: 4px; background: #262628; margin-top: 8px"><div style="width: 71%; height: 100%; border-radius: 4px; background: #f5f5f4"></div></div>
+            <div class="flex between meta" style="margin-top: 14px"><span>Up after 6:30 · 9 days</span><span style="color: #fff">11% · 1 day</span></div>
+            <div style="height: 8px; border-radius: 4px; background: #262628; margin-top: 8px"><div style="width: 11%; height: 100%; border-radius: 4px; background: #6a6a6e"></div></div>
+          </div>
+          <div style="flex: 1 1 260px" class="col g8">
+            <div class="meta" style="line-height: 18px">Hypothesis: on late mornings the day starts with work and the 2:00 PM block gets used for catch-up.</div>
+            <div class="meta" style="line-height: 18px">Only 9 late days so far, so this could change.</div>
+            <div class="flex g8" style="margin-top: 6px"><a href="InsightTest.dc.html" class="btn inv">Test a fix for 14 days</a><a href="InsightDetail.dc.html" class="btn" style="background: #262628">See the full insight</a></div>
+          </div>
+        </div>
+      </section>
+
+      <div class="two">
+        <section>
+          <div class="sh"><h2 class="h2"><dc-import name="Icon" i="trend" hint-size="16px,16px"></dc-import>Consistency trend</h2><span class="meta">Weekly, 12 weeks</span></div>
+          <div class="tile">
+            <svg viewBox="0 0 360 140" style="display: block; width: 100%; height: auto; font-family: Inter, sans-serif" role="img" aria-label="Weekly consistency over 12 weeks, from 29% to 43% this week, best 86% in mid September">
+              <path d="M0 20H360M0 60H360M0 100H360" stroke="#e9e7e1"></path>
+              <text x="0" y="16" font-size="9" fill="#a8a59e">100%</text><text x="0" y="96" font-size="9" fill="#a8a59e">20%</text>
+              <path d="M8 108 L38 92 L68 76 L98 36 L128 52 L158 84 L188 100 L218 72 L248 80 L278 64 L308 76 L340 80" fill="none" stroke="#111" stroke-width="2" stroke-linejoin="round"></path>
+              <circle cx="340" cy="80" r="4.5" fill="#ff5a1f" stroke="#fff" stroke-width="2"></circle>
+              <text x="8" y="134" font-size="9" fill="#a8a59e">17 Aug</text><text x="98" y="134" font-size="9" fill="#a8a59e" text-anchor="middle">14 Sep</text><text x="340" y="134" font-size="9" fill="#ff5a1f" text-anchor="end" font-weight="600">This week</text>
+            </svg>
+          </div>
+        </section>
+        <section>
+          <div class="sh"><h2 class="h2"><dc-import name="Icon" i="calendar" hint-size="16px,16px"></dc-import>Missed by weekday</h2><span class="meta">14 not done · 30 days</span></div>
+          <div class="tile">
+            <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px; align-items: end; height: 110px">
+              <sc-for list="{{wd}}" as="d" hint-placeholder-count="7">
+                <div class="col g6" style="align-items: center; justify-content: flex-end; height: 100%"><span class="cap ink num">{{d.k}}</span><span style="width: 100%; max-width: 26px; height: {{d.h}}px; border-radius: 4px; background: {{d.c}}"></span></div>
+              </sc-for>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px; margin-top: 8px; text-align: center"><sc-for list="{{wd}}" as="d" hint-placeholder-count="7"><span class="cap">{{d.n}}</span></sc-for></div>
+            <div class="meta" style="margin-top: 10px">Mondays and Wednesdays account for 7 of 14.</div>
+          </div>
+        </section>
+      </div>
+
+      <div class="two">
+        <section>
+          <div class="sh"><h2 class="h2"><dc-import name="Icon" i="flag" hint-size="16px,16px"></dc-import>Reasons you gave</h2><span class="meta">12 missed · 2 skipped</span></div>
+          <div class="tile col g10">
+            <sc-for list="{{reasons}}" as="r" hint-placeholder-count="4">
+              <div class="flex g10"><span class="item" style="width: 110px">{{r.n}}</span><span class="bar grow" style="height: 6px"><i style="width: {{r.w}}%"></i></span><span class="meta num" style="width: 24px; text-align: right">{{r.k}}</span></div>
+            </sc-for>
+            <div class="flex wrap g6" style="margin-top: 2px"><span class="tag t-gr">Fact</span><span class="meta">Counted from your own entries</span></div>
+          </div>
+        </section>
+        <section>
+          <div class="sh"><h2 class="h2"><dc-import name="Icon" i="link" hint-size="16px,16px"></dc-import>Linked to other data</h2><span class="meta">30 days</span></div>
+          <div class="col g8">
+            <div class="tile"><div class="flex between g8"><span class="item">Sleep 7h or more</span><span class="meta num">62% vs 38%</span></div><div class="flex wrap g6" style="margin-top: 8px"><span class="tag t-vi">Correlation</span><span class="tag t-am">Weak: 11 short nights</span></div></div>
+            <div class="tile"><div class="flex between g8"><span class="item">Focus time that day</span><span class="meta num">+18m on average</span></div><div class="flex wrap g6" style="margin-top: 8px"><span class="tag t-vi">Correlation</span><span class="tag">Cause not proven</span></div></div>
+            <div class="tile"><div class="flex between g8"><span class="item">Client meetings that day</span><span class="meta">No clear link</span></div><div class="flex wrap g6" style="margin-top: 8px"><span class="tag">Checked · nothing found</span></div></div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <aside class="rail">
+      <section>
+        <div class="sh"><h2 class="h2"><dc-import name="Icon" i="calendar" hint-size="16px,16px"></dc-import>History</h2><span class="meta">Oct to Nov</span></div>
+        <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; text-align: center">
+          <span class="cap">S</span><span class="cap">M</span><span class="cap">T</span><span class="cap">W</span><span class="cap">T</span><span class="cap">F</span><span class="cap">S</span>
+          <sc-for list="{{cal}}" as="c" hint-placeholder-count="35"><span title="{{c.t}}" style="aspect-ratio: 1; border-radius: 6px; background: {{c.bg}}; box-shadow: {{c.sh}}; font-size: 10px; display: flex; align-items: center; justify-content: center; color: {{c.c}}">{{c.n}}</span></sc-for>
+        </div>
+      </section>
+      <section>
+        <div class="sh"><h2 class="h2">Best and worst</h2></div>
+        <div class="col g8">
+          <div class="tile"><div class="meta">Best week</div><div class="item" style="margin-top: 4px">14 to 20 Sep · 7 of 7</div><div class="meta" style="margin-top: 4px">Woke before 6:30 on 6 of those days</div></div>
+          <div class="tile"><div class="meta">Worst week</div><div class="item" style="margin-top: 4px">19 to 25 Oct · 1 of 7</div><div class="meta" style="margin-top: 4px">Client deadline week · 4 late nights</div></div>
+        </div>
+      </section>
+      <section>
+        <div class="sh"><h2 class="h2">Settings</h2></div>
+        <div class="col g10 meta">
+          <div class="flex between"><span>Reminder</span><span style="color: #111">1:55 PM</span></div>
+          <div class="flex between"><span>Counts toward</span><span style="color: #111">Health</span></div>
+          <div class="flex between"><span>Goal</span><span style="color: #111">None · link one</span></div>
+          <div class="flex between"><span>Completes with block</span><span style="color: #111">Meditation, 2:00 PM</span></div>
+        </div>
+      </section>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1400}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var wd = [['S', 1], ['M', 4], ['T', 2], ['W', 3], ['T', 2], ['F', 1], ['S', 1]].map(function (x) {
+      return { n: x[0], k: x[1], h: 14 + x[1] * 18, c: x[1] >= 3 ? '#111111' : '#d5d3cc' };
+    });
+    var reasons = [['No time', 5], ['Too tired', 3], ['Forgot', 2], ['No reason', 2]].map(function (x) { return { n: x[0], k: x[1], w: Math.round(x[1] / 5 * 100) }; });
+    // Calendar: 4 Oct (Sun) to 7 Nov. Pattern for the last 30 days ends with today open.
+    var pat = 'mdmmdddmmddmdmsdmmddmdsdmdmdd' + 'm';
+    var last7 = ['d','m','m','d','m','d','t'];
+    var cal = [];
+    for (var i = 0; i < 35; i++) {
+      var day = i < 28 ? (i + 4) : (i - 27);
+      var mon = i < 28 ? 'Oct' : 'Nov';
+      var st;
+      var daysAgo = 31 - i; // index 31 = 5 Nov
+      if (i > 31) st = 'f';
+      else if (daysAgo <= 6) st = last7[6 - daysAgo];
+      else if (daysAgo < 30) st = pat[29 - daysAgo];
+      else st = 'o';
+      cal.push({ n: day, t: day + ' ' + mon,
+        bg: st === 'd' ? '#111111' : st === 's' ? '#c9c6be' : st === 'm' ? '#e9e7e1' : 'transparent',
+        c: st === 'd' ? '#ffffff' : st === 'f' || st === 'o' ? '#c9c6be' : '#77746e',
+        sh: st === 't' ? 'inset 0 0 0 1.6px #ff5a1f' : 'none' });
+    }
+    return { wd: wd, reasons: reasons, cal: cal };
+  }
+}
+</script>
+</body>
+</html>

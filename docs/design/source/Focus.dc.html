@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Focus mode</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ember.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0;background:#0f0f10}</style>
+</helmet>
+<div class="app solo" style="min-height: 900px; display: flex; flex-direction: column; padding: 12px 16px 16px">
+  <div class="flex between wrap g12">
+    <div class="flex g10">
+      <div style="width: 26px; height: 26px; border-radius: 8px; background: #ff5a1f; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 11.5L6 8l2.5 2L12 6"></path><circle cx="13" cy="5" r="1.2" fill="#fff" stroke="none"></circle></svg></div>
+      <span style="font-size: 13px; color: #9a9a9e">Focus mode · notifications paused until 12:00</span>
+    </div>
+    <a href="Main.dc.html" class="btn" style="background: #1e1e20; color: #f5f5f4">Exit full screen <kbd class="kbd dk">Esc</kbd></a>
+  </div>
+
+  <div style="flex: 1; display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; margin-top: 16px">
+    <!-- Timer -->
+    <section style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px; padding: 40px 16px">
+      <div class="flex wrap g6" style="justify-content: center">
+        <span class="tag t-dk">Build Life System app</span>
+        <span class="tag" style="background: #1e1e20; color: #9a9a9e">Goal: Profitable software business</span>
+      </div>
+      <h1 style="margin: 0; font-size: 28px; line-height: 34px; font-weight: 600; letter-spacing: -0.02em; text-align: center">UI research</h1>
+
+      <div style="position: relative; width: 320px; max-width: 80vw; aspect-ratio: 1">
+        <svg viewBox="0 0 200 200" style="display: block; width: 100%; height: 100%" role="img" aria-label="32 minutes of 3 hours done">
+          <circle cx="100" cy="100" r="90" fill="none" stroke="#1e1e20" stroke-width="6"></circle>
+          <circle cx="100" cy="100" r="90" fill="none" stroke="#ff5a1f" stroke-width="6" stroke-linecap="round" stroke-dasharray="100.6 565.5" transform="rotate(-90 100 100)"></circle>
+        </svg>
+        <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px">
+          <span class="num" style="font-size: 64px; line-height: 70px; font-weight: 700; letter-spacing: -0.04em; color: #ff5a1f">32:14</span>
+          <span style="font-size: 13px; color: #9a9a9e">of 3:00:00 · ends 12:00</span>
+        </div>
+      </div>
+
+      <div class="flex g10">
+        <button class="btn l" style="background: #1e1e20; color: #f5f5f4"><dc-import name="Icon" i="stop" hint-size="16px,16px"></dc-import>Stop and save</button>
+        <button aria-label="Pause" style="width: 64px; height: 64px; border: 0; border-radius: 9999px; background: #ff5a1f; color: #fff; display: flex; align-items: center; justify-content: center"><dc-import name="Icon" i="pause" s="24" w="2.2" hint-size="24px,24px"></dc-import></button>
+        <button class="btn l inv"><dc-import name="Icon" i="check" w="2" hint-size="16px,16px"></dc-import>Task done</button>
+      </div>
+      <p class="meta" style="margin: 0; color: #9a9a9e; text-align: center; max-width: 440px">Stop and save keeps the task open and adds this time to it. Task done completes it and updates the project to 75%.</p>
+
+      <!-- Distraction -->
+      <div style="width: 100%; max-width: 620px; background: #1e1e20; border-radius: 14px; padding: 16px 18px">
+        <div class="flex between wrap g8"><span style="font-size: 13px; font-weight: 600">Got distracted?</span><span style="font-size: 12px; color: #9a9a9e">One tap logs it. The timer keeps running. Press D</span></div>
+        <div class="flex wrap g8" style="margin-top: 12px">
+          <button class="btn" style="background: #262628; color: #f5f5f4"><dc-import name="Icon" i="phone" s="14" hint-size="14px,14px"></dc-import>Phone</button>
+          <button class="btn" style="background: #262628; color: #f5f5f4"><dc-import name="Icon" i="mail" s="14" hint-size="14px,14px"></dc-import>Messages</button>
+          <button class="btn" style="background: #262628; color: #f5f5f4"><dc-import name="Icon" i="user" s="14" hint-size="14px,14px"></dc-import>Someone</button>
+          <button class="btn" style="background: #262628; color: #f5f5f4"><dc-import name="Icon" i="search" s="14" hint-size="14px,14px"></dc-import>Browsing</button>
+          <button class="btn" style="background: #262628; color: #f5f5f4">Other…</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Session side -->
+    <aside style="flex: 1 1 320px; min-width: 0; background: #fbfaf7; color: #111; border-radius: 18px; padding: 22px 20px; display: flex; flex-direction: column; gap: 22px">
+      <section>
+        <div class="sh"><h2 class="h2"><dc-import name="Icon" i="focus" hint-size="16px,16px"></dc-import>This session</h2><span class="meta">Started 9:00</span></div>
+        <div style="display: flex; gap: 2px; height: 10px; border-radius: 3px; overflow: hidden" role="img" aria-label="Focused 25 minutes, distracted 7 minutes so far">
+          <span style="flex: 14; background: #111"></span><span style="flex: 4; background: #ff5a1f"></span><span style="flex: 11; background: #111"></span><span style="flex: 3; background: #ff5a1f"></span><span style="flex: 148; background: #e9e7e1"></span>
+        </div>
+        <div class="flex g14 cap ink" style="margin-top: 8px"><span class="flex g6"><i class="dot" style="background: #111; width: 6px; height: 6px"></i>Focused 25m</span><span class="flex g6"><i class="dot" style="background: #ff5a1f; width: 6px; height: 6px"></i>Distracted 7m</span></div>
+      </section>
+      <section>
+        <div class="h3" style="margin-bottom: 10px">Distractions logged</div>
+        <div class="col g8">
+          <div class="tile flex between"><span class="flex g8 item"><dc-import name="Icon" i="phone" s="14" hint-size="14px,14px"></dc-import>Phone</span><span class="meta num">9:14 · 4m</span></div>
+          <div class="tile flex between"><span class="flex g8 item"><dc-import name="Icon" i="mail" s="14" hint-size="14px,14px"></dc-import>Messages</span><span class="meta num">9:29 · 3m</span></div>
+        </div>
+        <p class="meta" style="margin: 10px 0 0">Phone is your most logged distraction this week: 6 times, 41m.</p>
+      </section>
+      <section>
+        <div class="flex between" style="margin-bottom: 10px"><span class="h3">Subtasks</span><span class="meta">1 of 3</span></div>
+        <div class="list" style="gap: 10px">
+          <div class="trow"><button class="ring done" aria-label="Undo"></button><span class="item soft">Review 5 planner apps</span></div>
+          <div class="trow"><button class="ring" aria-label="Complete"></button><span class="item">Sketch Today layout</span></div>
+          <div class="trow"><button class="ring" aria-label="Complete"></button><span class="item">List open questions</span></div>
+        </div>
+      </section>
+      <section>
+        <div class="h3" style="margin-bottom: 8px">Quick note</div>
+        <textarea class="input" rows="3" placeholder="Jot an idea without leaving focus. Saved to the task."></textarea>
+      </section>
+      <section class="tile">
+        <div class="meta">Up next</div>
+        <div class="flex between" style="margin-top: 6px"><span class="item">Client call · 12:00</span><span class="tag t-bl">Meeting</span></div>
+      </section>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

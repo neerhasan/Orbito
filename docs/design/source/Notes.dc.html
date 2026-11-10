@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Notes</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ember.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0;background:#0f0f10}</style>
+</helmet>
+<div class="app" style="min-height: 1100px">
+  <dc-import name="Titlebar" hint-size="100%,58px"></dc-import>
+  <div class="row">
+    <dc-import name="Sidebar" active="notes" hint-size="232px,1000px"></dc-import>
+    <main class="panel">
+      <div class="hd">
+        <div><h1 class="h1">Notes</h1><div class="date">13 notes · 3 folders</div></div>
+        <div class="flex g8" style="margin-top: 6px">
+          <div class="seg" role="group" aria-label="Layout"><button aria-pressed="true"><dc-import name="Icon" i="board" s="14" hint-size="14px,14px"></dc-import>Cards</button><button aria-pressed="false"><dc-import name="Icon" i="list" s="14" hint-size="14px,14px"></dc-import>List</button></div>
+          <a href="NoteEditor.dc.html" class="btn"><dc-import name="Icon" i="plus" s="14" w="1.9" hint-size="14px,14px"></dc-import>New note</a>
+        </div>
+      </div>
+      <div class="flex wrap g8">
+        <label class="input" style="flex: 1 1 320px"><dc-import name="Icon" i="search" hint-size="16px,16px"></dc-import><span class="sr">Search notes</span><input type="text" placeholder="Search notes, tasks inside notes, tags" style="flex: 1; min-width: 0; border: 0; background: transparent; font-size: 13px; outline-offset: 6px"></label>
+        <div class="seg"><button aria-pressed="true">All</button><button aria-pressed="false">Has tasks</button><button aria-pressed="false">Linked to a goal</button></div>
+      </div>
+
+      <div class="grid">
+        <sc-for list="{{notes}}" as="n" hint-placeholder-count="6">
+          <a href="NoteEditor.dc.html" class="tile" style="padding: 0; overflow: hidden; color: #111; display: flex; flex-direction: column">
+            <div style="height: 72px; background: {{n.cover}}"></div>
+            <div style="padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 8px; flex: 1">
+              <div class="flex between g8"><span class="h3">{{n.t}}</span><span class="cap">{{n.f}}</span></div>
+              <p class="meta" style="margin: 0; line-height: 18px">{{n.ex}}</p>
+              <div class="flex wrap g6" style="margin-top: auto"><sc-for list="{{n.tags}}" as="tg" hint-placeholder-count="2"><span class="tag {{tg.c}}">{{tg.n}}</span></sc-for></div>
+              <div class="meta">{{n.m}}</div>
+            </div>
+          </a>
+        </sc-for>
+      </div>
+    </main>
+
+    <aside class="rail">
+      <section>
+        <div class="sh"><h2 class="h2"><dc-import name="Icon" i="folder" hint-size="16px,16px"></dc-import>Folders</h2><button class="ib" aria-label="New folder"><dc-import name="Icon" i="plus" hint-size="16px,16px"></dc-import></button></div>
+        <div class="col g6">
+          <a href="#" class="tile flex between" style="background: #111; color: #fff"><span class="item">All notes</span><span class="meta" style="color: #c9c6be">13</span></a>
+          <a href="#" class="tile flex between"><span class="flex g8 item"><dc-import name="Icon" i="folder" s="14" hint-size="14px,14px"></dc-import>Work</span><span class="meta">4</span></a>
+          <a href="#" class="tile flex between"><span class="flex g8 item"><dc-import name="Icon" i="folder" s="14" hint-size="14px,14px"></dc-import>Reviews</span><span class="meta">6</span></a>
+          <a href="#" class="tile flex between"><span class="flex g8 item"><dc-import name="Icon" i="folder" s="14" hint-size="14px,14px"></dc-import>Reading</span><span class="meta">3</span></a>
+        </div>
+        <p class="meta" style="margin: 10px 0 0">Folders also live in the sidebar, under Life areas.</p>
+      </section>
+      <section>
+        <div class="sh"><h2 class="h2">Tags</h2></div>
+        <div class="flex wrap g6"><span class="tag t-bl">#work · 5</span><span class="tag t-vi">#idea · 4</span><span class="tag t-pk">#family · 2</span><span class="tag t-am">#finance · 1</span></div>
+      </section>
+      <section class="tile">
+        <div class="flex g8 item"><dc-import name="Icon" i="spark" hint-size="16px,16px"></dc-import>AI on notes</div>
+        <p class="meta" style="margin: 6px 0 0; line-height: 18px">Summary and rewrite run only when you ask, on the note you have open. The result is labelled and your original is kept.</p>
+      </section>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1100}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var E = 'linear-gradient(90deg, #ff5a1f, #ff9a5c, #ffd3b0)', P = 'linear-gradient(90deg, #1f6f5c, #58b79a, #c9ebdd)', D = 'linear-gradient(90deg, #27324f, #5d74b5, #c4d0ee)';
+    return {
+      notes: [
+        { t: 'Life System plan', f: 'Work', cover: E, ex: 'Scope for v1: Today, Tasks, Habits, Focus. Insights after 14 days of data.', tags: [{ n: '#work', c: 't-bl' }, { n: 'AI summary', c: 't-vi' }], m: '2 tasks inside · edited today' },
+        { t: 'Weekly review, November', f: 'Reviews', cover: P, ex: 'Wins: 4 days of deep work. Miss: Master skill on Monday again.', tags: [{ n: 'Financial Freedom', c: 't-am' }], m: 'Edited today' },
+        { t: 'Psycho-Cybernetics notes', f: 'Reading', cover: D, ex: 'Self-image sets the limits of what you attempt. Ideas for life stages.', tags: [{ n: '#idea', c: 't-vi' }, { n: 'AI rewrite', c: 't-vi' }], m: '1 event inside · 3 Nov' },
+        { t: 'Client call notes · 5 Nov', f: 'Work', cover: '#e4edfd', ex: 'Empty. Linked to the 12:00 Client call.', tags: [{ n: '#work', c: 't-bl' }], m: 'Created from an event' },
+        { t: 'Running plan draft', f: 'Work', cover: P, ex: 'Weeks 1 to 4: three easy runs, 3 to 5 km. Long run on Saturday.', tags: [{ n: 'Health', c: 't-gr' }], m: '4 tasks inside · 1 Nov' },
+        { t: 'Pricing ideas', f: 'Work', cover: E, ex: 'Free for 30 days, then monthly. Compare with 3 planner apps.', tags: [{ n: '#idea', c: 't-vi' }, { n: '#finance', c: 't-am' }], m: '12 Oct' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

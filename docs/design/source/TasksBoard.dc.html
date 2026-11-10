@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tasks – board</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ember.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0;background:#0f0f10}</style>
+</helmet>
+<div class="app" style="min-height: 1200px">
+  <dc-import name="Titlebar" hint-size="100%,58px"></dc-import>
+  <div class="row">
+    <dc-import name="Sidebar" active="tasks" hint-size="232px,1000px"></dc-import>
+    <main class="panel">
+      <div class="hd">
+        <div><h1 class="h1">Tasks</h1><div class="date">Board · grouped by status · drag a card to change it</div></div>
+        <div class="flex g8" style="margin-top: 6px">
+          <div class="seg" role="group" aria-label="View">
+            <a href="Tasks.dc.html" class="flex g6" style="border-radius: 6px; color: #77746e; font-size: 12px; padding: 6px 11px"><dc-import name="Icon" i="list" s="14" hint-size="14px,14px"></dc-import>List</a>
+            <button aria-pressed="true"><dc-import name="Icon" i="board" s="14" hint-size="14px,14px"></dc-import>Board</button>
+            <a href="TasksCalendar.dc.html" class="flex g6" style="border-radius: 6px; color: #77746e; font-size: 12px; padding: 6px 11px"><dc-import name="Icon" i="calendar" s="14" hint-size="14px,14px"></dc-import>Calendar</a>
+          </div>
+          <button class="add">Group: Status<dc-import name="Icon" i="down" s="14" hint-size="14px,14px"></dc-import></button>
+          <button class="btn"><dc-import name="Icon" i="plus" s="14" w="1.9" hint-size="14px,14px"></dc-import>New task</button>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; align-items: start">
+        <sc-for list="{{cols}}" as="c" hint-placeholder-count="4">
+          <section class="tile" style="padding: 12px; display: flex; flex-direction: column; gap: 8px; min-height: 640px">
+            <div class="flex between" style="padding: 2px 2px 6px"><span class="flex g8 h3"><span class="dot" style="background: {{c.dot}}"></span>{{c.n}}</span><span class="meta">{{c.k}}</span></div>
+            <sc-for list="{{c.cards}}" as="r" hint-placeholder-count="3">
+              <article style="background: {{r.bg}}; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px; opacity: {{r.op}}">
+                <div class="trow"><button class="ring {{r.p}}" aria-label="Complete {{r.t}}"></button><span class="item grow" style="color: {{r.tc}}">{{r.t}}</span></div>
+                <div class="flex wrap g6" style="padding-left: 28px">
+                  <sc-if value="{{r.tag}}" hint-placeholder-val="{{true}}"><span class="tag {{r.tagc}}">{{r.tag}}</span></sc-if>
+                  <span class="meta" style="color: {{r.wc}}">{{r.when}}</span>
+                </div>
+                <sc-if value="{{r.extra}}" hint-placeholder-val="{{false}}"><div class="meta" style="padding-left: 28px">{{r.extra}}</div></sc-if>
+              </article>
+            </sc-for>
+            <button class="add" style="background: transparent; align-self: flex-start"><dc-import name="Icon" i="plus" s="14" hint-size="14px,14px"></dc-import>Add</button>
+          </section>
+        </sc-for>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1200}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var card = function (t, p, tag, tagc, when, extra, o) {
+      o = o || {};
+      return { t: t, p: p, tag: tag, tagc: tagc, when: when, extra: extra || '',
+        bg: o.now ? '#fff1eb' : '#ffffff', op: o.done ? '0.75' : '1', tc: o.done ? '#a8a59e' : '#111111', wc: o.late ? '#d5430f' : '#77746e' };
+    };
+    return {
+      cols: [
+        { n: 'To do', k: '4', dot: '#c9c6be', cards: [
+          card('Call bank', 'hi', '#finance', 't-am', 'Fri 6 Nov · 10:00 AM'),
+          card('Book gym trial', '', 'Fitness routine', 't-gr', 'Fri 6 Nov'),
+          card('Plan 12-week running schedule', 'md', 'Fitness routine', 't-gr', 'Mon 9 Nov'),
+          card('Write product brief', '', '', '', 'No date')
+        ] },
+        { n: 'Today', k: '3', dot: '#111111', cards: [
+          card('Send invoice', 'hi', 'Career', 't-bl', 'Overdue · yesterday', 'Moved 2 times', { late: 1 }),
+          card('Define data model', 'md', 'Life System', 't-em', '4:00 PM', 'Est. 2h'),
+          card('Weekly review', '', '', '', '5:30 PM · weekly')
+        ] },
+        { n: 'In progress', k: '1', dot: '#ff5a1f', cards: [
+          card('UI research', 'hi', 'Life System', 't-em', '9:00 AM', '1 of 3 subtasks · focus 0:32 running', { now: 1 })
+        ] },
+        { n: 'Done this week', k: '3', dot: '#23a35a', cards: [
+          card('Set up repo and data stack', 'done', 'Life System', 't-em', 'Wed 4 Nov', '7h 08m · est. 6h', { done: 1 }),
+          card('Buy running shoes', 'done', 'Fitness routine', 't-gr', 'Tue 3 Nov', '', { done: 1 }),
+          card('Draft dashboard layout', 'done', 'Life System', 't-em', 'Mon 2 Nov', '10h 05m · est. 8h', { done: 1 })
+        ] }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

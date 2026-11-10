@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tasks – list</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ember.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0;background:#0f0f10}</style>
+</helmet>
+<div class="app" style="min-height: 1200px">
+  <dc-import name="Titlebar" hint-size="100%,58px"></dc-import>
+  <div class="row">
+    <dc-import name="Sidebar" active="tasks" hint-size="232px,1000px"></dc-import>
+    <main class="panel">
+      <div class="hd">
+        <div><h1 class="h1">Tasks</h1><div class="date">8 open · 1 overdue · 64% done on time this month</div></div>
+        <div class="flex g8" style="margin-top: 6px">
+          <div class="seg" role="group" aria-label="View">
+            <button aria-pressed="true"><dc-import name="Icon" i="list" s="14" hint-size="14px,14px"></dc-import>List</button>
+            <a href="TasksBoard.dc.html" class="flex g6" style="border-radius: 6px; color: #77746e; font-size: 12px; padding: 6px 11px"><dc-import name="Icon" i="board" s="14" hint-size="14px,14px"></dc-import>Board</a>
+            <a href="TasksCalendar.dc.html" class="flex g6" style="border-radius: 6px; color: #77746e; font-size: 12px; padding: 6px 11px"><dc-import name="Icon" i="calendar" s="14" hint-size="14px,14px"></dc-import>Calendar</a>
+          </div>
+          <button class="add"><dc-import name="Icon" i="filter" s="14" hint-size="14px,14px"></dc-import>All projects</button>
+          <button class="btn"><dc-import name="Icon" i="plus" s="14" w="1.9" hint-size="14px,14px"></dc-import>New task</button>
+        </div>
+      </div>
+
+      <div class="input" style="height: 40px"><dc-import name="Icon" i="plus" hint-size="16px,16px"></dc-import><span class="soft">Add a task: “review contract friday 3pm #work high”</span><kbd class="kbd" style="margin-left: auto">Enter</kbd></div>
+
+      <sc-for list="{{groups}}" as="g" hint-placeholder-count="4">
+        <section>
+          <div class="flex g8" style="margin-bottom: 8px"><span class="cap" style="color: {{g.c}}">{{g.label}}</span><span class="cap">{{g.k}}</span></div>
+          <div class="col g6">
+            <sc-for list="{{g.rows}}" as="r" hint-placeholder-count="3">
+              <div class="tile" style="background: {{r.bg}}; box-shadow: {{r.sh}}; display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px">
+                <button class="ring {{r.p}}" aria-label="Complete {{r.t}}" style="margin-top: -1px"></button>
+                <div class="grow">
+                  <div class="item" style="color: {{r.tc}}">{{r.t}}</div>
+                  <div class="flex wrap g6" style="margin-top: 6px">
+                    <span class="meta" style="color: {{r.wc}}">{{r.when}}</span>
+                    <sc-if value="{{r.tag}}" hint-placeholder-val="{{true}}"><span class="tag {{r.tagc}}">{{r.tag}}</span></sc-if>
+                    <span class="meta">{{r.extra}}</span>
+                  </div>
+                </div>
+                <span class="meta num" style="white-space: nowrap">{{r.est}}</span>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+      </sc-for>
+
+      <button class="add" style="align-self: flex-start"><dc-import name="Icon" i="down" s="14" hint-size="14px,14px"></dc-import>Done today · 2</button>
+    </main>
+
+    <!-- Task detail -->
+    <aside class="rail wide" aria-label="Task detail" style="padding: 22px 22px 26px">
+      <div class="flex between">
+        <span class="cap ink">Build Life System app  /  Task</span>
+        <div class="flex g4"><button class="ib" aria-label="More"><dc-import name="Icon" i="more" hint-size="16px,16px"></dc-import></button><button class="ib" aria-label="Close detail"><dc-import name="Icon" i="x" hint-size="16px,16px"></dc-import></button></div>
+      </div>
+      <div class="flex g12 top">
+        <button class="ring hi lg" aria-label="Complete UI research" style="margin-top: 3px"></button>
+        <div><h2 style="margin: 0; font-size: 22px; line-height: 28px; font-weight: 700; letter-spacing: -0.015em">UI research</h2><div class="meta" style="margin-top: 4px">In progress · moved once (from 3 Nov)</div></div>
+      </div>
+
+      <div class="tile now" style="display: flex; align-items: center; gap: 12px">
+        <button aria-label="Pause focus" style="width: 30px; height: 30px; border: 0; border-radius: 9999px; background: #ff5a1f; color: #fff; display: flex; align-items: center; justify-content: center; padding: 0"><dc-import name="Icon" i="pause" s="14" w="2.2" hint-size="14px,14px"></dc-import></button>
+        <div class="grow"><div class="item">Focus running · Deep work</div><div class="meta em num" style="margin-top: 3px">0:32 today · 1:17 total</div></div>
+        <button class="btn soft" style="background: #fff">Stop and save</button>
+      </div>
+
+      <dl style="margin: 0; display: grid; grid-template-columns: 110px 1fr; row-gap: 12px; column-gap: 12px; align-items: center">
+        <dt class="meta">Project</dt><dd style="margin: 0"><span class="tag t-em">Build Life System app</span></dd>
+        <dt class="meta">Goal</dt><dd style="margin: 0" class="item">Profitable software business</dd>
+        <dt class="meta">Life area</dt><dd style="margin: 0" class="flex g6 item"><span class="dot" style="background: #e0a400"></span>Financial Freedom</dd>
+        <dt class="meta">Due</dt><dd style="margin: 0" class="item">Today</dd>
+        <dt class="meta">Scheduled</dt><dd style="margin: 0" class="item">9:00 to 12:00 · Deep work</dd>
+        <dt class="meta">Priority</dt><dd style="margin: 0" class="flex g6 item"><span class="ring hi" style="width: 12px; height: 12px" aria-hidden="true"></span>High</dd>
+        <dt class="meta">Reminder</dt><dd style="margin: 0" class="item">8:55 AM</dd>
+        <dt class="meta">Tags</dt><dd style="margin: 0" class="flex g6"><span class="tag t-bl">#work</span><button class="add" style="padding: 3px 7px">Add</button></dd>
+      </dl>
+
+      <div>
+        <div class="flex between"><span class="h3">Time</span><span class="meta num">1:17 of 3:00 estimated</span></div>
+        <div class="bar" style="margin-top: 10px"><i style="width: 43%"></i></div>
+        <div class="meta" style="margin-top: 8px">Your estimates for research tasks run 20% short on average (8 tasks).</div>
+      </div>
+
+      <div>
+        <div class="flex between" style="margin-bottom: 10px"><span class="h3">Subtasks</span><span class="meta">1 of 3</span></div>
+        <div class="list" style="gap: 10px">
+          <div class="trow"><button class="ring done" aria-label="Undo"></button><span class="item soft">Review 5 planner apps</span></div>
+          <div class="trow"><button class="ring" aria-label="Complete subtask"></button><span class="item">Sketch Today layout</span></div>
+          <div class="trow"><button class="ring" aria-label="Complete subtask"></button><span class="item">List open questions</span></div>
+          <button class="add" style="align-self: flex-start"><dc-import name="Icon" i="plus" s="14" hint-size="14px,14px"></dc-import>Add subtask</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="h3" style="margin-bottom: 10px">Focus sessions</div>
+        <div class="col g8">
+          <div class="flex between meta"><span>Today · 9:00 AM</span><span class="em num">0:32 · running</span></div>
+          <div class="flex between meta"><span>Tue 3 Nov · 2:10 PM</span><span class="num">0:45 · 1 distraction</span></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="h3" style="margin-bottom: 8px">Notes</div>
+        <a href="#" class="tile flex g10"><dc-import name="Icon" i="note" hint-size="16px,16px"></dc-import><span class="item grow">Life System plan</span><span class="meta">2 tasks inside</span></a>
+      </div>
+
+      <div class="flex g8">
+        <button class="btn soft"><dc-import name="Icon" i="calendar" s="14" hint-size="14px,14px"></dc-import>Reschedule</button>
+        <button class="btn soft">Postpone to tomorrow</button>
+      </div>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1200}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var row = function (t, p, when, tag, tagc, extra, est, opt) {
+      opt = opt || {};
+      return { t: t, p: p, when: when, tag: tag, tagc: tagc, extra: extra, est: est,
+        bg: opt.sel ? '#ffffff' : '#f3f2ee', sh: opt.sel ? 'inset 0 0 0 1.5px #111' : 'none',
+        tc: '#111111', wc: opt.late ? '#d5430f' : '#77746e' };
+    };
+    return {
+      groups: [
+        { label: 'Overdue', k: '1', c: '#d5430f', rows: [row('Send invoice', 'hi', 'Yesterday', 'Career', 't-bl', '· moved 2 times', '15m', { late: 1 })] },
+        { label: 'Today', k: '3', c: '#a8a59e', rows: [
+          row('UI research', 'hi', '9:00 AM', 'Life System', 't-em', '· 1 of 3 subtasks · focus running', '1:17 / 3:00', { sel: 1 }),
+          row('Define data model', 'md', '4:00 PM', 'Life System', 't-em', '', '2h'),
+          row('Weekly review', '', '5:30 PM', '', '', 'Repeats weekly · also a habit', '30m')
+        ] },
+        { label: 'Tomorrow', k: '2', c: '#a8a59e', rows: [
+          row('Call bank', 'hi', 'Fri 6 Nov · 10:00 AM', '#finance', 't-am', '· from Quick Launcher', '15m'),
+          row('Book gym trial', '', 'Fri 6 Nov', 'Fitness routine', 't-gr', '', '10m')
+        ] },
+        { label: 'Later', k: '2', c: '#a8a59e', rows: [
+          row('Plan 12-week running schedule', 'md', 'Mon 9 Nov', 'Fitness routine', 't-gr', '', '1h'),
+          row('Write product brief', '', 'No date', '', '', 'Stand-alone', '1h')
+        ] }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

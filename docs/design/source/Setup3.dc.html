@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Setup 3 – Habits and first project</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ember.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0;background:#0f0f10}</style>
+</helmet>
+<div class="app solo" style="min-height: 1000px">
+  <div class="flex wrap g12 between" style="padding: 8px 10px 16px">
+    <div class="flex g8">
+      <div style="width: 26px; height: 26px; border-radius: 8px; background: #ff5a1f; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 11.5L6 8l2.5 2L12 6"></path><circle cx="13" cy="5" r="1.2" fill="#fff" stroke="none"></circle></svg></div>
+      <span style="font-size: 14px; font-weight: 600">Life System</span>
+    </div>
+    <div class="flex g10" aria-label="Step 3 of 3">
+      <span style="font-size: 12px; color: #9a9a9e">Step 3 of 3 · Habits and a project</span>
+      <span style="width: 48px; height: 4px; border-radius: 3px; background: #f5f5f4"></span>
+      <span style="width: 48px; height: 4px; border-radius: 3px; background: #f5f5f4"></span>
+      <span style="width: 48px; height: 4px; border-radius: 3px; background: #ff5a1f"></span>
+    </div>
+  </div>
+
+  <div class="row" style="padding-left: 8px">
+    <main class="panel" style="padding: 36px 40px">
+      <div>
+        <h1 class="h1">Pick a few daily habits and one project</h1>
+        <p class="lead" style="margin: 10px 0 0; color: #77746e; font-weight: 400; max-width: 680px">Start small. Three or four habits you can actually keep tell you more than ten you skip.</p>
+      </div>
+
+      <section>
+        <div class="sh"><h2 class="h2"><dc-import name="Icon" i="habit" hint-size="16px,16px"></dc-import>Habits</h2><span class="meta">4 selected</span></div>
+        <div class="grid">
+          <sc-for list="{{habits}}" as="h" hint-placeholder-count="8">
+            <sc-if value="{{h.on}}" hint-placeholder-val="{{false}}">
+              <button aria-pressed="true" class="tile" style="border: 0; text-align: left; background: #fff; box-shadow: inset 0 0 0 1.5px #111; display: flex; gap: 10px; align-items: flex-start">
+                <span class="ring done" aria-hidden="true"></span>
+                <span class="col g4 grow"><span class="item" style="font-weight: 600">{{h.n}}</span><span class="meta">{{h.d}}</span><span class="tag {{h.tc}}" style="align-self: flex-start; margin-top: 4px">{{h.a}}</span></span>
+              </button>
+            </sc-if>
+            <sc-if value="{{h.off}}" hint-placeholder-val="{{true}}">
+              <button aria-pressed="false" class="tile" style="border: 0; text-align: left; display: flex; gap: 10px; align-items: flex-start">
+                <span class="ring" aria-hidden="true"></span>
+                <span class="col g4 grow"><span class="item" style="font-weight: 600">{{h.n}}</span><span class="meta">{{h.d}}</span><span class="tag {{h.tc}}" style="align-self: flex-start; margin-top: 4px">{{h.a}}</span></span>
+              </button>
+            </sc-if>
+          </sc-for>
+        </div>
+        <div class="flex g8 meta" style="margin-top: 10px"><dc-import name="Icon" i="edit" s="14" hint-size="14px,14px"></dc-import>“Master skill” is a placeholder: rename it to the skill you practise.</div>
+      </section>
+
+      <section>
+        <div class="sh"><h2 class="h2"><dc-import name="Icon" i="folder" hint-size="16px,16px"></dc-import>First project</h2><span class="meta">Optional</span></div>
+        <div class="tile p" style="background: #fff; box-shadow: inset 0 0 0 1.5px #e9e7e1; display: flex; flex-direction: column; gap: 14px">
+          <div class="flex wrap g12">
+            <div class="field" style="flex: 2 1 240px"><label class="lbl" for="pn">Project name</label><input id="pn" class="input" value="Build Life System app"></div>
+            <div class="field" style="flex: 1 1 200px"><span class="lbl">Serves goal</span><div class="input" style="justify-content: space-between">Profitable software business<dc-import name="Icon" i="down" s="14" hint-size="14px,14px"></dc-import></div></div>
+          </div>
+          <div class="col g10">
+            <span class="lbl" style="margin: 0">First tasks</span>
+            <div class="trow"><span class="ring hi" aria-hidden="true"></span><span class="item grow">UI research</span><span class="meta">Est. 3h · High</span></div>
+            <div class="trow"><span class="ring md" aria-hidden="true"></span><span class="item grow">Define data model</span><span class="meta">Est. 2h · Medium</span></div>
+            <div class="trow"><span class="ring" aria-hidden="true"></span><span class="item grow">Write product brief</span><span class="meta">Est. 1h</span></div>
+            <div class="input" style="height: 34px"><dc-import name="Icon" i="plus" s="14" hint-size="14px,14px"></dc-import><span class="soft">Add a task, e.g. “set up repo tomorrow high”</span></div>
+          </div>
+          <div class="meta">The project’s percent updates as these get done: 0 of 3 now.</div>
+        </div>
+      </section>
+    </main>
+
+    <aside class="rail" style="padding: 28px 24px">
+      <h2 class="h2">What happens next</h2>
+      <div class="col g14">
+        <div class="trow"><span class="ring done" aria-hidden="true"></span><div><div class="item">4 life areas</div><div class="meta">Health, Career, Financial Freedom, Family</div></div></div>
+        <div class="trow"><span class="ring done" aria-hidden="true"></span><div><div class="item">3 goals</div><div class="meta">Each linked to an area and a date</div></div></div>
+        <div class="trow"><span class="ring" aria-hidden="true"></span><div><div class="item">4 habits and 1 project</div><div class="meta">This step</div></div></div>
+      </div>
+      <div class="dark" style="padding: 18px 20px">
+        <div class="item" style="color: #fff">Your Life line starts today</div>
+        <p class="meta" style="margin: 6px 0 0; line-height: 18px">The score uses your own logs. Insights appear once there is enough data, usually after about 14 days. Until then you will see what is being collected.</p>
+      </div>
+      <div class="flex g8" style="margin-top: auto">
+        <a href="Setup2.dc.html" class="btn l ghost">Back</a>
+        <a href="NewUser.dc.html" class="btn l grow" style="font-size: 14px">Finish and open Today</a>
+      </div>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var H = [
+      ['Wake by 7:00', 'Daily · checked from Sleep log', 'Health', 't-gr', 1],
+      ['Read book', 'Daily · 20 min', 'Learning', '', 1],
+      ['Meditate', 'Daily · 10 min', 'Health', 't-gr', 1],
+      ['Master skill', 'Daily · 45 min', 'Career', 't-bl', 1],
+      ['Exercise', '3 times a week', 'Health', 't-gr', 0],
+      ['Journal', 'Daily · evening', 'Mind', '', 0],
+      ['No phone after 10 PM', 'Daily', 'Health', 't-gr', 0],
+      ['Call family', 'Weekly · Friday', 'Family', 't-pk', 0]
+    ];
+    return { habits: H.map(function (x) { return { n: x[0], d: x[1], a: x[2], tc: x[3], on: !!x[4], off: !x[4] }; }) };
+  }
+}
+</script>
+</body>
+</html>

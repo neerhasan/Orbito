@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Goal – Profitable software business</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ember.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0;background:#0f0f10}</style>
+</helmet>
+<div class="app" style="min-height: 1300px">
+  <dc-import name="Titlebar" hint-size="100%,58px"></dc-import>
+  <div class="row">
+    <dc-import name="Sidebar" active="goals" hint-size="232px,1000px"></dc-import>
+    <main class="panel">
+      <div class="hd">
+        <div>
+          <a href="Goals.dc.html" class="flex g6 meta" style="margin-bottom: 8px"><dc-import name="Icon" i="left" s="14" hint-size="14px,14px"></dc-import>Goals</a>
+          <h1 class="h1">Profitable software business</h1>
+          <div class="flex wrap g6" style="margin-top: 8px"><span class="tag t-am">Financial Freedom</span><span class="tag t-bl">Career</span><span class="tag">Long term</span><span class="tag">Started Nov 2025 · due Dec 2027</span></div>
+        </div>
+        <div class="flex g8" style="margin-top: 26px"><button class="btn soft"><dc-import name="Icon" i="edit" s="14" hint-size="14px,14px"></dc-import>Edit</button><button class="btn soft">Pause</button></div>
+      </div>
+
+      <section class="dark">
+        <div class="flex between wrap g12">
+          <div>
+            <div class="meta">Progress</div>
+            <div class="flex g10" style="align-items: baseline; margin-top: 2px"><span class="score" style="color: #fff">40%</span><span class="chip" style="background: #3a2a05; color: #f2c14e">Behind · 8 points</span></div>
+            <div class="meta" style="margin-top: 2px">2 of 5 milestones · 48% of the time used</div>
+          </div>
+          <div class="seg dk" role="group" aria-label="Range"><button aria-pressed="false">6 months</button><button aria-pressed="true">All</button></div>
+        </div>
+        <svg viewBox="0 0 760 180" style="display: block; width: 100%; height: auto; margin-top: 14px; font-family: Inter, sans-serif" role="img" aria-label="Progress against the even pace line. Now 40 percent; even pace would be 48 percent.">
+          <path d="M0 160H760M0 100H760M0 40H760" stroke="#2a2a2c"></path>
+          <path d="M0 160 L700 16" stroke="#6a6a6e" stroke-width="1.4" stroke-dasharray="4 5"></path>
+          <path d="M0 160 L60 160 L120 145 L180 145 L240 131 L300 116 L336 102" fill="none" stroke="#ff5a1f" stroke-width="2" stroke-linejoin="round"></path>
+          <circle cx="336" cy="102" r="5" fill="#ff5a1f" stroke="#fff" stroke-width="2"></circle>
+          <circle cx="700" cy="16" r="6" fill="#141415" stroke="#fff" stroke-width="2"></circle>
+          <rect x="250" y="62" width="172" height="24" rx="8" fill="#262628"></rect><text x="336" y="78.5" fill="#f5f5f4" font-size="12" text-anchor="middle">Now 40% · even pace 48%</text>
+          <text x="0" y="176" font-size="11" fill="#9a9a9e">Nov 2025</text><text x="336" y="176" font-size="11" fill="#ff5a1f" font-weight="600" text-anchor="middle">Now</text><text x="700" y="176" font-size="11" fill="#9a9a9e" text-anchor="middle">Dec 2027</text>
+          <text x="760" y="36" font-size="11" fill="#9a9a9e" text-anchor="end">100%</text><text x="760" y="156" font-size="11" fill="#9a9a9e" text-anchor="end">0%</text>
+        </svg>
+        <div class="flex wrap g24" style="margin-top: 16px">
+          <div style="flex: 1 1 260px"><div class="meta">Where you are</div><div class="item" style="margin-top: 4px; line-height: 19px">Product designed, no users yet, no revenue.</div></div>
+          <div style="flex: 1 1 260px"><div class="meta">Where you want to be</div><div class="item" style="margin-top: 4px; line-height: 19px">3 months in a row where revenue covers all costs.</div></div>
+        </div>
+      </section>
+
+      <section>
+        <div class="sh"><h2 class="h2"><dc-import name="Icon" i="flag" hint-size="16px,16px"></dc-import>Milestones</h2><button class="add"><dc-import name="Icon" i="plus" s="14" hint-size="14px,14px"></dc-import>Add milestone</button></div>
+        <div class="col g6">
+          <div class="tile flex g12"><span class="ring done" aria-hidden="true"></span><span class="item grow soft">Pick the product idea</span><span class="meta">Done 14 Jan 2026</span></div>
+          <div class="tile flex g12"><span class="ring done" aria-hidden="true"></span><span class="item grow soft">Validate with 10 interviews</span><span class="meta">Done 2 Apr 2026</span></div>
+          <div class="tile now flex g12"><span class="ring hi" aria-hidden="true"></span><span class="item grow">Usable first version</span><span class="meta">Due 31 Dec 2026 · in progress</span></div>
+          <div class="tile flex g12"><span class="ring md" aria-hidden="true"></span><span class="item grow">First paying user</span><span class="meta">Due 31 Jan 2027</span></div>
+          <div class="tile flex g12"><span class="ring" aria-hidden="true"></span><span class="item grow">3 months in profit</span><span class="meta">Due Dec 2027</span></div>
+        </div>
+      </section>
+
+      <section>
+        <div class="sh"><h2 class="h2"><dc-import name="Icon" i="analytics" hint-size="16px,16px"></dc-import>Is daily work moving it?</h2><span class="meta">Focus time on linked projects, per week</span></div>
+        <div class="tile">
+          <div style="display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 10px; align-items: end; height: 120px">
+            <sc-for list="{{weeks}}" as="w" hint-placeholder-count="8">
+              <div class="col g6" style="align-items: center; justify-content: flex-end; height: 100%"><span class="cap ink num">{{w.v}}</span><span style="width: 100%; max-width: 34px; height: {{w.h}}px; border-radius: 4px; background: {{w.c}}"></span></div>
+            </sc-for>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 10px; margin-top: 8px; text-align: center"><sc-for list="{{weeks}}" as="w" hint-placeholder-count="8"><span class="cap">{{w.l}}</span></sc-for></div>
+          <div class="flex wrap g6" style="margin-top: 12px"><span class="tag t-gr">Fact</span><span class="meta">Weekly focus doubled since mid October. At the last 4 weeks’ pace the current milestone needs about 6 more weeks.</span><span class="tag">Estimate</span></div>
+        </div>
+      </section>
+    </main>
+
+    <aside class="rail">
+      <section>
+        <div class="sh"><h2 class="h2"><dc-import name="Icon" i="folder" hint-size="16px,16px"></dc-import>Projects serving it</h2></div>
+        <a href="ProjectDetail.dc.html" class="tile flex g12 top">
+          <span class="itile" style="background: #ffe9e0; color: #d5430f"><dc-import name="Icon" i="code" w="2" hint-size="16px,16px"></dc-import></span>
+          <div class="grow"><div class="flex between"><span class="item">Build Life System app</span><span class="meta">50%</span></div><div class="bar" style="margin: 8px 0 6px"><i style="width: 50%"></i></div><div class="meta">2 of 4 tasks · 18h 30m</div></div>
+        </a>
+        <button class="add" style="margin-top: 10px"><dc-import name="Icon" i="plus" s="14" hint-size="14px,14px"></dc-import>Link a project</button>
+      </section>
+      <section>
+        <div class="sh"><h2 class="h2"><dc-import name="Icon" i="habit" hint-size="16px,16px"></dc-import>Habits that support it</h2></div>
+        <div class="tile flex between"><span class="item">Master skill</span><span class="meta">40% · 30 days</span></div>
+        <p class="meta" style="margin: 8px 0 0">Linked by you. No measured effect yet.</p>
+      </section>
+      <section>
+        <div class="sh"><h2 class="h2"><dc-import name="Icon" i="note" hint-size="16px,16px"></dc-import>Notes</h2></div>
+        <div class="col g8">
+          <a href="NoteEditor.dc.html" class="tile flex g10"><span class="item grow">Life System plan</span><span class="meta">Edited today</span></a>
+          <a href="#" class="tile flex g10"><span class="item grow">Pricing ideas</span><span class="meta">12 Oct</span></a>
+        </div>
+      </section>
+      <section class="tile">
+        <div class="meta">Why this matters to you</div>
+        <p class="item" style="margin: 6px 0 0; line-height: 19px">“Work on my own terms and stop trading time for money.”</p>
+        <p class="cap ink" style="margin: 8px 0 0">Your words, from setup.</p>
+      </section>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1300}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var W = [['14 Sep', 3.5], ['21 Sep', 2], ['28 Sep', 4], ['5 Oct', 3], ['12 Oct', 5.5], ['19 Oct', 6], ['26 Oct', 7.5], ['This wk', 6.5]];
+    return { weeks: W.map(function (w, i) { var last = i === W.length - 1; var hh = Math.floor(w[1]), mm = Math.round((w[1] - hh) * 60); return { l: w[0], v: hh + 'h' + (mm ? ' ' + mm + 'm' : ''), h: Math.round(w[1] * 11), c: last ? '#ff5a1f' : '#111111' }; }) };
+  }
+}
+</script>
+</body>
+</html>

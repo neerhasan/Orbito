@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Settings</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ember.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0;background:#0f0f10}</style>
+</helmet>
+<div class="app" style="min-height: 1200px">
+  <dc-import name="Titlebar" hint-size="100%,58px"></dc-import>
+  <div class="row">
+    <dc-import name="Sidebar" active="settings" hint-size="232px,1000px"></dc-import>
+    <main class="panel">
+      <div class="hd"><div><h1 class="h1">Settings</h1><div class="date">Changes save as you make them</div></div></div>
+
+      <div class="flex wrap g24 top">
+        <nav aria-label="Settings sections" class="col g2" style="flex: 0 0 180px">
+          <a href="#account" class="flex g10" style="height: 32px; padding: 0 10px; border-radius: 8px; background: #f3f2ee; font-size: 13px"><dc-import name="Icon" i="user" hint-size="16px,16px"></dc-import>Account</a>
+          <a href="#calendars" class="flex g10" style="height: 32px; padding: 0 10px; border-radius: 8px; font-size: 13px; color: #77746e"><dc-import name="Icon" i="calendar" hint-size="16px,16px"></dc-import>Calendars</a>
+          <a href="#ai" class="flex g10" style="height: 32px; padding: 0 10px; border-radius: 8px; font-size: 13px; color: #77746e"><dc-import name="Icon" i="spark" hint-size="16px,16px"></dc-import>AI and privacy</a>
+          <a href="#data" class="flex g10" style="height: 32px; padding: 0 10px; border-radius: 8px; font-size: 13px; color: #77746e"><dc-import name="Icon" i="download" hint-size="16px,16px"></dc-import>Data and export</a>
+          <a href="#notify" class="flex g10" style="height: 32px; padding: 0 10px; border-radius: 8px; font-size: 13px; color: #77746e"><dc-import name="Icon" i="bell" hint-size="16px,16px"></dc-import>Notifications</a>
+        </nav>
+
+        <div class="col g24" style="flex: 1 1 520px; min-width: 0">
+          <section id="account">
+            <h2 class="h2" style="margin-bottom: 12px">Account</h2>
+            <div class="tile p col g14">
+              <div class="flex g14"><span style="width: 48px; height: 48px; border-radius: 9999px; background: #111; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 600">Z</span><div class="grow"><div class="item" style="font-weight: 600">Zihad</div><div class="meta" style="margin-top: 3px">zihad@example.com</div></div><button class="btn soft" style="background: #fff">Change photo</button></div>
+              <div class="flex wrap g12">
+                <label class="field" style="flex: 1 1 200px"><span class="lbl">First name</span><input class="input" style="background: #fff" value="Zihad"></label>
+                <div class="field" style="flex: 1 1 200px"><span class="lbl">Time zone</span><div class="input" style="background: #fff; justify-content: space-between">Asia/Dhaka (UTC+6)<dc-import name="Icon" i="down" s="14" hint-size="14px,14px"></dc-import></div></div>
+                <div class="field" style="flex: 1 1 200px"><span class="lbl">Week starts on</span><div class="seg" style="background: #fff"><button aria-pressed="true">Sunday</button><button aria-pressed="false">Monday</button></div></div>
+              </div>
+              <div class="flex g8"><button class="btn soft" style="background: #fff"><dc-import name="Icon" i="lock" s="14" hint-size="14px,14px"></dc-import>Change password</button><button class="btn ghost"><dc-import name="Icon" i="logout" s="14" hint-size="14px,14px"></dc-import>Log out</button></div>
+            </div>
+          </section>
+
+          <section id="calendars">
+            <div class="sh"><h2 class="h2">Calendars</h2><span class="meta">Events show on Today, Upcoming and Calendar</span></div>
+            <div class="col g8">
+              <div class="tile flex wrap g12"><span class="itile" style="background: #fff"><dc-import name="Icon" i="calendar" hint-size="16px,16px"></dc-import></span><div class="grow"><div class="item">Google Calendar</div><div class="meta" style="margin-top: 3px">Work, Family · two-way sync · synced 2 min ago</div></div><span class="tag t-gr">Connected</span><button class="btn soft" style="background: #fff">Manage</button></div>
+              <div class="tile flex wrap g12"><span class="itile" style="background: #fff"><dc-import name="Icon" i="calendar" hint-size="16px,16px"></dc-import></span><div class="grow"><div class="item">Microsoft Outlook</div><div class="meta" style="margin-top: 3px">Work and school accounts</div></div><button class="btn">Connect</button></div>
+              <div class="tile flex wrap g12"><span class="itile" style="background: #fff"><dc-import name="Icon" i="calendar" hint-size="16px,16px"></dc-import></span><div class="grow"><div class="item">Apple iCloud Calendar</div><div class="meta" style="margin-top: 3px">Needs an app-specific password</div></div><button class="btn">Connect</button></div>
+              <div class="tile flex wrap g12"><span class="itile" style="background: #fff"><dc-import name="Icon" i="link" hint-size="16px,16px"></dc-import></span><div class="grow"><div class="item">Any calendar by link</div><div class="meta" style="margin-top: 3px">Read-only subscription with an .ics address</div></div><button class="btn soft" style="background: #fff">Add link</button></div>
+            </div>
+            <p class="cap ink" style="margin: 10px 0 0">Proposed set for v1. Which ones to support is still open.</p>
+          </section>
+
+          <section id="ai">
+            <div class="sh"><h2 class="h2">AI and privacy</h2></div>
+            <div class="tile p col g14">
+              <sc-for list="{{toggles}}" as="t" hint-placeholder-count="4">
+                <div class="flex g14 top">
+                  <div class="grow"><div class="item">{{t.n}}</div><div class="meta" style="margin-top: 3px; line-height: 17px">{{t.d}}</div></div>
+                  <button role="switch" aria-checked="{{t.on}}" aria-label="{{t.n}}" style="width: 38px; height: 22px; border: 0; border-radius: 9999px; padding: 2px; background: {{t.bg}}; display: flex; justify-content: {{t.j}}; flex: none"><span style="width: 18px; height: 18px; border-radius: 9999px; background: #fff"></span></button>
+                </div>
+              </sc-for>
+              <div class="sep"></div>
+              <div class="flex wrap g12">
+                <div class="field" style="flex: 1 1 200px"><span class="lbl">Days of data before an insight</span><div class="seg" style="background: #fff"><button aria-pressed="false">7</button><button aria-pressed="true">14</button><button aria-pressed="false">30</button></div></div>
+                <div class="field" style="flex: 1 1 200px"><span class="lbl">Smallest group in a comparison</span><div class="seg" style="background: #fff"><button aria-pressed="false">5 days</button><button aria-pressed="true">7 days</button><button aria-pressed="false">10 days</button></div></div>
+              </div>
+            </div>
+          </section>
+
+          <section id="data">
+            <div class="sh"><h2 class="h2">Data and export</h2><span class="meta">Life Data: 4,812 records since 2 Aug</span></div>
+            <div class="tile p col g12">
+              <div class="flex wrap g12"><div class="grow"><div class="item">Export everything</div><div class="meta" style="margin-top: 3px">Tasks, habits, sleep, focus sessions, notes and insights</div></div><button class="btn soft" style="background: #fff"><dc-import name="Icon" i="download" s="14" hint-size="14px,14px"></dc-import>CSV</button><button class="btn soft" style="background: #fff"><dc-import name="Icon" i="download" s="14" hint-size="14px,14px"></dc-import>JSON</button></div>
+              <div class="flex wrap g12"><div class="grow"><div class="item">Import</div><div class="meta" style="margin-top: 3px">From another task app or a CSV of sleep records</div></div><button class="btn soft" style="background: #fff">Choose file</button></div>
+              <div class="sep"></div>
+              <div class="flex wrap g12"><div class="grow"><div class="item" style="color: #d5430f">Delete account and all data</div><div class="meta" style="margin-top: 3px">Permanent after 30 days. You can export first.</div></div><button class="btn soft" style="background: #fff; color: #d5430f">Delete…</button></div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1200}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var t = function (n, d, on) { return { n: n, d: d, on: on ? 'true' : 'false', bg: on ? '#111111' : '#c9c6be', j: on ? 'flex-end' : 'flex-start' }; };
+    return {
+      toggles: [
+        t('Life Intelligence', 'Look for patterns across your logs and show labelled insights.', true),
+        t('AI summary and rewrite in notes', 'Runs only when you press the button. Only that note is sent for processing.', true),
+        t('Suggest tasks from notes', 'You accept each suggestion before anything is created.', false),
+        t('Use my data to improve Life System', 'Off by default. Nothing personal is shared unless you turn this on.', false)
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

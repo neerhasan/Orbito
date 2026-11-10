@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mobile Today – option B</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ember.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0;background:#0f0f10}</style>
+</helmet>
+<div style="width: 390px; height: 1700px; position: relative; overflow: hidden; background: #0f0f10; color: #f5f5f4; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-weight: 500; border-radius: 40px">
+  <header style="padding: 52px 16px 12px">
+    <div class="flex between">
+      <div><div style="font-size: 30px; line-height: 36px; font-weight: 700; letter-spacing: -0.025em">Today</div><div style="font-size: 12px; color: #9a9a9e">Thursday, 5 November</div></div>
+      <button aria-label="Account" style="width: 40px; height: 40px; border: 0; border-radius: 9999px; background: #262628; color: #f5f5f4; font-size: 14px; font-weight: 600">Z</button>
+    </div>
+    <label style="margin-top: 14px; height: 44px; border-radius: 12px; background: #1e1e20; color: #9a9a9e; display: flex; align-items: center; gap: 10px; padding: 0 14px">
+      <dc-import name="Icon" i="plus" s="18" hint-size="18px,18px"></dc-import>
+      <span class="sr">Add or log</span>
+      <input type="text" placeholder="Add or log anything…" style="flex: 1; min-width: 0; border: 0; background: transparent; color: #f5f5f4; font-size: 14px; outline-offset: 6px">
+    </label>
+  </header>
+
+  <div style="padding: 4px 8px 120px; display: flex; flex-direction: column; gap: 8px">
+    <!-- Hero: Life line -->
+    <section style="background: #141415; border: 1px solid #262628; border-radius: 22px; padding: 18px">
+      <div class="flex between"><span class="meta" style="color: #9a9a9e">Life line</span><div class="seg dk"><button aria-pressed="false" style="padding: 4px 8px">W</button><button aria-pressed="true" style="padding: 4px 8px">M</button><button aria-pressed="false" style="padding: 4px 8px">Y</button></div></div>
+      <div class="flex g10" style="align-items: baseline"><span class="score" style="color: #fff">62</span><span style="font-size: 14px; color: #9a9a9e">/ 100</span><span class="chip t-dk">+4</span></div>
+      <svg viewBox="0 0 340 110" style="display: block; width: 100%; height: auto" role="img" aria-label="Life line in the Building stage, rising to 62. Desired 90 by Dec 2027.">
+        <rect x="0" y="48" width="340" height="40" fill="rgba(255,255,255,0.045)"></rect>
+        <path d="M0 22H340M0 48H340M0 88H340" stroke="#2a2a2c"></path>
+        <text x="338" y="70" font-size="10" fill="#fff" text-anchor="end" font-family="Inter">Building</text>
+        <path d="M0 80 L16 76 L32 82 L48 72 L64 76 L80 66 L96 70 L112 62 L128 64 L150 54" fill="none" stroke="#ff5a1f" stroke-width="2" stroke-linejoin="round"></path>
+        <path d="M150 54 L300 14" stroke="#8a8a8e" stroke-width="1.6" stroke-dasharray="0.5 5" stroke-linecap="round"></path>
+        <circle cx="150" cy="54" r="4.5" fill="#ff5a1f" stroke="#fff" stroke-width="2"></circle>
+        <circle cx="300" cy="14" r="5" fill="#141415" stroke="#fff" stroke-width="2"></circle>
+      </svg>
+      <div class="flex between" style="font-size: 12px; color: #9a9a9e; margin-top: 4px"><span>You are here</span><span>90 by Dec 2027</span></div>
+    </section>
+
+    <!-- Day strip -->
+    <section style="background: #fbfaf7; color: #111; border-radius: 22px; padding: 16px">
+      <div class="sh"><h2 class="h2"><dc-import name="Icon" i="calendar" hint-size="16px,16px"></dc-import>Your day</h2><span class="meta">9:32 AM</span></div>
+      <div style="overflow-x: auto; margin: 0 -16px; padding: 0 16px">
+        <div style="display: flex; gap: 8px; width: max-content">
+          <div class="tile" style="width: 120px; opacity: 0.6"><div class="meta">7:00</div><div class="item soft" style="margin-top: 6px">Breakfast</div><span class="ring done" style="margin-top: 10px" aria-hidden="true"></span></div>
+          <div class="tile now" style="width: 170px; box-shadow: inset 0 0 0 1.5px #ff5a1f"><div class="meta em">Now · 9:00 to 12:00</div><div class="item" style="margin-top: 6px; font-weight: 600">Deep work</div><div class="flex g8" style="margin-top: 10px"><span class="num" style="font-size: 13px; font-weight: 600; color: #d5430f">0:32</span><span class="bar grow" style="background: #ffd9ca"><i style="width: 18%; background: #ff5a1f"></i></span></div></div>
+          <div class="tile" style="width: 140px"><div class="meta">12:00</div><div class="item" style="margin-top: 6px">Client call</div><button class="btn" style="margin-top: 8px; height: 28px">Join</button></div>
+          <div class="tile" style="width: 130px"><div class="meta">2:00</div><div class="item" style="margin-top: 6px">Meditation</div><span class="tag t-gr" style="margin-top: 8px">Habit</span></div>
+          <div class="tile" style="width: 120px"><div class="meta">3:00</div><div class="item" style="margin-top: 6px">Nap</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Habits 2x2 -->
+    <section style="background: #fbfaf7; color: #111; border-radius: 22px; padding: 16px">
+      <div class="sh"><h2 class="h2"><dc-import name="Icon" i="habit" hint-size="16px,16px"></dc-import>Habits</h2><span class="meta">2 of 4</span></div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+        <button class="tile" style="border: 0; text-align: left; min-height: 72px"><span class="flex between"><span class="item soft">Wake by 7:00</span><span class="ring done" aria-hidden="true"></span></span><span class="meta" style="display: block; margin-top: 8px">6 of 7</span></button>
+        <button class="tile" style="border: 0; text-align: left; min-height: 72px"><span class="flex between"><span class="item soft">Read book</span><span class="ring done" aria-hidden="true"></span></span><span class="meta" style="display: block; margin-top: 8px">5 of 7</span></button>
+        <button class="tile" style="border: 0; text-align: left; min-height: 72px"><span class="flex between"><span class="item">Meditate</span><span class="ring" aria-hidden="true"></span></span><span class="meta" style="display: block; margin-top: 8px">3 of 7 · 2 PM</span></button>
+        <button class="tile" style="border: 0; text-align: left; min-height: 72px"><span class="flex between"><span class="item">Master skill</span><span class="ring" aria-hidden="true"></span></span><span class="meta" style="display: block; margin-top: 8px">2 of 7</span></button>
+      </div>
+    </section>
+
+    <!-- Tasks -->
+    <section style="background: #fbfaf7; color: #111; border-radius: 22px; padding: 16px">
+      <div class="sh"><h2 class="h2"><dc-import name="Icon" i="tasks" hint-size="16px,16px"></dc-import>Tasks</h2><span class="meta">3 today · 1 overdue</span></div>
+      <div class="col g12">
+        <div class="trow" style="min-height: 40px"><button class="ring hi" aria-label="Complete Send invoice" style="width: 24px; height: 24px"></button><div class="grow"><div class="item">Send invoice</div><div class="meta em" style="margin-top: 3px">Overdue · yesterday</div></div></div>
+        <div class="trow" style="min-height: 40px"><button class="ring md" aria-label="Complete Define data model" style="width: 24px; height: 24px"></button><div class="grow"><div class="item">Define data model</div><div class="meta" style="margin-top: 3px">4:00 PM · Life System</div></div></div>
+        <div class="trow" style="min-height: 40px"><button class="ring" aria-label="Complete Weekly review" style="width: 24px; height: 24px"></button><div class="grow"><div class="item">Weekly review</div><div class="meta" style="margin-top: 3px">5:30 PM</div></div></div>
+      </div>
+    </section>
+
+    <!-- Insight + sleep -->
+    <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 8px">
+      <section style="background: #fbfaf7; color: #111; border-radius: 22px; padding: 16px">
+        <div class="flex g6 meta"><dc-import name="Icon" i="insight" s="14" hint-size="14px,14px"></dc-import>New insight</div>
+        <p class="item" style="margin: 8px 0 0; line-height: 18px">Meditation: 71% on early days, 11% on late ones.</p>
+        <span class="tag t-vi" style="margin-top: 8px">Correlation</span>
+      </section>
+      <section style="background: #fbfaf7; color: #111; border-radius: 22px; padding: 16px">
+        <div class="flex g6 meta"><dc-import name="Icon" i="sleep" s="14" hint-size="14px,14px"></dc-import>Sleep</div>
+        <div class="stat" style="margin-top: 8px; font-size: 22px">7h 10m</div>
+        <div class="meta" style="margin-top: 4px">82% consistent</div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Tab bar, docked -->
+  <nav aria-label="Tabs" style="position: absolute; left: 0; right: 0; bottom: 0; height: 88px; background: #0f0f10; border-top: 1px solid #1e1e20; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: start; padding: 10px 6px 0">
+    <a href="#" aria-current="page" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: #f5f5f4; font-size: 10px"><span style="color: #ff5a1f; display: flex"><dc-import name="Icon" i="today" s="22" hint-size="22px,22px"></dc-import></span>Today</a>
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: #9a9a9e; font-size: 10px"><dc-import name="Icon" i="tasks" s="22" hint-size="22px,22px"></dc-import>Tasks</a>
+    <a href="Focus.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: #f5f5f4; font-size: 10px"><span style="width: 48px; height: 34px; border-radius: 12px; background: #ff5a1f; color: #fff; display: flex; align-items: center; justify-content: center"><dc-import name="Icon" i="focus" s="20" w="1.9" hint-size="20px,20px"></dc-import></span>32:14</a>
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: #9a9a9e; font-size: 10px"><dc-import name="Icon" i="habit" s="22" hint-size="22px,22px"></dc-import>Habits</a>
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: #9a9a9e; font-size: 10px"><dc-import name="Icon" i="insight" s="22" hint-size="22px,22px"></dc-import>Insights</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1700}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

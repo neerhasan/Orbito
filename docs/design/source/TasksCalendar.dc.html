@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tasks – calendar</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ember.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0;background:#0f0f10}</style>
+</helmet>
+<div class="app" style="min-height: 1200px">
+  <dc-import name="Titlebar" hint-size="100%,58px"></dc-import>
+  <div class="row">
+    <dc-import name="Sidebar" active="tasks" hint-size="232px,1000px"></dc-import>
+    <main class="panel">
+      <div class="hd">
+        <div><h1 class="h1">Tasks</h1><div class="date">Week of 1 to 7 November · tasks by scheduled time, events shown faint</div></div>
+        <div class="flex g8" style="margin-top: 6px">
+          <div class="seg" role="group" aria-label="View">
+            <a href="Tasks.dc.html" class="flex g6" style="border-radius: 6px; color: #77746e; font-size: 12px; padding: 6px 11px"><dc-import name="Icon" i="list" s="14" hint-size="14px,14px"></dc-import>List</a>
+            <a href="TasksBoard.dc.html" class="flex g6" style="border-radius: 6px; color: #77746e; font-size: 12px; padding: 6px 11px"><dc-import name="Icon" i="board" s="14" hint-size="14px,14px"></dc-import>Board</a>
+            <button aria-pressed="true"><dc-import name="Icon" i="calendar" s="14" hint-size="14px,14px"></dc-import>Calendar</button>
+          </div>
+          <button class="ib" aria-label="Previous week"><dc-import name="Icon" i="left" hint-size="16px,16px"></dc-import></button>
+          <button class="ib" aria-label="Next week"><dc-import name="Icon" i="right" hint-size="16px,16px"></dc-import></button>
+        </div>
+      </div>
+
+      <div style="overflow-x: auto">
+        <div style="min-width: 760px">
+          <!-- day headers -->
+          <div style="display: grid; grid-template-columns: 44px repeat(7, minmax(0, 1fr)); gap: 6px; margin-bottom: 8px">
+            <span></span>
+            <sc-for list="{{days}}" as="d" hint-placeholder-count="7">
+              <div class="flex g6" style="justify-content: center"><span class="cap">{{d.w}}</span><span style="width: 26px; height: 26px; border-radius: 9999px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: {{d.fw}}; background: {{d.bg}}; color: {{d.c}}">{{d.n}}</span></div>
+            </sc-for>
+          </div>
+          <!-- all-day -->
+          <div style="display: grid; grid-template-columns: 44px repeat(7, minmax(0, 1fr)); gap: 6px; margin-bottom: 8px; align-items: start">
+            <span class="cap" style="padding-top: 5px">All day</span>
+            <span></span><span></span><span></span>
+            <span class="tag t-em" style="display: block; padding: 5px 8px; overflow: hidden; text-overflow: ellipsis">Send invoice · overdue</span>
+            <span class="tag" style="display: block; padding: 5px 8px">Book gym trial</span>
+            <span></span><span></span>
+          </div>
+          <!-- grid -->
+          <div style="display: grid; grid-template-columns: 44px repeat(7, minmax(0, 1fr)); gap: 6px">
+            <div style="position: relative; height: 480px">
+              <sc-for list="{{hours}}" as="h" hint-placeholder-count="11"><span class="cap" style="position: absolute; left: 0; top: {{h.top}}px">{{h.l}}</span></sc-for>
+            </div>
+            <sc-for list="{{days}}" as="d" hint-placeholder-count="7">
+              <div style="position: relative; height: 480px; border-radius: 10px; background-color: {{d.col}}; background-image: repeating-linear-gradient(to bottom, #e9e7e1 0, #e9e7e1 1px, transparent 1px, transparent 48px)">
+                <sc-for list="{{d.items}}" as="b" hint-placeholder-count="1">
+                  <div style="position: absolute; left: 3px; right: 3px; top: {{b.top}}px; height: {{b.h}}px; border-radius: 8px; background: {{b.bg}}; color: {{b.c}}; padding: 5px 7px; overflow: hidden; display: flex; gap: 6px; align-items: flex-start; box-shadow: {{b.sh}}">
+                    <span class="ring {{b.p}}" style="width: 12px; height: 12px; margin-top: 1px; border-width: 1.4px" aria-hidden="true"></span>
+                    <span style="min-width: 0"><span style="display: block; font-size: 11px; line-height: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{b.t}}</span><span style="display: block; font-size: 10px; line-height: 12px; font-weight: 400; opacity: 0.8">{{b.m}}</span></span>
+                  </div>
+                </sc-for>
+                <sc-if value="{{d.today}}" hint-placeholder-val="{{false}}">
+                  <div style="position: absolute; left: -3px; right: 0; top: 73px; height: 2px; background: #ff5a1f"><span style="position: absolute; left: -3px; top: -3px; width: 8px; height: 8px; border-radius: 9999px; background: #ff5a1f"></span></div>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <aside class="rail" aria-label="Unscheduled tasks">
+      <div><h2 class="h2"><dc-import name="Icon" i="tasks" hint-size="16px,16px"></dc-import>Unscheduled</h2><p class="meta" style="margin: 6px 0 0">Drag onto the week to give a task a time.</p></div>
+      <div class="col g8">
+        <div class="tile flex g10"><dc-import name="Icon" i="drag" hint-size="16px,16px"></dc-import><span class="ring md" aria-hidden="true"></span><div class="grow"><div class="item">Plan 12-week running schedule</div><div class="meta" style="margin-top: 3px">Due Mon 9 Nov · est. 1h</div></div></div>
+        <div class="tile flex g10"><dc-import name="Icon" i="drag" hint-size="16px,16px"></dc-import><span class="ring" aria-hidden="true"></span><div class="grow"><div class="item">Write product brief</div><div class="meta" style="margin-top: 3px">No date · est. 1h</div></div></div>
+      </div>
+      <div class="tile">
+        <div class="h3">This week</div>
+        <div class="col g8" style="margin-top: 10px">
+          <div class="flex between meta"><span>Planned task time</span><span class="num" style="color: #111">9h 20m</span></div>
+          <div class="flex between meta"><span>Free focus time left</span><span class="num" style="color: #111">6h 40m</span></div>
+          <div class="flex between meta"><span>Done on the planned day</span><span class="num" style="color: #111">3 of 4</span></div>
+        </div>
+      </div>
+      <div class="col g8">
+        <span class="cap ink">Legend</span>
+        <span class="flex g8 meta"><span class="dot" style="background: #111"></span>Task with a time</span>
+        <span class="flex g8 meta"><span class="dot" style="background: #ff5a1f"></span>Running now</span>
+        <span class="flex g8 meta"><span class="dot" style="background: #c5d6f8"></span>Event, for context</span>
+      </div>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1200}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var H = 48, o = 8;
+    var b = function (t, m, from, to, kind, p) {
+      var k = {
+        task: ['#ffffff', '#111111', 'inset 0 0 0 1px #e9e7e1'],
+        done: ['#f3f2ee', '#a8a59e', 'none'],
+        now: ['#fff1eb', '#111111', 'inset 3px 0 0 #ff5a1f'],
+        event: ['#e4edfd', '#2b62d9', 'none']
+      }[kind];
+      return { t: t, m: m, top: Math.round((from - o) * H), h: Math.max(26, Math.round((to - from) * H) - 3), bg: k[0], c: k[1], sh: k[2], p: p || '' };
+    };
+    var days = [
+      ['Sun', 1, []],
+      ['Mon', 2, [b('Draft dashboard layout', '10:00 to 12:40', 10, 12.67, 'done', 'done')]],
+      ['Tue', 3, [b('UI research', '2:10 to 2:55', 14.17, 14.92, 'done', 'hi')]],
+      ['Wed', 4, [b('Set up repo and data stack', '9:10 to 11:45', 9.17, 11.75, 'done', 'done')]],
+      ['Thu', 5, [b('UI research', '9:00 to 12:00 · running', 9, 12, 'now', 'hi'), b('Client call', '12:00 to 12:45', 12, 12.75, 'event'), b('Define data model', 'Due 4:00 PM', 16, 16.5, 'task', 'md'), b('Weekly review', '5:30 PM', 17.5, 18, 'task')]],
+      ['Fri', 6, [b('Call bank', '10:00 AM', 10, 10.5, 'task', 'hi')]],
+      ['Sat', 7, []]
+    ].map(function (d) {
+      var today = d[1] === 5;
+      return { w: d[0], n: d[1], items: d[2], today: today, bg: today ? '#ff5a1f' : 'transparent', c: today ? '#ffffff' : '#111111', fw: today ? 600 : 500, col: today ? '#fbf6f2' : 'transparent' };
+    });
+    var hours = [];
+    for (var h = 8; h <= 18; h++) hours.push({ top: (h - o) * H - 6, l: (h > 12 ? h - 12 : h) + (h >= 12 ? ' PM' : ' AM') });
+    return { days: days, hours: hours };
+  }
+}
+</script>
+</body>
+</html>

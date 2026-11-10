@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Projects</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ember.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0;background:#0f0f10}</style>
+</helmet>
+<div class="app" style="min-height: 1200px">
+  <dc-import name="Titlebar" hint-size="100%,58px"></dc-import>
+  <div class="row">
+    <dc-import name="Sidebar" active="projects" hint-size="232px,1000px"></dc-import>
+    <main class="panel">
+      <div class="hd">
+        <div><h1 class="h1">Projects</h1><div class="date">2 active · 1 planned · 24h 40m this month</div></div>
+        <div class="flex g8" style="margin-top: 6px">
+          <div class="seg" role="group" aria-label="Status"><button aria-pressed="true">Active</button><button aria-pressed="false">Planned</button><button aria-pressed="false">Done</button><button aria-pressed="false">All</button></div>
+          <button class="btn"><dc-import name="Icon" i="plus" s="14" w="1.9" hint-size="14px,14px"></dc-import>New project</button>
+        </div>
+      </div>
+
+      <div class="col g10">
+        <sc-for list="{{projects}}" as="p" hint-placeholder-count="3">
+          <a href="{{p.href}}" class="tile p" style="display: flex; flex-wrap: wrap; gap: 18px; align-items: center; color: #111">
+            <span class="itile" style="width: 40px; height: 40px; border-radius: 10px; background: {{p.ibg}}; color: {{p.ifg}}"><dc-import name="Icon" i="{{p.icon}}" s="20" w="1.8" hint-size="20px,20px"></dc-import></span>
+            <div style="flex: 1 1 240px; min-width: 0">
+              <div class="flex g8"><span class="item" style="font-size: 15px; line-height: 19px; font-weight: 600">{{p.n}}</span><span class="tag {{p.sc}}">{{p.s}}</span></div>
+              <div class="flex wrap g6" style="margin-top: 6px"><span class="meta">Goal: {{p.goal}}</span><span class="tag {{p.ac}}">{{p.a}}</span></div>
+            </div>
+            <div style="flex: 1 1 200px; min-width: 0">
+              <div class="flex between"><span class="meta">{{p.done}} of {{p.total}} tasks · {{p.pend}} open</span><span class="item num">{{p.pct}}%</span></div>
+              <div class="bar" style="margin-top: 8px"><i style="width: {{p.pct}}%"></i></div>
+            </div>
+            <div style="width: 120px" class="col g4"><span class="meta">Time invested</span><span class="item num">{{p.time}}</span></div>
+            <div style="width: 150px" class="col g4"><span class="meta">Dates</span><span class="item">{{p.dates}}</span></div>
+          </a>
+        </sc-for>
+      </div>
+
+      <section>
+        <div class="sh"><h2 class="h2"><dc-import name="Icon" i="check" hint-size="16px,16px"></dc-import>Recently done</h2></div>
+        <div class="tile flex wrap g12"><span class="ring done" aria-hidden="true"></span><span class="item grow soft">Portfolio website</span><span class="meta">6 of 6 tasks · 21h 15m · est. 16h</span><span class="meta">Finished 9 Oct</span></div>
+      </section>
+    </main>
+
+    <aside class="rail">
+      <section>
+        <div class="sh"><h2 class="h2"><dc-import name="Icon" i="time" hint-size="16px,16px"></dc-import>Time this month</h2><span class="meta">24h 40m</span></div>
+        <div style="display: flex; height: 10px; border-radius: 3px; overflow: hidden; gap: 2px" role="img" aria-label="Build Life System app 18h 30m, Fitness routine 6h 10m">
+          <span style="flex: 1110; background: #111"></span><span style="flex: 370; background: #c9c6be"></span>
+        </div>
+        <div class="col g8" style="margin-top: 12px">
+          <div class="flex between meta"><span class="flex g6"><i class="dot" style="background: #111"></i>Build Life System app</span><span class="num" style="color: #111">18h 30m</span></div>
+          <div class="flex between meta"><span class="flex g6"><i class="dot" style="background: #c9c6be"></i>Fitness routine</span><span class="num" style="color: #111">6h 10m</span></div>
+        </div>
+      </section>
+      <section class="tile">
+        <div class="item">Estimates vs actual</div>
+        <p class="meta" style="margin: 6px 0 0; line-height: 18px">Across 14 finished tasks, actual time was 22% over your estimate. Design tasks ran longest.</p>
+        <div class="flex wrap g6" style="margin-top: 8px"><span class="tag t-gr">Fact</span></div>
+      </section>
+      <section class="tile">
+        <div class="item">Planned, not started</div>
+        <p class="meta" style="margin: 6px 0 0; line-height: 18px">Client onboarding kit has no tasks scheduled. Its goal is due in 8 weeks.</p>
+        <button class="add" style="margin-top: 10px"><dc-import name="Icon" i="calendar" s="14" hint-size="14px,14px"></dc-import>Schedule first task</button>
+      </section>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1200}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      projects: [
+        { n: 'Build Life System app', s: 'Active', sc: 't-gr', goal: 'Profitable software business', a: 'Financial Freedom', ac: 't-am', icon: 'code', ibg: '#ffe9e0', ifg: '#d5430f', done: 2, total: 4, pend: 2, pct: 50, time: '18h 30m', dates: '1 Oct to 31 Dec', href: 'ProjectDetail.dc.html' },
+        { n: 'Fitness routine', s: 'Active', sc: 't-gr', goal: 'Run a half marathon', a: 'Health', ac: 't-gr', icon: 'activity', ibg: '#e3f5e9', ifg: '#23804a', done: 1, total: 4, pend: 3, pct: 25, time: '6h 10m', dates: '15 Oct to 30 Jun', href: '#' },
+        { n: 'Client onboarding kit', s: 'Planned', sc: '', goal: 'Lead my first client project', a: 'Career', ac: 't-bl', icon: 'briefcase', ibg: '#e4edfd', ifg: '#2b62d9', done: 0, total: 3, pend: 3, pct: 0, time: '0m', dates: 'Starts 9 Nov', href: '#' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

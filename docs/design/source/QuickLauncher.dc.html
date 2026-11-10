@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Quick Launcher</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ember.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0;background:#0f0f10}</style>
+</helmet>
+<div class="app" style="min-height: 1000px; position: relative">
+  <dc-import name="Titlebar" hint-size="100%,58px"></dc-import>
+  <div class="row">
+    <dc-import name="Sidebar" active="today" hint-size="232px,940px"></dc-import>
+    <main class="panel" style="min-height: 930px">
+      <div><h1 class="h1">Today</h1><div class="date">Thursday, 5 November 2026</div></div>
+      <div class="tile" style="height: 46px"></div>
+      <div class="dark" style="height: 300px"></div>
+      <div class="grid s"><div class="tile" style="height: 92px"></div><div class="tile" style="height: 92px"></div><div class="tile" style="height: 92px"></div><div class="tile" style="height: 92px"></div></div>
+    </main>
+    <aside class="rail" style="min-height: 930px"><div class="tile" style="height: 260px"></div><div class="tile" style="height: 200px"></div></aside>
+  </div>
+
+  <!-- Scrim + launcher -->
+  <div style="position: absolute; inset: 0; background: rgba(15,15,16,0.62); display: flex; justify-content: center; align-items: flex-start; padding: 96px 16px 16px">
+    <div role="dialog" aria-label="Quick Launcher" style="width: 100%; max-width: 680px; background: #fbfaf7; color: #111; border-radius: 18px; overflow: hidden">
+      <label style="display: flex; align-items: center; gap: 10px; padding: 18px 20px; color: #77746e">
+        <dc-import name="Icon" i="search" s="18" hint-size="18px,18px"></dc-import>
+        <span class="sr">Search, add or log anything</span>
+        <input type="text" value="task call bank tomorrow 10:00 #finance high" style="flex: 1; min-width: 0; border: 0; background: transparent; font-size: 16px; line-height: 20px; font-weight: 500; color: #111; outline-offset: 6px">
+        <kbd class="kbd">Esc</kbd>
+      </label>
+      <div class="sep"></div>
+
+      <div style="padding: 16px 20px 18px">
+        <div class="cap ink" style="margin-bottom: 8px">Understood as</div>
+        <div class="flex wrap g6">
+          <span class="chip" style="background: #111; color: #fff">Task</span>
+          <span class="chip">Title · Call bank</span>
+          <span class="chip t-bl">Tomorrow · Fri 6 Nov</span>
+          <span class="chip t-bl">10:00 AM</span>
+          <span class="chip t-am">#finance</span>
+          <span class="chip t-em">High priority</span>
+        </div>
+
+        <div class="tile w" style="margin-top: 14px; padding: 14px 16px">
+          <div class="cap" style="margin-bottom: 10px">Preview</div>
+          <div class="trow">
+            <span class="ring hi" aria-hidden="true"></span>
+            <div class="grow">
+              <div class="item">Call bank</div>
+              <div class="flex wrap g6" style="margin-top: 6px">
+                <span class="meta">Fri 6 Nov · 10:00 AM</span>
+                <span class="tag t-am">#finance</span>
+                <span class="tag t-am">Financial Freedom</span>
+                <span class="meta">· Reminder 9:45 AM</span>
+              </div>
+            </div>
+            <button class="btn">Create <kbd class="kbd" style="background: #262628; color: #c9c6be">Enter</kbd></button>
+          </div>
+        </div>
+        <div class="flex g8" style="margin-top: 10px">
+          <dc-import name="Icon" i="link" s="14" hint-size="14px,14px"></dc-import>
+          <span class="meta">Similar inbox item: “Call bank about the card”. <a href="#" style="color: #111; text-decoration: underline">Turn it into this task instead</a></span>
+        </div>
+      </div>
+      <div class="sep"></div>
+
+      <div style="padding: 14px 12px 8px">
+        <div class="cap ink" style="padding: 0 8px; margin-bottom: 6px">Matches</div>
+        <a href="#" class="flex g10" style="padding: 9px 8px; border-radius: 10px; background: #f3f2ee">
+          <span class="itile" style="background: #edebe5; color: #77746e"><dc-import name="Icon" i="inbox" hint-size="16px,16px"></dc-import></span>
+          <span class="grow item">Call bank about the card</span><span class="meta">Inbox</span>
+        </a>
+        <a href="#" class="flex g10" style="padding: 9px 8px; border-radius: 10px">
+          <span class="itile" style="background: #fbf0d5; color: #9a6a00"><dc-import name="Icon" i="coin" hint-size="16px,16px"></dc-import></span>
+          <span class="grow item">Financial Freedom</span><span class="meta">Life area · Now 40</span>
+        </a>
+      </div>
+      <div class="sep"></div>
+
+      <div style="padding: 14px 20px 16px">
+        <div class="cap ink" style="margin-bottom: 10px">Log in one line</div>
+        <div class="col g8">
+          <div class="flex g10"><code class="kbd" style="font-size: 12px; min-width: 210px">meditated</code><dc-import name="Icon" i="right" s="14" hint-size="14px,14px"></dc-import><span class="meta">Marks <b style="color: #111; font-weight: 500">Meditate</b> done today · also completes the 2:00 PM block</span></div>
+          <div class="flex g10"><code class="kbd" style="font-size: 12px; min-width: 210px">slept 11 to 6:30</code><dc-import name="Icon" i="right" s="14" hint-size="14px,14px"></dc-import><span class="meta">Sleep log · 7h 30m · 11:00 PM to 6:30 AM</span></div>
+          <div class="flex g10"><code class="kbd" style="font-size: 12px; min-width: 210px">distracted 20 min by phone</code><dc-import name="Icon" i="right" s="14" hint-size="14px,14px"></dc-import><span class="meta">Distraction · 20m · Phone · added to Time today</span></div>
+        </div>
+      </div>
+
+      <div class="flex wrap g16" style="background: #f3f2ee; padding: 10px 20px">
+        <span class="flex g6 meta"><kbd class="kbd">↑</kbd><kbd class="kbd">↓</kbd> Move</span>
+        <span class="flex g6 meta"><kbd class="kbd">Enter</kbd> Create</span>
+        <span class="flex g6 meta"><kbd class="kbd">Ctrl Enter</kbd> Create and open</span>
+        <span class="flex g6 meta"><kbd class="kbd">Tab</kbd> Edit a chip</span>
+        <span class="flex g6 meta" style="margin-left: auto">Starts with: task, event, note, habit, log</span>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Setup 1 – Life areas</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ember.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0;background:#0f0f10}</style>
+</helmet>
+<div class="app solo" style="min-height: 1000px">
+  <div class="flex wrap g12 between" style="padding: 8px 10px 16px">
+    <div class="flex g8">
+      <div style="width: 26px; height: 26px; border-radius: 8px; background: #ff5a1f; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 11.5L6 8l2.5 2L12 6"></path><circle cx="13" cy="5" r="1.2" fill="#fff" stroke="none"></circle></svg></div>
+      <span style="font-size: 14px; font-weight: 600">Life System</span>
+    </div>
+    <div class="flex g10" aria-label="Step 1 of 3">
+      <span style="font-size: 12px; color: #9a9a9e">Step 1 of 3 · Life areas</span>
+      <span style="width: 48px; height: 4px; border-radius: 3px; background: #ff5a1f"></span>
+      <span style="width: 48px; height: 4px; border-radius: 3px; background: #262628"></span>
+      <span style="width: 48px; height: 4px; border-radius: 3px; background: #262628"></span>
+    </div>
+  </div>
+
+  <div class="row" style="padding-left: 8px">
+    <main class="panel" style="padding: 36px 40px">
+      <div>
+        <h1 class="h1">Which parts of your life do you want to measure?</h1>
+        <p class="lead" style="margin: 10px 0 0; color: #77746e; font-weight: 400; max-width: 680px">Pick the areas that matter now. These are suggestions: rename, delete or add your own at any time.</p>
+      </div>
+
+      <div class="grid s">
+        <sc-for list="{{areas}}" as="a" hint-placeholder-count="10">
+          <sc-if value="{{a.on}}" hint-placeholder-val="{{false}}">
+            <button aria-pressed="true" class="tile" style="border: 0; text-align: left; background: #fff; box-shadow: inset 0 0 0 1.5px #111; display: flex; flex-direction: column; gap: 10px; min-height: 108px">
+              <span class="flex between" style="width: 100%"><span class="itile" style="background: {{a.bg}}; color: {{a.fg}}"><dc-import name="Icon" i="{{a.icon}}" hint-size="16px,16px"></dc-import></span><span class="ring done" aria-hidden="true"></span></span>
+              <span class="h3">{{a.n}}</span><span class="meta">{{a.d}}</span>
+            </button>
+          </sc-if>
+          <sc-if value="{{a.off}}" hint-placeholder-val="{{true}}">
+            <button aria-pressed="false" class="tile" style="border: 0; text-align: left; display: flex; flex-direction: column; gap: 10px; min-height: 108px">
+              <span class="flex between" style="width: 100%"><span class="itile" style="background: #edebe5; color: #77746e"><dc-import name="Icon" i="{{a.icon}}" hint-size="16px,16px"></dc-import></span><span class="ring" aria-hidden="true"></span></span>
+              <span class="h3">{{a.n}}</span><span class="meta">{{a.d}}</span>
+            </button>
+          </sc-if>
+        </sc-for>
+        <button class="tile" style="border: 0; text-align: left; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 8px; min-height: 108px; background: transparent; box-shadow: inset 0 0 0 1.5px #e9e7e1; color: #77746e">
+          <dc-import name="Icon" i="plus" s="18" hint-size="18px,18px"></dc-import><span class="item">Add your own</span>
+        </button>
+      </div>
+    </main>
+
+    <aside class="rail" style="padding: 28px 24px">
+      <div>
+        <h2 class="h2">Your areas · 4</h2>
+        <p class="meta" style="margin: 6px 0 0">Rate where you are today and where you want to be. Rough is fine: the app refines “Now” from your logs.</p>
+      </div>
+      <div class="col g12">
+        <sc-for list="{{chosen}}" as="c" hint-placeholder-count="4">
+          <div class="tile">
+            <div class="flex between"><span class="flex g8 h3"><span class="dot" style="background: {{c.dot}}"></span>{{c.n}}</span><span class="meta">Weight {{c.w}}</span></div>
+            <div class="flex g10" style="margin-top: 12px">
+              <label class="field grow"><span class="cap ink" style="margin-bottom: 4px">Now</span><input class="input" style="height: 32px; background: #fff" value="{{c.now}}"></label>
+              <label class="field grow"><span class="cap ink" style="margin-bottom: 4px">Target</span><input class="input" style="height: 32px; background: #fff" value="{{c.t}}"></label>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <div class="tile" style="background: #fbf0d5; display: flex; gap: 10px">
+        <span style="color: #9a6a00; display: flex"><dc-import name="Icon" i="insight" hint-size="16px,16px"></dc-import></span>
+        <span class="meta" style="color: #5e4300">3 to 8 areas is easier to keep up with. This is a suggestion, not a limit.</span>
+      </div>
+      <div class="flex g8" style="margin-top: auto">
+        <button class="btn l ghost">Skip for now</button>
+        <a href="Setup2.dc.html" class="btn l grow" style="font-size: 14px">Continue</a>
+      </div>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var A = [
+      ['Health', 'Body, sleep, energy', 'heart', 1, '#e3f5e9', '#23804a'],
+      ['Mind', 'Focus, calm, mood', 'spark', 0],
+      ['Career', 'Work, skills, reputation', 'briefcase', 1, '#e4edfd', '#2b62d9'],
+      ['Financial Freedom', 'Income, savings, runway', 'coin', 1, '#fbf0d5', '#9a6a00'],
+      ['Family', 'Time and care at home', 'family', 1, '#f7e6fa', '#9b3aab'],
+      ['Relationships', 'Friends and partner', 'user', 0],
+      ['Learning', 'Books, courses, practice', 'book', 0],
+      ['Spirituality', 'Faith, meaning, values', 'sun', 0],
+      ['Fun', 'Play, hobbies, rest', 'today', 0],
+      ['Environment', 'Home, tools, space', 'area', 0]
+    ];
+    return {
+      areas: A.map(function (x) { return { n: x[0], d: x[1], icon: x[2], on: !!x[3], off: !x[3], bg: x[4] || '#edebe5', fg: x[5] || '#77746e' }; }),
+      chosen: [
+        { n: 'Health', dot: '#23a35a', now: '58', t: '80', w: 'High' },
+        { n: 'Career', dot: '#2b62d9', now: '71', t: '90', w: 'High' },
+        { n: 'Financial Freedom', dot: '#e0a400', now: '40', t: '85', w: 'High' },
+        { n: 'Family', dot: '#c65bd6', now: '66', t: '80', w: 'Medium' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

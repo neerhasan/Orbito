@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Habits</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ember.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0;background:#0f0f10}</style>
+</helmet>
+<div class="app" style="min-height: 1200px">
+  <dc-import name="Titlebar" hint-size="100%,58px"></dc-import>
+  <div class="row">
+    <dc-import name="Sidebar" active="habits" hint-size="232px,1000px"></dc-import>
+    <main class="panel">
+      <div class="hd">
+        <div><h1 class="h1">Habits</h1><div class="date">Thursday, 5 November · 2 of 4 done</div></div>
+        <div class="flex g8" style="margin-top: 6px">
+          <div class="seg" role="group" aria-label="Period"><button aria-pressed="true">Today</button><button aria-pressed="false">Week</button><button aria-pressed="false">Month</button></div>
+          <button class="btn"><dc-import name="Icon" i="plus" s="14" w="1.9" hint-size="14px,14px"></dc-import>New habit</button>
+        </div>
+      </div>
+
+      <div class="grid s">
+        <div class="tile"><div class="meta">Today</div><div class="stat" style="margin-top: 6px">2 of 4</div><div class="bar" style="margin-top: 10px"><i style="width: 50%"></i></div></div>
+        <div class="tile"><div class="meta">Last 7 days</div><div class="stat" style="margin-top: 6px">62%</div><div class="meta" style="margin-top: 6px">16 of 26 · 2 still open today</div></div>
+        <div class="tile"><div class="meta">Last 30 days</div><div class="stat" style="margin-top: 6px">63%</div><div class="meta" style="margin-top: 6px">76 of 120 · previous 30: 58%</div></div>
+        <div class="tile"><div class="meta">Most kept</div><div class="stat" style="margin-top: 6px; font-size: 20px">Wake by 7:00</div><div class="meta" style="margin-top: 6px">87% over 30 days</div></div>
+      </div>
+
+      <section>
+        <div class="sh"><h2 class="h2"><dc-import name="Icon" i="habit" hint-size="16px,16px"></dc-import>Today’s checklist</h2><span class="meta">Tap the ring when done · Skip keeps your streak fair</span></div>
+        <div class="col g8">
+          <sc-for list="{{habits}}" as="h" hint-placeholder-count="4">
+            <a href="{{h.href}}" class="tile" style="display: flex; flex-wrap: wrap; align-items: center; gap: 14px; padding: 14px 16px">
+              <span class="ring lg {{h.ring}}" aria-hidden="true"></span>
+              <div style="flex: 1 1 200px; min-width: 0">
+                <div class="item" style="font-weight: 600; color: {{h.tc}}">{{h.n}}</div>
+                <div class="flex wrap g6" style="margin-top: 6px"><span class="tag {{h.ac}}">{{h.a}}</span><span class="meta">{{h.link}}</span></div>
+              </div>
+              <div class="wk" aria-label="{{h.wl}}">
+                <sc-for list="{{h.week}}" as="d" hint-placeholder-count="7"><i class="{{d}}"></i></sc-for>
+              </div>
+              <div style="width: 120px; text-align: right"><div class="item num">{{h.pct}}</div><div class="meta">{{h.streak}}</div></div>
+              <div class="flex g6" style="width: 150px; justify-content: flex-end">
+                <sc-if value="{{h.open}}" hint-placeholder-val="{{false}}"><span class="btn soft" style="background: #fff">Skip</span><span class="btn soft" style="background: #fff">Missed</span></sc-if>
+                <sc-if value="{{h.closed}}" hint-placeholder-val="{{true}}"><span class="meta">{{h.state}}</span></sc-if>
+              </div>
+            </a>
+          </sc-for>
+        </div>
+      </section>
+
+      <section class="tile p" style="background: #fff; box-shadow: inset 0 0 0 1.5px #e9e7e1">
+        <div class="flex between wrap g8"><span class="h3">Yesterday: Master skill was marked missed</span><span class="meta">Optional · helps find patterns</span></div>
+        <p class="meta" style="margin: 6px 0 12px">What got in the way? Pick one or leave it.</p>
+        <div class="flex wrap g6">
+          <button class="chip" style="border: 0">No time</button>
+          <button class="chip" style="border: 0; background: #111; color: #fff">Too tired</button>
+          <button class="chip" style="border: 0">Forgot</button>
+          <button class="chip" style="border: 0">Plans changed</button>
+          <button class="chip" style="border: 0">Unwell</button>
+          <button class="chip" style="border: 0">Other…</button>
+          <button class="btn" style="margin-left: auto">Save</button>
+        </div>
+        <p class="cap ink" style="margin: 12px 0 0">One missed day changes your 30-day rate by about 3 points. Your streak picks up again with the next done day.</p>
+      </section>
+
+      <section>
+        <div class="sh"><h2 class="h2"><dc-import name="Icon" i="calendar" hint-size="16px,16px"></dc-import>Last 30 days</h2>
+          <div class="flex g12 meta"><span class="flex g6"><i class="dot" style="background: #111; width: 10px; height: 10px; border-radius: 3px"></i>Done</span><span class="flex g6"><i class="dot" style="background: #c9c6be; width: 10px; height: 10px; border-radius: 3px"></i>Skipped</span><span class="flex g6"><i class="dot" style="background: #e9e7e1; width: 10px; height: 10px; border-radius: 3px"></i>Missed</span></div>
+        </div>
+        <div class="tile" style="overflow-x: auto">
+          <div class="col g8" style="min-width: 640px">
+            <sc-for list="{{heat}}" as="r" hint-placeholder-count="4">
+              <div class="flex g10"><span class="meta" style="width: 110px; color: #111">{{r.n}}</span>
+                <div style="flex: 1; display: grid; grid-template-columns: repeat(30, minmax(0, 1fr)); gap: 3px">
+                  <sc-for list="{{r.cells}}" as="c" hint-placeholder-count="30"><span style="height: 16px; border-radius: 3px; background: {{c.bg}}; box-shadow: {{c.sh}}"></span></sc-for>
+                </div>
+                <span class="meta num" style="width: 40px; text-align: right">{{r.pct}}</span>
+              </div>
+            </sc-for>
+            <div class="flex g10"><span style="width: 110px"></span><div class="flex between cap grow"><span>7 Oct</span><span>21 Oct</span><span>Today</span></div><span style="width: 40px"></span></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <aside class="rail">
+      <section>
+        <div class="sh"><h2 class="h2"><dc-import name="Icon" i="insight" hint-size="16px,16px"></dc-import>Patterns</h2><span class="meta">30 days</span></div>
+        <div class="col g10">
+          <div class="tile"><p class="item" style="margin: 0; line-height: 18px">Meditate is done on 71% of early-wake days and 11% of late ones.</p><div class="flex wrap g6" style="margin-top: 8px"><span class="tag t-vi">Correlation</span><span class="tag">Cause not proven</span></div></div>
+          <div class="tile"><p class="item" style="margin: 0; line-height: 18px">Master skill is missed most on Mondays (3 of 4).</p><div class="flex wrap g6" style="margin-top: 8px"><span class="tag t-gr">Fact</span></div></div>
+        </div>
+      </section>
+      <section>
+        <div class="sh"><h2 class="h2"><dc-import name="Icon" i="refresh" hint-size="16px,16px"></dc-import>Repeating tasks</h2></div>
+        <p class="meta" style="margin: -4px 0 10px">Any recurring task can also count as a habit.</p>
+        <div class="tile flex g10"><span class="ring" aria-hidden="true"></span><div class="grow"><div class="item">Weekly review</div><div class="meta" style="margin-top: 3px">Thursdays · 5:30 PM</div></div><span class="tag t-gr">Counts as habit</span></div>
+        <div class="tile flex g10" style="margin-top: 8px"><span class="ring" aria-hidden="true"></span><div class="grow"><div class="item">Call family</div><div class="meta" style="margin-top: 3px">Reminder · daily 7:30 PM</div></div><button class="add">Repeat as habit</button></div>
+      </section>
+      <section>
+        <div class="sh"><h2 class="h2"><dc-import name="Icon" i="sleep" hint-size="16px,16px"></dc-import>Linked to sleep</h2></div>
+        <div class="tile"><div class="item">Wake by 7:00 fills itself in</div><div class="meta" style="margin-top: 4px">From your Sleep log: woke 6:40 AM today.</div></div>
+      </section>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1200}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var habits = [
+      { n: 'Wake by 7:00', ring: 'done', tc: '#a8a59e', a: 'Health', ac: 't-gr', link: 'From Sleep log · woke 6:40 AM', week: ['d','d','','d','d','d','d'], wl: 'Last 7 days: 6 done', pct: '86%', streak: '4-day streak', open: false, closed: true, state: 'Done 6:40 AM', href: '#' },
+      { n: 'Read book', ring: 'done', tc: '#a8a59e', a: 'Learning', ac: '', link: '20 min · linked to goal: none', week: ['d','','d','d','','d','d'], wl: 'Last 7 days: 5 done', pct: '73%', streak: '2-day streak', open: false, closed: true, state: 'Done 7:20 AM', href: '#' },
+      { n: 'Meditate', ring: '', tc: '#111111', a: 'Health', ac: 't-gr', link: 'Block 2:00 PM in Schedule', week: ['d','','','d','','d','t'], wl: 'Last 7 days: 3 done, today open', pct: '52%', streak: 'Best: 9 days', open: true, closed: false, state: '', href: 'HabitDetail.dc.html' },
+      { n: 'Master skill', ring: '', tc: '#111111', a: 'Career', ac: 't-bl', link: '45 min · placeholder name', week: ['','d','','','d','','t'], wl: 'Last 7 days: 2 done, today open', pct: '41%', streak: 'Best: 5 days', open: true, closed: false, state: '', href: '#' }
+    ];
+    // 30-day rows: the last 7 cells equal the week dots; earlier cells are filled to reach the stated total.
+    var mk = function (h, seed, total) {
+      var states = [], idx = [], i;
+      for (i = 0; i < 23; i++) { var v = Math.abs((Math.sin(i * 12.9898 + seed) * 43758.5453) % 1); idx.push([v, i]); states.push('m'); }
+      var weekDone = h.week.filter(function (x) { return x === 'd'; }).length;
+      idx.sort(function (a, b) { return a[0] - b[0]; });
+      idx.forEach(function (p, k) { states[p[1]] = k < total - weekDone ? 'd' : (k < total - weekDone + 2 ? 's' : 'm'); });
+      h.week.forEach(function (x) { states.push(x === 'd' ? 'd' : x === 't' ? 't' : 'm'); });
+      var cells = states.map(function (st) { return { bg: st === 'd' ? '#111111' : st === 's' ? '#c9c6be' : st === 't' ? 'transparent' : '#e9e7e1', sh: st === 't' ? 'inset 0 0 0 1.6px #ff5a1f' : 'none' }; });
+      var pct = Math.round(total / 30 * 100) + '%';
+      h.pct = pct;
+      return { n: h.n, cells: cells, pct: pct };
+    };
+    var heat = [mk(habits[0], 1, 26), mk(habits[1], 2, 22), mk(habits[2], 3, 16), mk(habits[3], 4, 12)];
+    return { habits: habits, heat: heat };
+  }
+}
+</script>
+</body>
+</html>

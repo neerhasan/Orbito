@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Inbox</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ember.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0;background:#0f0f10}</style>
+</helmet>
+<div class="app" style="min-height: 1000px">
+  <dc-import name="Titlebar" hint-size="100%,58px"></dc-import>
+  <div class="row">
+    <dc-import name="Sidebar" active="inbox" hint-size="232px,1000px"></dc-import>
+    <main class="panel">
+      <div class="hd">
+        <div><h1 class="h1">Inbox</h1><div class="date">3 to sort · oldest from Tuesday</div></div>
+        <button class="btn soft" style="margin-top: 6px">Sort all, one by one</button>
+      </div>
+
+      <label class="input" style="height: 46px; font-size: 14px">
+        <dc-import name="Icon" i="plus" hint-size="16px,16px"></dc-import>
+        <span class="sr">Capture</span>
+        <input type="text" placeholder="Capture anything. Sort it later." style="flex: 1; min-width: 0; border: 0; background: transparent; font-size: 14px; font-weight: 400; outline-offset: 6px">
+        <kbd class="kbd">Enter</kbd>
+      </label>
+
+      <div class="col g8">
+        <div class="tile" style="background: #fff; box-shadow: inset 0 0 0 1.5px #111; display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px">
+          <span class="ring" aria-hidden="true"></span>
+          <div class="grow">
+            <div class="item">Call bank about the card</div>
+            <div class="flex wrap g6" style="margin-top: 6px"><span class="meta">Captured Tue 3 Nov · from phone</span><span class="tag t-am">Looks like: task · #finance</span></div>
+          </div>
+          <span class="meta">2 days</span>
+        </div>
+        <div class="tile" style="display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px">
+          <span class="ring" aria-hidden="true"></span>
+          <div class="grow">
+            <div class="item">Idea: letter to future self</div>
+            <div class="flex wrap g6" style="margin-top: 6px"><span class="meta">Captured Wed 4 Nov · Quick Launcher</span><span class="tag t-vi">#idea</span><span class="tag">Looks like: note</span></div>
+          </div>
+          <span class="meta">1 day</span>
+        </div>
+        <div class="tile" style="display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px">
+          <span class="ring" aria-hidden="true"></span>
+          <div class="grow">
+            <div class="item">Book dentist appointment</div>
+            <div class="flex wrap g6" style="margin-top: 6px"><span class="meta">Captured today 7:52 AM · Quick Launcher</span><span class="tag t-gr">Health</span><span class="tag">Looks like: task</span></div>
+          </div>
+          <span class="meta">Today</span>
+        </div>
+      </div>
+
+      <div class="tile flex g10" style="background: transparent; box-shadow: inset 0 0 0 1.5px #e9e7e1">
+        <dc-import name="Icon" i="insight" hint-size="16px,16px"></dc-import>
+        <span class="meta">Items usually wait 1.6 days here. Anything older than 7 days gets a gentle nudge in your Weekly review.</span>
+      </div>
+    </main>
+
+    <aside class="rail" aria-label="Sort item">
+      <div class="flex between"><span class="cap ink">Sort · 1 of 3</span><div class="flex g4"><button class="ib" aria-label="Previous item"><dc-import name="Icon" i="up" hint-size="16px,16px"></dc-import></button><button class="ib" aria-label="Next item"><dc-import name="Icon" i="down" hint-size="16px,16px"></dc-import></button></div></div>
+      <h2 style="margin: 0; font-size: 20px; line-height: 26px; font-weight: 700; letter-spacing: -0.01em">Call bank about the card</h2>
+
+      <div class="col g8">
+        <span class="lbl" style="margin: 0">Turn it into</span>
+        <div class="seg" style="width: 100%">
+          <button aria-pressed="true" style="flex: 1; justify-content: center"><dc-import name="Icon" i="tasks" s="14" hint-size="14px,14px"></dc-import>Task <kbd class="kbd">T</kbd></button>
+          <button aria-pressed="false" style="flex: 1; justify-content: center"><dc-import name="Icon" i="calendar" s="14" hint-size="14px,14px"></dc-import>Event <kbd class="kbd">E</kbd></button>
+          <button aria-pressed="false" style="flex: 1; justify-content: center"><dc-import name="Icon" i="note" s="14" hint-size="14px,14px"></dc-import>Note <kbd class="kbd">N</kbd></button>
+        </div>
+      </div>
+
+      <div class="col g12">
+        <label class="field"><span class="lbl">Title</span><input class="input" value="Call bank about the card"></label>
+        <div class="flex g10">
+          <div class="field grow"><span class="lbl">Due</span><div class="input" style="justify-content: space-between">Tomorrow<dc-import name="Icon" i="calendar" s="14" hint-size="14px,14px"></dc-import></div></div>
+          <div class="field grow"><span class="lbl">Priority</span><div class="input" style="justify-content: space-between"><span class="flex g6"><span class="ring hi" style="width: 12px; height: 12px" aria-hidden="true"></span>High</span><dc-import name="Icon" i="down" s="14" hint-size="14px,14px"></dc-import></div></div>
+        </div>
+        <div class="field"><span class="lbl">Project · optional</span><div class="input" style="justify-content: space-between"><span class="soft">None · stand-alone task</span><dc-import name="Icon" i="down" s="14" hint-size="14px,14px"></dc-import></div></div>
+        <div class="field"><span class="lbl">Tags</span><div class="flex g6"><span class="tag t-am">#finance</span><button class="add" style="padding: 3px 7px">Add</button></div></div>
+      </div>
+
+      <div class="tile flex g8"><dc-import name="Icon" i="link" s="14" hint-size="14px,14px"></dc-import><span class="meta">A task “Call bank” already exists for tomorrow. <a href="#" style="color: #111; text-decoration: underline">Merge into it</a></span></div>
+
+      <div class="flex g8">
+        <button class="btn l grow">Create task</button>
+        <button class="btn l soft" aria-label="Delete item">Delete</button>
+      </div>
+      <p class="cap ink" style="margin: 0">Sorting removes it from the Inbox. The original capture stays in Life Data.</p>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

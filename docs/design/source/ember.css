@@ -1,0 +1,113 @@
+/* Ember UI — shared styles for Life System screens. Values from the Life System design system tokens. */
+*{box-sizing:border-box}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer;transition:background-color .15s,color .15s,border-color .15s}
+a{color:inherit;text-decoration:none;transition:background-color .15s,color .15s}
+input::placeholder,textarea::placeholder{color:#77746e}
+:focus-visible{outline:2px solid #ff5a1f;outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion: reduce){*{transition:none !important}}
+
+/* Frame */
+.app{width:100%;background:#0f0f10;border-radius:20px;overflow:hidden;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;font-weight:500;color:#f5f5f4;padding:0 8px 8px 0;-webkit-font-smoothing:antialiased}
+.app.solo{padding:8px}
+.row{display:flex;flex-wrap:wrap;align-items:flex-start;gap:8px}
+.panel{flex:999 1 560px;min-width:0;background:#fbfaf7;color:#111;border-radius:18px;padding:26px 28px 28px;display:flex;flex-direction:column;gap:26px}
+.rail{flex:1 1 320px;min-width:0;background:#fbfaf7;color:#111;border-radius:18px;padding:22px 20px 24px;display:flex;flex-direction:column;gap:22px}
+.rail.wide{flex-basis:400px}
+
+/* Type */
+.h1{margin:0;font-size:38px;line-height:46px;font-weight:700;letter-spacing:-.025em}
+.h1s{margin:0;font-size:28px;line-height:34px;font-weight:700;letter-spacing:-.02em}
+.date{font-size:13px;line-height:16px;font-weight:400;color:#a8a59e;margin-top:2px}
+.h2{margin:0;display:flex;align-items:center;gap:8px;font-size:15px;line-height:18px;font-weight:600}
+.h3{margin:0;font-size:13px;line-height:16px;font-weight:600}
+.lead{font-size:14px;line-height:20px}
+.item{font-size:13px;line-height:16px}
+.body{font-size:13px;line-height:19px;font-weight:400}
+.meta{font-size:12px;line-height:15px;font-weight:400;color:#77746e}
+.cap{font-size:11px;line-height:13px;color:#a8a59e}
+.cap.ink{color:#77746e}
+.soft{color:#a8a59e}
+.em{color:#d5430f}
+.score{font-size:52px;line-height:63px;font-weight:700;letter-spacing:-.03em}
+.stat{font-size:24px;line-height:29px;font-weight:700;letter-spacing:-.02em}
+.num{font-variant-numeric:tabular-nums}
+
+/* Layout helpers */
+.hd{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:12px}
+.sh{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.flex{display:flex;align-items:center}
+.wrap{flex-wrap:wrap}
+.top{align-items:flex-start}
+.between{justify-content:space-between}
+.col{display:flex;flex-direction:column}
+.grow{flex:1;min-width:0}
+.g4{gap:4px}.g6{gap:6px}.g8{gap:8px}.g10{gap:10px}.g12{gap:12px}.g14{gap:14px}.g16{gap:16px}.g20{gap:20px}.g24{gap:24px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.grid.s{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.grid.l{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.two{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
+.two>*{flex:1 1 340px;min-width:0}
+
+/* Surfaces */
+.tile{background:#f3f2ee;border-radius:12px;padding:12px 14px}
+.tile.p{padding:16px 18px}
+.tile.w{background:#fff}
+.tile.now{background:#fff1eb}
+.dark{background:#141415;color:#f5f5f4;border-radius:18px;padding:22px 26px}
+.dark .meta{color:#9a9a9e}
+.card{background:#fbfaf7;color:#111;border-radius:18px;padding:32px}
+
+/* Tags and chips */
+.tag{display:inline-block;font-size:11px;line-height:13px;font-weight:500;border-radius:6px;padding:3px 6px;background:#edebe5;color:#77746e;white-space:nowrap}
+.chip{display:inline-block;font-size:12px;line-height:15px;font-weight:500;border-radius:7px;padding:4px 8px;background:#edebe5;color:#77746e;white-space:nowrap}
+.t-em{background:#ffe9e0;color:#d5430f}.t-gr{background:#e3f5e9;color:#23804a}.t-bl{background:#e4edfd;color:#2b62d9}.t-vi{background:#eee7fd;color:#6c43d0}.t-am{background:#fbf0d5;color:#9a6a00}.t-pk{background:#f7e6fa;color:#9b3aab}
+.t-dk{background:#3a1e12;color:#ff8a5c}
+
+/* Rings — the complete button */
+.ring{width:18px;height:18px;border:1.6px solid #c9c6be;border-radius:9999px;background:transparent;padding:0;flex:none;display:inline-flex;align-items:center;justify-content:center}
+.ring.hi{border-color:#ff5a1f}.ring.md{border-color:#e0a400}
+.ring.done{background:#111;border-color:#111}
+.ring.done::after{content:"";width:7px;height:4px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:translateY(-1px) rotate(-45deg)}
+.ring.miss{border-style:dashed}
+.ring.lg{width:22px;height:22px}
+
+/* Buttons and inputs */
+.btn{height:30px;border:0;border-radius:8px;background:#111;color:#fff;font-size:12px;line-height:15px;font-weight:500;padding:0 12px;display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
+.btn.l{height:40px;font-size:13px;padding:0 16px;border-radius:10px}
+.btn.soft{background:#f3f2ee;color:#111}
+.btn.em{background:#ff5a1f;color:#fff}
+.btn.inv{background:#f5f5f4;color:#111}
+.btn.ghost{background:transparent;color:#77746e}
+.btn.full{width:100%}
+.add{border:0;border-radius:7px;background:#f3f2ee;color:#77746e;font-size:12px;line-height:15px;font-weight:500;padding:6px 10px 6px 8px;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.ib{width:28px;height:28px;border:0;border-radius:8px;background:transparent;color:#77746e;display:inline-flex;align-items:center;justify-content:center;padding:0;flex:none}
+.ib.s{background:#f3f2ee;color:#111}
+.input{height:38px;border:0;border-radius:10px;background:#f3f2ee;padding:0 12px;font-size:13px;font-weight:400;color:#111;width:100%;display:flex;align-items:center;gap:8px}
+.input.err{box-shadow:inset 0 0 0 1.5px #d5430f;background:#fff6f2}
+textarea.input{height:auto;padding:10px 12px;line-height:19px;resize:none}
+.lbl{font-size:12px;line-height:15px;font-weight:500;color:#77746e;display:block;margin-bottom:6px}
+.field{display:flex;flex-direction:column}
+.seg{display:inline-flex;background:#f3f2ee;border-radius:8px;padding:2px;gap:2px}
+.seg button{border:0;border-radius:6px;background:transparent;color:#77746e;font-size:12px;line-height:15px;font-weight:500;padding:6px 11px;display:inline-flex;align-items:center;gap:6px}
+.seg button[aria-pressed="true"]{background:#fff;color:#111}
+.seg.dk{background:#1e1e20}.seg.dk button{color:#9a9a9e}.seg.dk button[aria-pressed="true"]{background:#262628;color:#fff}
+.kbd{font-family:inherit;font-size:11px;line-height:13px;font-weight:500;color:#77746e;background:#edebe5;border-radius:5px;padding:2px 6px}
+.kbd.dk{color:#9a9a9e;background:#262628}
+
+/* Bars and dots */
+.bar{height:5px;background:#e9e7e1;border-radius:3px;overflow:hidden;flex:none}
+.bar>i{display:block;height:100%;background:#111;border-radius:3px}
+.dot{width:8px;height:8px;border-radius:9999px;display:inline-block;flex:none}
+.wk{display:flex;gap:6px}
+.wk>i{width:9px;height:9px;border-radius:9999px;background:#dad8d1;display:block}
+.wk>i.d{background:#111}.wk>i.t{background:transparent;box-shadow:inset 0 0 0 1.6px #ff5a1f}.wk>i.s{background:transparent;box-shadow:inset 0 0 0 1.6px #c9c6be}
+.itile{width:28px;height:28px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;flex:none}
+
+/* Lists */
+.trow{display:flex;gap:10px;align-items:flex-start}
+.trow .ring{margin-top:-1px}
+.list{display:flex;flex-direction:column;gap:14px}
+.glabel{font-size:11px;line-height:13px;font-weight:500;color:#a8a59e;margin:4px 0 0}
+.sep{height:1px;background:#e9e7e1}

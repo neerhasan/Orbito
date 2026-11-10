@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Insights</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ember.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0;background:#0f0f10}</style>
+</helmet>
+<div class="app" style="min-height: 1200px">
+  <dc-import name="Titlebar" hint-size="100%,58px"></dc-import>
+  <div class="row">
+    <dc-import name="Sidebar" active="insights" hint-size="232px,1000px"></dc-import>
+    <main class="panel">
+      <div class="hd">
+        <div><h1 class="h1">Insights</h1><div class="date">Patterns in your own logs · last 30 days · 1 new</div></div>
+        <div class="seg" role="group" aria-label="Status" style="margin-top: 6px"><button aria-pressed="true">Open · 6</button><button aria-pressed="false">Testing · 1</button><button aria-pressed="false">Kept · 1</button><button aria-pressed="false">Dismissed · 2</button></div>
+      </div>
+
+      <div class="flex wrap g8">
+        <span class="meta">Show</span>
+        <button class="chip" style="border: 0; background: #111; color: #fff">All</button>
+        <button class="chip t-gr" style="border: 0">Fact</button>
+        <button class="chip t-vi" style="border: 0">Correlation</button>
+        <button class="chip" style="border: 0">Hypothesis</button>
+        <button class="chip t-bl" style="border: 0">Recommendation</button>
+      </div>
+
+      <div class="col g10">
+        <sc-for list="{{items}}" as="it" hint-placeholder-count="5">
+          <a href="{{it.href}}" class="tile p" style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; color: #111; background: {{it.bg}}; box-shadow: {{it.sh}}">
+            <span class="itile" style="background: #fff; color: {{it.ic}}"><dc-import name="Icon" i="{{it.icon}}" hint-size="16px,16px"></dc-import></span>
+            <div style="flex: 1 1 380px; min-width: 0">
+              <div class="flex g8"><sc-if value="{{it.isnew}}" hint-placeholder-val="{{false}}"><span class="tag t-em">New</span></sc-if><span class="meta">{{it.area}}</span></div>
+              <p class="item" style="margin: 6px 0 0; font-size: 14px; line-height: 20px">{{it.t}}</p>
+              <p class="meta" style="margin: 6px 0 0">{{it.src}}</p>
+              <div class="flex wrap g6" style="margin-top: 10px"><sc-for list="{{it.tags}}" as="tg" hint-placeholder-count="2"><span class="tag {{tg.c}}">{{tg.n}}</span></sc-for></div>
+            </div>
+            <div class="col g6" style="align-items: flex-end; flex: 0 0 auto"><span class="btn {{it.btnc}}">{{it.cta}}</span><span class="cap">{{it.when}}</span></div>
+          </a>
+        </sc-for>
+      </div>
+    </main>
+
+    <aside class="rail">
+      <section>
+        <div class="sh"><h2 class="h2"><dc-import name="Icon" i="flag" hint-size="16px,16px"></dc-import>Running test</h2></div>
+        <a href="InsightTest.dc.html" class="tile now" style="display: block">
+          <div class="item">Phone in another room, 3 to 5 PM</div>
+          <div class="flex between meta" style="margin-top: 8px"><span>Day 5 of 14</span><span>Ends 14 Nov</span></div>
+          <div class="bar" style="margin-top: 8px; background: #ffd9ca"><i style="width: 36%; background: #ff5a1f"></i></div>
+        </a>
+      </section>
+      <section>
+        <div class="sh"><h2 class="h2"><dc-import name="Icon" i="refresh" hint-size="16px,16px"></dc-import>Collecting data</h2></div>
+        <p class="meta" style="margin: -4px 0 10px">Nothing is shown until there is enough to say something.</p>
+        <div class="col g8">
+          <div class="tile"><div class="flex between"><span class="item">Sleep and mood</span><span class="meta">6 of 14 days</span></div><div class="bar" style="margin-top: 8px"><i style="width: 43%; background: #c9c6be"></i></div></div>
+          <div class="tile"><div class="flex between"><span class="item">Reading and focus</span><span class="meta">9 of 14 days</span></div><div class="bar" style="margin-top: 8px"><i style="width: 64%; background: #c9c6be"></i></div></div>
+          <div class="tile"><div class="flex between"><span class="item">Family time</span><span class="meta">Needs logs</span></div><p class="meta" style="margin: 6px 0 0">No Family habits or tasks yet, so nothing to measure.</p></div>
+        </div>
+      </section>
+      <section class="tile">
+        <div class="h3">The labels</div>
+        <div class="col g8" style="margin-top: 10px">
+          <div class="flex g8 top"><span class="tag t-gr">Fact</span><span class="meta">Measured directly from your logs.</span></div>
+          <div class="flex g8 top"><span class="tag t-vi">Correlation</span><span class="meta">Two things move together. Always shown with “Cause not proven” and the sample size.</span></div>
+          <div class="flex g8 top"><span class="tag">Hypothesis</span><span class="meta">A possible cause. Unproven until tested.</span></div>
+          <div class="flex g8 top"><span class="tag t-bl">Recommendation</span><span class="meta">Something to try, usually as a 14-day test.</span></div>
+        </div>
+        <p class="meta" style="margin: 10px 0 0">Minimum before speaking: 14 days of data and at least 7 cases on each side of a comparison.</p>
+      </section>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1200}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var C = { n: 'Correlation', c: 't-vi' }, NP = { n: 'Cause not proven', c: '' }, F = { n: 'Fact', c: 't-gr' }, H = { n: 'Hypothesis', c: '' }, R = { n: 'Recommendation', c: 't-bl' }, A = { n: 'Needs attention', c: 't-em' };
+    var base = function (o) { o.bg = o.bg || '#f3f2ee'; o.sh = o.sh || 'none'; o.btnc = o.btnc || 'soft'; return o; };
+    return {
+      items: [
+        base({ isnew: true, area: 'Health · Habits', icon: 'habit', ic: '#23804a', t: 'Meditation is done on 71% of early-wake days (15 of 21) and 11% of late ones (1 of 9).', src: 'Sleep and habit logs · 30 days', tags: [C, NP, { n: 'Small sample: 9 late days', c: 't-am' }], cta: 'Test a fix for 14 days', btnc: '', when: 'Found today', href: 'InsightDetail.dc.html', bg: '#ffffff', sh: 'inset 0 0 0 1.5px #111' }),
+        base({ isnew: false, area: 'Time', icon: 'time', ic: '#111111', t: 'Focus drops after 3 PM on 5 of 7 days. Best window: 9 to 11 AM.', src: 'Focus sessions · 4 weeks', tags: [F], cta: 'See Time', when: '2 days ago', href: 'Time.dc.html' }),
+        base({ isnew: false, area: 'Financial Freedom', icon: 'coin', ic: '#9a6a00', t: 'Financial Freedom: no focus time in 12 days. 45 points below target.', src: 'Focus sessions and area scores', tags: [F, A], cta: 'Plan a block', when: 'Yesterday', href: '#' }),
+        base({ isnew: false, area: 'Time', icon: 'phone', ic: '#111111', t: 'Phone accounts for 61% of distractions between 3 and 5 PM. It may be causing the afternoon dip.', src: 'Distraction logs · 4 weeks · 23 entries', tags: [H, { n: 'Testing now', c: 't-em' }], cta: 'View test', when: 'Test day 5 of 14', href: 'InsightTest.dc.html' }),
+        base({ isnew: false, area: 'Sleep', icon: 'sleep', ic: '#111111', t: 'After 7h or more of sleep, next-day focus averages 43 minutes more.', src: 'Sleep and focus logs · 30 nights (19 vs 11)', tags: [C, NP], cta: 'Open', when: '4 days ago', href: '#' }),
+        base({ isnew: false, area: 'Tasks', icon: 'tasks', ic: '#111111', t: 'Admin tasks are postponed 2.4 times on average. Try giving each one a 15-minute slot.', src: 'Task history · 22 admin tasks', tags: [F, R], cta: 'Try for 14 days', when: '5 days ago', href: '#' })
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

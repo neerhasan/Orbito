@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Project – Build Life System app</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ember.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0;background:#0f0f10}</style>
+</helmet>
+<div class="app" style="min-height: 1300px">
+  <dc-import name="Titlebar" hint-size="100%,58px"></dc-import>
+  <div class="row">
+    <dc-import name="Sidebar" active="projects" hint-size="232px,1000px"></dc-import>
+    <main class="panel">
+      <div class="hd">
+        <div>
+          <a href="Projects.dc.html" class="flex g6 meta" style="margin-bottom: 8px"><dc-import name="Icon" i="left" s="14" hint-size="14px,14px"></dc-import>Projects</a>
+          <div class="flex g12"><span class="itile" style="width: 40px; height: 40px; border-radius: 10px; background: #ffe9e0; color: #d5430f"><dc-import name="Icon" i="code" s="20" w="1.8" hint-size="20px,20px"></dc-import></span><h1 class="h1">Build Life System app</h1></div>
+          <div class="flex wrap g6" style="margin-top: 10px"><span class="tag t-gr">Active</span><span class="tag">Goal: Profitable software business</span><span class="tag t-am">Financial Freedom</span><span class="tag">1 Oct to 31 Dec</span></div>
+        </div>
+        <div class="flex g8" style="margin-top: 26px"><button class="btn soft"><dc-import name="Icon" i="edit" s="14" hint-size="14px,14px"></dc-import>Edit</button><a href="Focus.dc.html" class="btn"><dc-import name="Icon" i="play" s="14" hint-size="14px,14px"></dc-import>Focus on next task</a></div>
+      </div>
+
+      <div class="grid s">
+        <div class="tile"><div class="meta">Complete</div><div class="stat" style="margin-top: 6px">50%</div><div class="bar" style="margin-top: 10px"><i style="width: 50%"></i></div></div>
+        <div class="tile"><div class="meta">Tasks</div><div class="stat" style="margin-top: 6px">2 of 4</div><div class="meta" style="margin-top: 6px">2 open · 0 overdue</div></div>
+        <div class="tile"><div class="meta">Time invested</div><div class="stat" style="margin-top: 6px">18h 30m</div><div class="meta" style="margin-top: 6px">12 focus sessions</div></div>
+        <div class="tile"><div class="meta">Estimate vs actual</div><div class="stat" style="margin-top: 6px">+23%</div><div class="meta" style="margin-top: 6px">17h 13m vs 14h on done tasks</div></div>
+        <div class="tile"><div class="meta">Days left</div><div class="stat" style="margin-top: 6px">56</div><div class="meta" style="margin-top: 6px">38% of time used</div></div>
+      </div>
+
+      <section>
+        <div class="sh"><h2 class="h2"><dc-import name="Icon" i="tasks" hint-size="16px,16px"></dc-import>Tasks</h2><button class="add"><dc-import name="Icon" i="plus" s="14" hint-size="14px,14px"></dc-import>Add task</button></div>
+        <div class="col g6">
+          <div class="tile flex wrap g12" style="background: #fff; box-shadow: inset 0 0 0 1.5px #e9e7e1"><button class="ring hi" aria-label="Complete UI research"></button><div class="grow"><div class="item">UI research</div><div class="meta" style="margin-top: 4px">Today 9:00 AM · 1 of 3 subtasks · focus running</div></div><span class="meta num" style="width: 120px; text-align: right">1h 17m / 3h</span></div>
+          <div class="tile flex wrap g12"><button class="ring md" aria-label="Complete Define data model"></button><div class="grow"><div class="item">Define data model</div><div class="meta" style="margin-top: 4px">Today 4:00 PM</div></div><span class="meta num" style="width: 120px; text-align: right">0m / 2h</span></div>
+          <div class="tile flex wrap g12"><button class="ring done" aria-label="Undo"></button><div class="grow"><div class="item soft">Draft dashboard layout</div><div class="meta" style="margin-top: 4px">Done Mon 2 Nov</div></div><span class="meta num" style="width: 120px; text-align: right">10h 05m / 8h</span></div>
+          <div class="tile flex wrap g12"><button class="ring done" aria-label="Undo"></button><div class="grow"><div class="item soft">Set up repo and data stack</div><div class="meta" style="margin-top: 4px">Done Wed 4 Nov</div></div><span class="meta num" style="width: 120px; text-align: right">7h 08m / 6h</span></div>
+        </div>
+        <p class="meta" style="margin: 10px 0 0">Completing a task updates the percent: 3 of 4 would show 75%.</p>
+      </section>
+
+      <section>
+        <div class="sh"><h2 class="h2"><dc-import name="Icon" i="focus" hint-size="16px,16px"></dc-import>Focus sessions</h2><span class="meta">Latest 5 of 12</span></div>
+        <div class="tile" style="padding: 6px 14px">
+          <sc-for list="{{sessions}}" as="s" hint-placeholder-count="5">
+            <div class="flex wrap g12" style="padding: 10px 0; border-bottom: 1px solid #e9e7e1">
+              <span class="meta" style="width: 130px">{{s.d}}</span><span class="item grow">{{s.t}}</span><span class="meta" style="width: 140px">{{s.dis}}</span><span class="item num" style="width: 70px; text-align: right; color: {{s.c}}">{{s.len}}</span>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+    </main>
+
+    <aside class="rail">
+      <section>
+        <div class="sh"><h2 class="h2"><dc-import name="Icon" i="analytics" hint-size="16px,16px"></dc-import>Time per week</h2></div>
+        <div class="tile">
+          <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; align-items: end; height: 100px">
+            <span style="height: 22px; border-radius: 4px; background: #111"></span><span style="height: 0"></span><span style="height: 40px; border-radius: 4px; background: #111"></span><span style="height: 70px; border-radius: 4px; background: #111"></span><span style="height: 86px; border-radius: 4px; background: #111"></span><span style="height: 76px; border-radius: 4px; background: #ff5a1f"></span>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; margin-top: 6px; text-align: center" class="cap"><span>4 Oct</span><span>11</span><span>18</span><span>25</span><span>1 Nov</span><span>Now</span></div>
+          <p class="meta" style="margin: 10px 0 0">No sessions the week of 11 Oct.</p>
+        </div>
+      </section>
+      <section>
+        <div class="sh"><h2 class="h2"><dc-import name="Icon" i="note" hint-size="16px,16px"></dc-import>Notes</h2></div>
+        <a href="NoteEditor.dc.html" class="tile flex g10"><span class="item grow">Life System plan</span><span class="meta">2 tasks inside</span></a>
+      </section>
+      <section>
+        <div class="sh"><h2 class="h2"><dc-import name="Icon" i="calendar" hint-size="16px,16px"></dc-import>Upcoming blocks</h2></div>
+        <div class="col g8">
+          <div class="tile now flex between"><span class="item">Deep work</span><span class="meta">Today 9:00 to 12:00</span></div>
+          <div class="tile flex between"><span class="item">Deep work</span><span class="meta">Fri 9:00 to 11:00</span></div>
+        </div>
+      </section>
+      <section class="tile">
+        <div class="item">Rolls up to</div>
+        <div class="col g6" style="margin-top: 8px">
+          <a href="GoalDetail.dc.html" class="flex between meta"><span style="color: #111">Profitable software business</span><span>Goal · 40%</span></a>
+          <span class="flex between meta"><span class="flex g6" style="color: #111"><span class="dot" style="background: #e0a400"></span>Financial Freedom</span><span>Area · Now 40</span></span>
+        </div>
+      </section>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1300}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      sessions: [
+        { d: 'Today · 9:00 AM', t: 'UI research', dis: '2 distractions · 7m', len: '0:32', c: '#d5430f' },
+        { d: 'Wed 4 Nov · 9:10 AM', t: 'Set up repo and data stack', dis: '1 distraction · 4m', len: '2:35', c: '#111111' },
+        { d: 'Tue 3 Nov · 2:10 PM', t: 'UI research', dis: '1 distraction · 3m', len: '0:45', c: '#111111' },
+        { d: 'Tue 3 Nov · 9:05 AM', t: 'Set up repo and data stack', dis: 'None', len: '2:28', c: '#111111' },
+        { d: 'Mon 2 Nov · 10:00 AM', t: 'Draft dashboard layout', dis: 'None', len: '2:40', c: '#111111' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

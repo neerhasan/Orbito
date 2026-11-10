@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Analytics</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ember.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0;background:#0f0f10}</style>
+</helmet>
+<div class="app" style="min-height: 1500px">
+  <dc-import name="Titlebar" hint-size="100%,58px"></dc-import>
+  <div class="row">
+    <dc-import name="Sidebar" active="analytics" hint-size="232px,1000px"></dc-import>
+    <main class="panel">
+      <div class="hd">
+        <div><h1 class="h1">Analytics</h1><div class="date">This week (1 to 5 Nov, so far) vs the same days last week</div></div>
+        <div class="flex g8" style="margin-top: 6px">
+          <div class="seg" role="group" aria-label="Period"><button aria-pressed="false">Day</button><button aria-pressed="true">Week</button><button aria-pressed="false">Month</button><button aria-pressed="false">Year</button></div>
+          <button class="add">vs last week<dc-import name="Icon" i="down" s="14" hint-size="14px,14px"></dc-import></button>
+          <button class="btn soft"><dc-import name="Icon" i="download" s="14" hint-size="14px,14px"></dc-import>Export</button>
+        </div>
+      </div>
+
+      <div class="grid s">
+        <sc-for list="{{kpis}}" as="k" hint-placeholder-count="6">
+          <div class="tile">
+            <div class="meta">{{k.n}}</div>
+            <div class="stat" style="margin-top: 6px">{{k.v}}</div>
+            <div class="flex g6" style="margin-top: 6px"><span class="tag {{k.dc}}">{{k.d}}</span><span class="meta">was {{k.was}}</span></div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div class="two">
+        <section>
+          <div class="sh"><h2 class="h2"><dc-import name="Icon" i="focus" hint-size="16px,16px"></dc-import>Focus per day</h2>
+            <div class="flex g12 meta"><span class="flex g6"><i style="width: 14px; height: 2px; background: #111; display: block"></i>This week</span><span class="flex g6"><i style="width: 14px; height: 0; border-top: 2px dashed #a8a59e; display: block"></i>Last week</span></div>
+          </div>
+          <div class="tile">
+            <svg viewBox="0 0 360 170" style="display: block; width: 100%; height: auto; font-family: Inter, sans-serif" role="img" aria-label="Focus hours per day. This week: Sun 1h, Mon 3h 10m, Tue 2h 50m, Wed 3h 35m, Thu 32m so far. Last week: 0.5, 2.5, 2, 3, 2.8, 2.2, 0.8 hours.">
+              <path d="M24 50H356M24 100H356M24 150H356" stroke="#e9e7e1"></path>
+              <text x="0" y="54" font-size="9" fill="#a8a59e">4h</text><text x="0" y="104" font-size="9" fill="#a8a59e">2h</text><text x="0" y="154" font-size="9" fill="#a8a59e">0</text>
+              <path d="M40 137.5 L92 87.5 L144 100 L196 75 L248 80 L300 95 L352 130" fill="none" stroke="#a8a59e" stroke-width="1.6" stroke-dasharray="4 4"></path>
+              <path d="M40 125 L92 70.8 L144 79.2 L196 60.4 L248 136.7" fill="none" stroke="#111" stroke-width="2" stroke-linejoin="round"></path>
+              <circle cx="248" cy="136.7" r="4.5" fill="#ff5a1f" stroke="#fff" stroke-width="2"></circle>
+              <text x="248" y="124" font-size="9" fill="#ff5a1f" text-anchor="middle" font-weight="600">so far</text>
+              <text x="40" y="166" font-size="9" fill="#a8a59e" text-anchor="middle">Sun</text><text x="92" y="166" font-size="9" fill="#a8a59e" text-anchor="middle">Mon</text><text x="144" y="166" font-size="9" fill="#a8a59e" text-anchor="middle">Tue</text><text x="196" y="166" font-size="9" fill="#a8a59e" text-anchor="middle">Wed</text><text x="248" y="166" font-size="9" fill="#ff5a1f" text-anchor="middle">Thu</text><text x="300" y="166" font-size="9" fill="#a8a59e" text-anchor="middle">Fri</text><text x="352" y="166" font-size="9" fill="#a8a59e" text-anchor="middle">Sat</text>
+            </svg>
+          </div>
+        </section>
+        <section>
+          <div class="sh"><h2 class="h2"><dc-import name="Icon" i="tasks" hint-size="16px,16px"></dc-import>Tasks done per day</h2><span class="meta">Bars: this week · ticks: last week</span></div>
+          <div class="tile">
+            <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px; align-items: end; height: 130px">
+              <sc-for list="{{tasks}}" as="t" hint-placeholder-count="7">
+                <div style="position: relative; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center">
+                  <span class="cap ink num" style="margin-bottom: 4px">{{t.v}}</span>
+                  <span style="width: 100%; max-width: 28px; height: {{t.h}}px; border-radius: 4px; background: {{t.c}}"></span>
+                  <span style="position: absolute; left: 50%; transform: translateX(-50%); bottom: {{t.lb}}px; width: 36px; max-width: 100%; height: 2px; background: #a8a59e"></span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px; margin-top: 8px; text-align: center"><sc-for list="{{tasks}}" as="t" hint-placeholder-count="7"><span class="cap">{{t.d}}</span></sc-for></div>
+          </div>
+        </section>
+      </div>
+
+      <div class="two">
+        <section>
+          <div class="sh"><h2 class="h2"><dc-import name="Icon" i="area" hint-size="16px,16px"></dc-import>Life areas, now vs a month ago</h2></div>
+          <div class="tile col g14">
+            <sc-for list="{{areas}}" as="a" hint-placeholder-count="4">
+              <div>
+                <div class="flex between"><span class="flex g8 item"><span class="dot" style="background: {{a.c}}"></span>{{a.n}}</span><span class="meta num">{{a.prev}} → <b style="color: #111; font-weight: 600">{{a.now}}</b> · target {{a.t}}</span></div>
+                <div style="position: relative; height: 8px; margin-top: 8px; border-radius: 4px; background: #e9e7e1">
+                  <span style="position: absolute; left: 0; top: 0; bottom: 0; width: {{a.prev}}%; border-radius: 4px; background: #d5d3cc"></span>
+                  <span style="position: absolute; left: 0; top: 2px; height: 4px; width: {{a.now}}%; border-radius: 4px; background: {{a.c}}"></span>
+                  <span style="position: absolute; left: {{a.t}}%; top: -3px; width: 2px; height: 14px; background: #111; border-radius: 1px"></span>
+                </div>
+              </div>
+            </sc-for>
+            <div class="meta">Thick grey: a month ago · coloured: now · tick: target</div>
+          </div>
+        </section>
+        <section>
+          <div class="sh"><h2 class="h2"><dc-import name="Icon" i="habit" hint-size="16px,16px"></dc-import>Habit consistency</h2><span class="meta">Last 30 days vs previous 30</span></div>
+          <div class="tile col g12">
+            <sc-for list="{{habits}}" as="h" hint-placeholder-count="4">
+              <div class="flex g10"><span class="item" style="width: 110px">{{h.n}}</span><span class="bar grow" style="height: 6px"><i style="width: {{h.v}}%"></i></span><span class="meta num" style="width: 90px; text-align: right">{{h.v}}% · <span style="color: {{h.dc}}">{{h.d}}</span></span></div>
+            </sc-for>
+          </div>
+          <div class="sh" style="margin-top: 20px"><h2 class="h2"><dc-import name="Icon" i="folder" hint-size="16px,16px"></dc-import>Project progress this week</h2></div>
+          <div class="tile col g10">
+            <div class="flex between"><span class="item">Build Life System app</span><span class="meta num">25% → 50%</span></div>
+            <div class="flex between"><span class="item">Fitness routine</span><span class="meta num">0% → 25%</span></div>
+          </div>
+        </section>
+      </div>
+
+      <section class="tile flex wrap g12" style="padding: 14px 16px">
+        <dc-import name="Icon" i="insight" hint-size="16px,16px"></dc-import>
+        <span class="item grow">Want to know why a number moved? Each chart links to the records behind it, and Insights looks for patterns across them.</span>
+        <a href="Insights.dc.html" class="btn soft" style="background: #fff">Open Insights</a>
+      </section>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1500}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var up = 't-gr', dn = 't-em', nu = '';
+    var T = [['Sun', 0, 0], ['Mon', 1, 1], ['Tue', 1, 2], ['Wed', 1, 1], ['Thu', 0, 2], ['Fri', null, 1], ['Sat', null, 0]];
+    return {
+      kpis: [
+        { n: 'Focus time', v: '11h 07m', d: '+19m', dc: up, was: '10h 48m' },
+        { n: 'Tasks done', v: '3', d: '−3', dc: dn, was: '6' },
+        { n: 'Habits kept', v: '62%', d: '+4 pts', dc: up, was: '58%' },
+        { n: 'Average sleep', v: '7h 04m', d: '+33m', dc: up, was: '6h 31m' },
+        { n: 'Distracted', v: '1h 52m', d: '+18m', dc: dn, was: '1h 34m' },
+        { n: 'Life line', v: '62', d: '+1', dc: up, was: '61' }
+      ],
+      tasks: T.map(function (t, i) {
+        var v = t[1];
+        return { d: t[0], v: v === null ? '' : String(v), h: v === null ? 0 : Math.max(3, v * 40), c: i === 4 ? '#ff5a1f' : '#111111', lb: 0 + t[2] * 40 };
+      }),
+      areas: [
+        { n: 'Health', c: '#23a35a', prev: 53, now: 58, t: 80 },
+        { n: 'Career', c: '#2b62d9', prev: 69, now: 71, t: 90 },
+        { n: 'Financial Freedom', c: '#e0a400', prev: 42, now: 40, t: 85 },
+        { n: 'Family', c: '#c65bd6', prev: 66, now: 66, t: 80 }
+      ],
+      habits: [
+        { n: 'Wake by 7:00', v: 87, d: '+7', dc: '#23804a' },
+        { n: 'Read book', v: 73, d: '+3', dc: '#23804a' },
+        { n: 'Meditate', v: 53, d: '+6', dc: '#23804a' },
+        { n: 'Master skill', v: 40, d: '−4', dc: '#d5430f' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

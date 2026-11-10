@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>System states</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ember.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0;background:#0f0f10}</style>
+</helmet>
+<div class="app solo" style="min-height: 1500px">
+  <main class="panel" style="min-height: 1484px">
+    <div><h1 class="h1">States</h1><div class="date">Not enough data · empty · loading · errors · missed days</div></div>
+
+    <div class="grid l" style="gap: 20px; align-items: start">
+      <!-- 1 -->
+      <section class="col g10">
+        <span class="cap ink">1 · Life line, not enough data</span>
+        <div class="dark" style="padding: 20px">
+          <div class="meta">Life line</div>
+          <div class="flex g10" style="align-items: baseline"><span class="stat" style="color: #fff; font-size: 32px">—</span><span class="chip" style="background: #262628; color: #9a9a9e">Collecting · 6 of 14 days</span></div>
+          <div style="display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); gap: 4px; margin-top: 14px">
+            <sc-for list="{{six}}" as="x" hint-placeholder-count="6"><span style="height: 24px; border-radius: 4px; background: #f5f5f4"></span></sc-for>
+            <sc-for list="{{eight}}" as="x" hint-placeholder-count="8"><span style="height: 24px; border-radius: 4px; background: #1e1e20"></span></sc-for>
+          </div>
+          <p class="meta" style="margin: 12px 0 0">The line appears on 13 Nov. Until then, logging any one thing a day counts.</p>
+        </div>
+      </section>
+
+      <!-- 2 -->
+      <section class="col g10">
+        <span class="cap ink">2 · Insight, not enough data</span>
+        <div class="tile p">
+          <div class="flex g8"><dc-import name="Icon" i="insight" hint-size="16px,16px"></dc-import><span class="item">Sleep and mood</span><span class="tag" style="margin-left: auto">Waiting</span></div>
+          <p class="meta" style="margin: 8px 0 12px; line-height: 18px">There is a hint of a pattern, but only 6 days of mood logs. Showing it now could mislead you.</p>
+          <div class="bar"><i style="width: 43%; background: #c9c6be"></i></div>
+          <div class="flex between meta" style="margin-top: 8px"><span>6 of 14 days</span><span>Also needs 7 short-sleep nights</span></div>
+        </div>
+      </section>
+
+      <!-- 3 -->
+      <section class="col g10">
+        <span class="cap ink">3 · Empty list</span>
+        <div class="tile p" style="background: transparent; box-shadow: inset 0 0 0 1.5px #e9e7e1; text-align: center; padding: 28px 20px">
+          <span class="itile" style="width: 40px; height: 40px; border-radius: 12px; background: #f3f2ee"><dc-import name="Icon" i="tasks" s="20" w="1.5" hint-size="20px,20px"></dc-import></span>
+          <div class="item" style="margin-top: 12px">No tasks for today</div>
+          <p class="meta" style="margin: 6px 0 14px">3 are due tomorrow. Pull one in, or enjoy the space.</p>
+          <div class="flex g8" style="justify-content: center"><button class="btn"><dc-import name="Icon" i="plus" s="14" w="1.9" hint-size="14px,14px"></dc-import>Add task</button><button class="btn soft">Show tomorrow</button></div>
+        </div>
+      </section>
+
+      <!-- 4 -->
+      <section class="col g10">
+        <span class="cap ink">4 · Empty inbox</span>
+        <div class="tile p" style="background: transparent; box-shadow: inset 0 0 0 1.5px #e9e7e1; text-align: center; padding: 28px 20px">
+          <span class="itile" style="width: 40px; height: 40px; border-radius: 12px; background: #f3f2ee"><dc-import name="Icon" i="inbox" s="20" w="1.5" hint-size="20px,20px"></dc-import></span>
+          <div class="item" style="margin-top: 12px">Inbox is clear</div>
+          <p class="meta" style="margin: 6px 0 0">You sorted 7 items this week. New captures land here.</p>
+        </div>
+      </section>
+
+      <!-- 5 -->
+      <section class="col g10">
+        <span class="cap ink">5 · Loading</span>
+        <div class="tile p col g12" aria-busy="true" aria-label="Loading habits">
+          <div class="flex between"><span style="width: 110px; height: 12px; border-radius: 6px; background: #e9e7e1"></span><span style="width: 18px; height: 18px; border-radius: 9999px; background: #e9e7e1"></span></div>
+          <div class="flex g6"><span style="width: 9px; height: 9px; border-radius: 9999px; background: #e9e7e1"></span><span style="width: 9px; height: 9px; border-radius: 9999px; background: #e9e7e1"></span><span style="width: 9px; height: 9px; border-radius: 9999px; background: #e9e7e1"></span><span style="width: 9px; height: 9px; border-radius: 9999px; background: #e9e7e1"></span><span style="width: 9px; height: 9px; border-radius: 9999px; background: #e9e7e1"></span><span style="width: 9px; height: 9px; border-radius: 9999px; background: #e9e7e1"></span><span style="width: 9px; height: 9px; border-radius: 9999px; background: #e9e7e1"></span></div>
+          <span style="width: 70%; height: 10px; border-radius: 6px; background: #e9e7e1"></span>
+          <span class="cap">Shapes match the real content so nothing jumps when it arrives. Shown only after 300 ms.</span>
+        </div>
+      </section>
+
+      <!-- 6 -->
+      <section class="col g10">
+        <span class="cap ink">6 · Error: sync failed</span>
+        <div class="tile p" role="alert">
+          <div class="flex g10 top">
+            <span style="color: #d5430f; display: flex; margin-top: 1px"><dc-import name="Icon" i="sync" hint-size="16px,16px"></dc-import></span>
+            <div class="grow">
+              <div class="item">Couldn’t reach Google Calendar</div>
+              <p class="meta" style="margin: 4px 0 12px; line-height: 18px">Your Life System data is safe. Events from the last sync (9:12 AM) are still shown. Trying again in 5 minutes.</p>
+              <div class="flex g8"><button class="btn">Retry now</button><button class="btn ghost">Details</button></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7 -->
+      <section class="col g10">
+        <span class="cap ink">7 · Offline</span>
+        <div class="flex g10" style="background: #141415; color: #f5f5f4; border-radius: 12px; padding: 12px 14px">
+          <span style="width: 8px; height: 8px; border-radius: 9999px; background: #e0a400; flex: none"></span>
+          <span class="item grow">Offline. Changes are saved on this device and will sync when you reconnect.</span>
+          <span class="meta" style="color: #9a9a9e">3 waiting</span>
+        </div>
+      </section>
+
+      <!-- 8 -->
+      <section class="col g10">
+        <span class="cap ink">8 · Missed day, no guilt</span>
+        <div class="tile p">
+          <div class="flex between"><span class="h3">Meditate</span><button class="ring" aria-label="Complete Meditate"></button></div>
+          <div class="wk" style="margin-top: 12px"><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i></i><i class="d"></i><i class="t"></i></div>
+          <p class="meta" style="margin: 10px 0 0; line-height: 18px">Missed yesterday. Your 30-day rate is still 53%, and today counts the same as any other day.</p>
+          <div class="flex wrap g6" style="margin-top: 10px"><button class="chip" style="border: 0">Add a reason</button><button class="chip" style="border: 0">Mark as rest day</button></div>
+        </div>
+      </section>
+
+      <!-- 9 -->
+      <section class="col g10">
+        <span class="cap ink">9 · Back after a break</span>
+        <div class="tile p">
+          <div class="item">Welcome back. You were away 3 days.</div>
+          <p class="meta" style="margin: 6px 0 12px; line-height: 18px">Nothing is lost. Want to fill in those days, or mark them as a break so they don’t count against your habits?</p>
+          <div class="flex wrap g8"><button class="btn">Mark as a break</button><button class="btn soft" style="background: #fff">Fill in 3 days</button><button class="btn ghost">Skip</button></div>
+        </div>
+      </section>
+
+      <!-- 10 -->
+      <section class="col g10">
+        <span class="cap ink">10 · Task keeps slipping</span>
+        <div class="tile p">
+          <div class="trow"><span class="ring hi" aria-hidden="true"></span><div class="grow"><div class="item">Send invoice</div><div class="meta em" style="margin-top: 3px">Overdue · moved 2 times</div></div></div>
+          <p class="meta" style="margin: 10px 0 12px; line-height: 18px">Tasks moved twice often need a smaller first step. What would help?</p>
+          <div class="flex wrap g6"><button class="chip" style="border: 0">Split into steps</button><button class="chip" style="border: 0">Give it 15 min today</button><button class="chip" style="border: 0">Drop it</button></div>
+        </div>
+      </section>
+
+      <!-- 11 -->
+      <section class="col g10">
+        <span class="cap ink">11 · Search found nothing</span>
+        <div class="tile p" style="text-align: center">
+          <div class="item">No results for “quarterly tax”</div>
+          <p class="meta" style="margin: 6px 0 12px">Searched tasks, notes, events and Life Data.</p>
+          <button class="btn soft" style="background: #fff"><dc-import name="Icon" i="plus" s="14" hint-size="14px,14px"></dc-import>Create task “quarterly tax”</button>
+        </div>
+      </section>
+
+      <!-- 12 -->
+      <section class="col g10">
+        <span class="cap ink">12 · Test ended without enough logs</span>
+        <div class="tile p">
+          <div class="flex g8"><span class="item grow">Phone in another room</span><span class="tag">No result</span></div>
+          <p class="meta" style="margin: 6px 0 12px; line-height: 18px">Only 6 of 14 days were logged, so a comparison would not be fair. That happens. Run it again?</p>
+          <div class="flex g8"><button class="btn">Restart test</button><button class="btn ghost">Keep in history</button></div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1500}}'>
+class Component extends DCLogic {
+  renderVals() { return { six: [1,2,3,4,5,6], eight: [1,2,3,4,5,6,7,8] }; }
+}
+</script>
+</body>
+</html>

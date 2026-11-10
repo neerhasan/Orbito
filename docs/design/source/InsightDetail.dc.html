@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Insight detail</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ember.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0;background:#0f0f10}</style>
+</helmet>
+<div class="app" style="min-height: 1400px">
+  <dc-import name="Titlebar" hint-size="100%,58px"></dc-import>
+  <div class="row">
+    <dc-import name="Sidebar" active="insights" hint-size="232px,1000px"></dc-import>
+    <main class="panel">
+      <div>
+        <a href="Insights.dc.html" class="flex g6 meta" style="margin-bottom: 8px"><dc-import name="Icon" i="left" s="14" hint-size="14px,14px"></dc-import>Insights</a>
+        <div class="flex wrap g6"><span class="tag t-vi">Correlation</span><span class="tag">Cause not proven</span><span class="tag t-am">Small sample: 9 late days</span><span class="tag">Sleep and habit logs · 30 days</span></div>
+        <h1 style="margin: 12px 0 0; font-size: 30px; line-height: 36px; font-weight: 700; letter-spacing: -0.02em; max-width: 760px">Meditation happens far more on days you are up by 6:30.</h1>
+      </div>
+
+      <section class="dark" style="padding: 20px 24px">
+        <div class="flex between wrap g8"><span class="item" style="color: #fff">Each dot is one day, placed by wake time</span><div class="flex g12 meta"><span class="flex g6"><i class="dot" style="background: #f5f5f4"></i>Meditated</span><span class="flex g6"><i class="dot" style="box-shadow: inset 0 0 0 1.5px #6a6a6e"></i>Did not</span></div></div>
+        <div style="position: relative; height: 120px; margin-top: 16px">
+          <div style="position: absolute; left: 0; right: 0; top: 0; bottom: 22px">
+            <div style="position: absolute; left: {{cut}}%; top: 0; bottom: 0; width: 1px; background: #6a6a6e"></div>
+            <span style="position: absolute; left: {{cut}}%; top: -2px; transform: translateX(6px); font-size: 11px; color: #9a9a9e">6:30</span>
+            <sc-for list="{{dots}}" as="d" hint-placeholder-count="30"><span title="{{d.t}}" style="position: absolute; left: {{d.x}}%; top: {{d.y}}px; width: 10px; height: 10px; margin-left: -5px; border-radius: 9999px; background: {{d.bg}}; box-shadow: {{d.sh}}"></span></sc-for>
+          </div>
+          <div class="flex between" style="position: absolute; left: 0; right: 0; bottom: 0; font-size: 11px; color: #9a9a9e"><span>5:45 AM</span><span>6:30</span><span>7:15</span><span>8:00 AM</span></div>
+        </div>
+        <div class="flex wrap g24" style="margin-top: 14px">
+          <span class="meta">Up by 6:30: <b style="color: #fff; font-weight: 600">15 of 21 · 71%</b></span>
+          <span class="meta">Later: <b style="color: #fff; font-weight: 600">1 of 9 · 11%</b></span>
+        </div>
+      </section>
+
+      <div class="col g10">
+        <sc-for list="{{qa}}" as="q" hint-placeholder-count="7">
+          <section class="tile p" style="display: flex; gap: 16px; align-items: flex-start">
+            <span style="width: 26px; height: 26px; border-radius: 9999px; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex: none">{{q.n}}</span>
+            <div class="grow">
+              <div class="flex between wrap g8"><h2 class="h3" style="font-size: 14px">{{q.q}}</h2><span class="tag {{q.lc}}">{{q.l}}</span></div>
+              <p class="body" style="margin: 6px 0 0">{{q.a}}</p>
+              <sc-if value="{{q.extra}}" hint-placeholder-val="{{false}}"><p class="meta" style="margin: 6px 0 0">{{q.extra}}</p></sc-if>
+            </div>
+          </section>
+        </sc-for>
+      </div>
+    </main>
+
+    <aside class="rail">
+      <section class="tile now">
+        <div class="item">Try a fix for 14 days</div>
+        <p class="meta" style="margin: 6px 0 12px; line-height: 18px">Pick one change. The app compares the 14 days before with the 14 days of the test.</p>
+        <div class="col g8">
+          <label class="tile flex g10 top" style="background: #fff; box-shadow: inset 0 0 0 1.5px #111"><span class="ring done" aria-hidden="true" style="margin-top: 1px"></span><span><span class="item" style="display: block">On late mornings, meditate right after waking</span><span class="meta">Keeps the 2 PM block on other days</span></span></label>
+          <label class="tile flex g10 top" style="background: #fff"><span class="ring" aria-hidden="true" style="margin-top: 1px"></span><span><span class="item" style="display: block">Protect the 2 PM block from work</span><span class="meta">Turns on a do-not-disturb at 1:55 PM</span></span></label>
+          <label class="tile flex g10 top" style="background: #fff"><span class="ring" aria-hidden="true" style="margin-top: 1px"></span><span><span class="item" style="display: block">Write my own change</span></span></label>
+        </div>
+        <a href="InsightTest.dc.html" class="btn l full" style="margin-top: 12px">Start test · 6 to 19 Nov</a>
+        <button class="btn ghost full" style="margin-top: 4px">Not now · keep in history</button>
+      </section>
+      <section class="tile">
+        <div class="h3">How sure is this?</div>
+        <div class="col g8" style="margin-top: 10px">
+          <div class="flex between meta"><span>Days of data</span><span style="color: #111">30 of 30</span></div>
+          <div class="flex between meta"><span>Smaller group</span><span style="color: #111">9 days</span></div>
+          <div class="flex between meta"><span>Gap between groups</span><span style="color: #111">60 points</span></div>
+          <div class="flex between meta"><span>Overall</span><span class="tag t-am">Moderate</span></div>
+        </div>
+        <p class="meta" style="margin: 10px 0 0; line-height: 18px">A big gap, but from few late days. It shows a link, not a cause.</p>
+      </section>
+      <section>
+        <div class="h3" style="margin-bottom: 8px">Data used</div>
+        <div class="col g6">
+          <a href="Sleep.dc.html" class="tile flex between"><span class="item">Sleep log</span><span class="meta">30 nights</span></a>
+          <a href="HabitDetail.dc.html" class="tile flex between"><span class="item">Meditate habit</span><span class="meta">30 days</span></a>
+          <a href="Calendar.dc.html" class="tile flex between"><span class="item">Schedule blocks</span><span class="meta">30 days</span></a>
+        </div>
+      </section>
+      <button class="btn ghost" style="align-self: flex-start">This is wrong or not useful</button>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1400}}'>
+class Component extends DCLogic {
+  renderVals() {
+    // wake minutes after 5:45; 21 early (<=45), 9 late (>45). 15 early done, 1 late done.
+    var early = [5, 8, 12, 14, 17, 20, 22, 24, 26, 28, 30, 31, 33, 35, 36, 38, 40, 41, 42, 44, 45];
+    var late = [52, 55, 58, 62, 66, 71, 78, 86, 101];
+    var span = 135, dots = [];
+    early.forEach(function (m, i) { var done = i % 7 !== 3 && i !== 20 && i !== 9 && i !== 16 ? true : false; dots.push({ m: m, done: done }); });
+    // ensure exactly 15 early done
+    var cnt = dots.filter(function (d) { return d.done; }).length;
+    for (var k = 0; cnt > 15 && k < dots.length; k++) { if (dots[k].done) { dots[k].done = false; cnt--; } }
+    for (k = 0; cnt < 15 && k < dots.length; k++) { if (!dots[k].done) { dots[k].done = true; cnt++; } }
+    late.forEach(function (m, i) { dots.push({ m: m, done: i === 1 }); });
+    var out = dots.map(function (d, i) {
+      return { x: (d.m / span * 100).toFixed(1), y: d.done ? 18 + (i % 3) * 12 : 58 + (i % 3) * 10, bg: d.done ? '#f5f5f4' : 'transparent', sh: d.done ? 'none' : 'inset 0 0 0 1.5px #6a6a6e', t: d.done ? 'Meditated' : 'Did not' };
+    });
+    return {
+      cut: (45 / span * 100).toFixed(1),
+      dots: out,
+      qa: [
+        { n: 1, q: 'What is happening?', a: 'You meditated on 15 of 21 days you were up by 6:30, and on 1 of 9 days you got up later.', l: 'Fact', lc: 't-gr', extra: '' },
+        { n: 2, q: 'How often?', a: 'Overall 16 of 30 days. Late mornings happened 9 times, about twice a week.', l: 'Fact', lc: 't-gr', extra: '' },
+        { n: 3, q: 'When?', a: 'Late mornings fall mostly on Mondays and Wednesdays. On 6 of those 9 days, Deep work ran past 2 PM into the Meditation block.', l: 'Fact', lc: 't-gr', extra: '' },
+        { n: 4, q: 'What else goes with it?', a: 'Late mornings follow nights under 7 hours on 7 of 9 occasions. Client meetings showed no clear link.', l: 'Correlation', lc: 't-vi', extra: 'Cause not proven · 30 days' },
+        { n: 5, q: 'What might be causing it?', a: 'When the day starts late, work spills into the afternoon and the 2 PM block gets used to catch up.', l: 'Hypothesis', lc: '', extra: 'Unproven. A test can check it.' },
+        { n: 6, q: 'What could you change?', a: 'On late mornings, meditate right after waking instead of at 2 PM. Or protect the 2 PM block from work.', l: 'Recommendation', lc: 't-bl', extra: '' },
+        { n: 7, q: 'Did a change help before?', a: 'Yes, once. In September you tried meditating right after waking: 4 of 14 days before, 9 of 14 during. You moved it back to 2 PM on 12 October.', l: 'Fact', lc: 't-gr', extra: 'See the result on the test page.' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

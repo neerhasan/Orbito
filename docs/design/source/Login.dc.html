@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Log in</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ember.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0;background:#0f0f10}</style>
+</helmet>
+<div class="app solo" style="min-height: 900px; display: flex; flex-direction: column">
+  <div class="flex g8" style="padding: 12px 10px">
+    <div style="width: 26px; height: 26px; border-radius: 8px; background: #ff5a1f; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 11.5L6 8l2.5 2L12 6"></path><circle cx="13" cy="5" r="1.2" fill="#fff" stroke="none"></circle></svg></div>
+    <span style="font-size: 14px; font-weight: 600">Life System</span>
+  </div>
+  <div style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px 16px 80px">
+    <form class="card" style="width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 18px">
+      <div>
+        <h1 class="h1s">Log in</h1>
+        <p class="meta" style="margin: 6px 0 0">Welcome back. Your day is ready.</p>
+      </div>
+      <div class="field"><label class="lbl" for="em">Email</label><input id="em" class="input" type="email" value="zihad@example.com" autocomplete="email"></div>
+      <div class="field">
+        <div class="flex between"><label class="lbl" for="pw">Password</label><a href="#" class="meta" style="margin-bottom: 6px; color: #111">Forgot password?</a></div>
+        <input id="pw" class="input" type="password" value="••••••••••" autocomplete="current-password">
+      </div>
+      <label class="flex g8 meta" style="color: #111"><input type="checkbox" checked style="width: 16px; height: 16px; accent-color: #111; margin: 0">Keep me logged in on this device</label>
+      <button class="btn l full" type="submit" style="font-size: 14px">Log in</button>
+      <div class="flex g10 cap"><span class="sep grow"></span>or<span class="sep grow"></span></div>
+      <button class="btn l soft full" type="button" style="font-size: 14px"><dc-import name="Icon" i="mail" hint-size="16px,16px"></dc-import>Email me a login link</button>
+      <p class="meta" style="margin: 4px 0 0; text-align: center">New here? <a href="Signup.dc.html" style="color: #111; font-weight: 500">Create an account</a></p>
+    </form>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

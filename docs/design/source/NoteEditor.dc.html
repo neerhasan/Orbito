@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Note – Life System plan</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ember.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0;background:#0f0f10}</style>
+</helmet>
+<div class="app" style="min-height: 1300px">
+  <dc-import name="Titlebar" hint-size="100%,58px"></dc-import>
+  <div class="row">
+    <dc-import name="Sidebar" active="notes" hint-size="232px,1000px"></dc-import>
+    <main class="panel" style="padding: 0; gap: 0; overflow: hidden">
+      <div style="height: 150px; background: linear-gradient(90deg, #ff5a1f, #ff9a5c, #ffd3b0); position: relative">
+        <div class="flex g6" style="position: absolute; right: 16px; bottom: 12px"><button class="btn soft" style="background: rgba(255,255,255,0.85)"><dc-import name="Icon" i="image" s="14" hint-size="14px,14px"></dc-import>Change cover</button></div>
+      </div>
+      <article style="max-width: 760px; width: 100%; margin: 0 auto; padding: 0 40px 48px; display: flex; flex-direction: column; gap: 18px">
+        <div class="itile" style="width: 52px; height: 52px; border-radius: 14px; background: #fbfaf7; color: #d5430f; margin-top: -26px; box-shadow: 0 0 0 4px #fbfaf7"><dc-import name="Icon" i="code" s="26" w="1.6" hint-size="26px,26px"></dc-import></div>
+        <div class="flex between wrap g8">
+          <a href="Notes.dc.html" class="flex g6 meta"><dc-import name="Icon" i="folder" s="14" hint-size="14px,14px"></dc-import>Work</a>
+          <div class="flex g6">
+            <button class="btn soft"><dc-import name="Icon" i="spark" s="14" hint-size="14px,14px"></dc-import>Summarize</button>
+            <button class="btn soft"><dc-import name="Icon" i="edit" s="14" hint-size="14px,14px"></dc-import>Rewrite</button>
+            <button class="ib" aria-label="More"><dc-import name="Icon" i="more" hint-size="16px,16px"></dc-import></button>
+          </div>
+        </div>
+        <h1 class="h1" style="margin-top: -6px">Life System plan</h1>
+        <div class="flex wrap g6"><span class="tag t-bl">#work</span><span class="tag t-em">Project: Build Life System app</span><span class="tag">Goal: Profitable software business</span><button class="add" style="padding: 3px 7px">Add link</button></div>
+
+        <div class="tile" style="background: #eee7fd">
+          <div class="flex between"><span class="flex g6" style="font-size: 12px; font-weight: 600; color: #6c43d0"><dc-import name="Icon" i="spark" s="14" hint-size="14px,14px"></dc-import>AI summary</span><span class="cap" style="color: #6c43d0">Made 9:20 AM from this note · edit or remove</span></div>
+          <p class="body" style="margin: 8px 0 0; color: #2b1c5c">v1 covers Today, Tasks, Habits and Focus. Insights wait for 14 days of data. Two tasks are open: data model today, design review Friday.</p>
+        </div>
+
+        <h2 style="margin: 8px 0 0; font-size: 20px; line-height: 26px; font-weight: 700">Scope for v1</h2>
+        <p class="body" style="margin: 0">The first version should make daily tracking take one tap. Everything else can wait until people use it every day for two weeks.</p>
+        <ul class="body" style="margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px">
+          <li>Today, with the Life line and schedule</li>
+          <li>Tasks with focus timer and distraction logging</li>
+          <li>Habits and sleep, logged by hand</li>
+        </ul>
+
+        <h2 style="margin: 8px 0 0; font-size: 20px; line-height: 26px; font-weight: 700">Next steps</h2>
+        <div class="col g8">
+          <div class="tile flex g10" style="background: #fff; box-shadow: inset 0 0 0 1px #e9e7e1"><span class="ring done" aria-hidden="true"></span><span class="item grow soft">Draft dashboard layout</span><span class="meta">Done Mon</span></div>
+          <div class="tile flex g10" style="background: #fff; box-shadow: inset 0 0 0 1px #e9e7e1"><span class="ring md" aria-hidden="true"></span><span class="item grow">Define data model</span><span class="tag t-em">Life System</span><span class="meta">Today 4:00 PM</span></div>
+          <div class="tile flex g10" style="background: #fff; box-shadow: inset 0 0 0 1px #e9e7e1"><span style="width: 18px; height: 18px; border-radius: 9999px; background: #e4edfd; color: #2b62d9; display: flex; align-items: center; justify-content: center"><dc-import name="Icon" i="calendar" s="11" w="2" hint-size="11px,11px"></dc-import></span><span class="item grow">Design review</span><span class="meta">Event · Fri 6 Nov, 3:00 PM</span></div>
+        </div>
+        <p class="cap ink" style="margin: -8px 0 0">Tasks and events made here also appear in Tasks and Calendar.</p>
+
+        <blockquote style="margin: 4px 0 0; padding: 4px 0 4px 14px; box-shadow: inset 2px 0 0 #c9c6be" class="body">Evidence over motivation. If a screen cannot show a real number, it should not show one.</blockquote>
+
+        <div style="position: relative">
+          <div class="flex g8 body"><span class="soft">/</span><span class="soft">Type / for blocks</span></div>
+          <div role="menu" aria-label="Insert block" style="position: absolute; top: 28px; left: 0; width: 280px; background: #ffffff; border-radius: 12px; box-shadow: 0 0 0 1px #e9e7e1; padding: 6px; z-index: 2">
+            <div class="cap ink" style="padding: 6px 8px">Blocks</div>
+            <div class="flex g10" style="padding: 8px; border-radius: 8px; background: #f3f2ee"><span class="itile" style="width: 24px; height: 24px; background: #fff"><dc-import name="Icon" i="tasks" s="14" hint-size="14px,14px"></dc-import></span><span class="item grow">Task</span><span class="cap">[ ]</span></div>
+            <div class="flex g10" style="padding: 8px"><span class="itile" style="width: 24px; height: 24px; background: #f3f2ee"><dc-import name="Icon" i="calendar" s="14" hint-size="14px,14px"></dc-import></span><span class="item grow">Event</span><span class="cap">@date</span></div>
+            <div class="flex g10" style="padding: 8px"><span class="itile" style="width: 24px; height: 24px; background: #f3f2ee"><dc-import name="Icon" i="text" s="14" hint-size="14px,14px"></dc-import></span><span class="item grow">Heading</span><span class="cap">#</span></div>
+            <div class="flex g10" style="padding: 8px"><span class="itile" style="width: 24px; height: 24px; background: #f3f2ee"><dc-import name="Icon" i="bullet" s="14" hint-size="14px,14px"></dc-import></span><span class="item grow">Bullet list</span><span class="cap">-</span></div>
+            <div class="flex g10" style="padding: 8px"><span class="itile" style="width: 24px; height: 24px; background: #f3f2ee"><dc-import name="Icon" i="quote" s="14" hint-size="14px,14px"></dc-import></span><span class="item grow">Quote</span><span class="cap">&gt;</span></div>
+            <div class="flex g10" style="padding: 8px"><span class="itile" style="width: 24px; height: 24px; background: #f3f2ee"><dc-import name="Icon" i="image" s="14" hint-size="14px,14px"></dc-import></span><span class="item grow">Image</span><span class="cap"></span></div>
+            <div class="flex g10" style="padding: 8px"><span class="itile" style="width: 24px; height: 24px; background: #f3f2ee"><dc-import name="Icon" i="link" s="14" hint-size="14px,14px"></dc-import></span><span class="item grow">Link to goal or project</span><span class="cap"></span></div>
+          </div>
+          <div style="height: 300px"></div>
+        </div>
+      </article>
+    </main>
+
+    <aside class="rail">
+      <section>
+        <div class="sh"><h2 class="h2"><dc-import name="Icon" i="list" hint-size="16px,16px"></dc-import>On this page</h2></div>
+        <div class="col g8 meta"><a href="#" style="color: #111">Scope for v1</a><a href="#">Next steps</a></div>
+      </section>
+      <section>
+        <div class="sh"><h2 class="h2"><dc-import name="Icon" i="spark" hint-size="16px,16px"></dc-import>AI actions</h2></div>
+        <div class="col g8">
+          <button class="tile flex g10" style="border: 0; text-align: left"><div class="grow"><div class="item">Summarize</div><div class="meta" style="margin-top: 3px">Adds a labelled summary at the top</div></div></button>
+          <button class="tile flex g10" style="border: 0; text-align: left"><div class="grow"><div class="item">Rewrite selection</div><div class="meta" style="margin-top: 3px">Shorter, clearer or more formal. You review before it replaces anything.</div></div></button>
+          <button class="tile flex g10" style="border: 0; text-align: left"><div class="grow"><div class="item">Find tasks in this note</div><div class="meta" style="margin-top: 3px">Suggests tasks; nothing is created until you accept</div></div></button>
+        </div>
+      </section>
+      <section>
+        <div class="sh"><h2 class="h2"><dc-import name="Icon" i="link" hint-size="16px,16px"></dc-import>Linked from</h2></div>
+        <div class="col g8">
+          <a href="ProjectDetail.dc.html" class="tile flex between"><span class="item">Build Life System app</span><span class="meta">Project</span></a>
+          <a href="Tasks.dc.html" class="tile flex between"><span class="item">UI research</span><span class="meta">Task</span></a>
+        </div>
+      </section>
+      <section class="meta">Saved · edited 9:24 AM · 412 words</section>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1300}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

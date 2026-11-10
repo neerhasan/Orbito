@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mobile Today – option A</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ember.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0;background:#0f0f10}</style>
+</helmet>
+<div style="width: 390px; height: 1700px; position: relative; overflow: hidden; background: #0f0f10; color: #f5f5f4; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-weight: 500; border-radius: 40px">
+  <!-- Shell header -->
+  <header style="padding: 52px 16px 14px; display: flex; flex-direction: column; gap: 14px">
+    <div class="flex between">
+      <div class="flex g8">
+        <div style="width: 26px; height: 26px; border-radius: 8px; background: #ff5a1f; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 11.5L6 8l2.5 2L12 6"></path><circle cx="13" cy="5" r="1.2" fill="#fff" stroke="none"></circle></svg></div>
+        <div><div style="font-size: 15px; font-weight: 600">Today</div><div style="font-size: 11px; color: #9a9a9e">Thu 5 Nov</div></div>
+      </div>
+      <div class="flex g8">
+        <button aria-label="Search, add or log" style="width: 40px; height: 40px; border: 0; border-radius: 12px; background: #1e1e20; color: #f5f5f4; display: flex; align-items: center; justify-content: center"><dc-import name="Icon" i="search" s="18" hint-size="18px,18px"></dc-import></button>
+        <button aria-label="Account" style="width: 40px; height: 40px; border: 0; border-radius: 9999px; background: #262628; color: #f5f5f4; font-size: 14px; font-weight: 600">Z</button>
+      </div>
+    </div>
+    <!-- Live focus -->
+    <div style="background: #1e1e20; border-radius: 14px; padding: 12px 12px 12px 14px; display: flex; align-items: center; gap: 12px">
+      <span style="width: 8px; height: 8px; border-radius: 9999px; background: #ff5a1f"></span>
+      <div class="grow"><div style="font-size: 13px">Deep work · UI research</div><div style="height: 4px; border-radius: 3px; background: #262628; margin-top: 8px"><div style="width: 18%; height: 100%; border-radius: 3px; background: #ff5a1f"></div></div></div>
+      <span class="num" style="font-size: 15px; font-weight: 600; color: #ff5a1f">32:14</span>
+      <button aria-label="Pause" style="width: 36px; height: 36px; border: 0; border-radius: 9999px; background: #ff5a1f; color: #fff; display: flex; align-items: center; justify-content: center"><dc-import name="Icon" i="pause" w="2.2" hint-size="16px,16px"></dc-import></button>
+    </div>
+  </header>
+
+  <!-- One paper sheet -->
+  <main style="margin: 0 8px; background: #fbfaf7; color: #111; border-radius: 24px; padding: 20px 16px 120px; display: flex; flex-direction: column; gap: 22px">
+    <p style="margin: 0; font-size: 15px; line-height: 22px">Good morning, Zihad. <span class="chip t-em">3 tasks · 1 overdue</span> <span class="chip t-bl">1 meeting</span> <span class="chip t-gr">2 habits left</span></p>
+
+    <!-- Life line compact -->
+    <section class="dark" style="padding: 16px 16px 12px">
+      <div class="flex between"><span class="meta">Life line</span><span class="chip t-dk">+4 this month</span></div>
+      <div class="flex g8" style="align-items: baseline; margin-top: 2px"><span style="font-size: 40px; line-height: 48px; font-weight: 700; letter-spacing: -0.03em; color: #fff">62</span><span style="font-size: 13px; color: #9a9a9e">/ 100 · Building</span></div>
+      <svg viewBox="0 0 330 70" style="display: block; width: 100%; height: auto; margin-top: 4px" aria-label="Life line rising to 62, desired 90 by Dec 2027" role="img">
+        <path d="M0 58 L18 54 L36 60 L54 50 L72 54 L90 44 L108 48 L126 40 L144 42 L162 34" fill="none" stroke="#ff5a1f" stroke-width="2" stroke-linejoin="round"></path>
+        <path d="M162 34 L320 8" stroke="#8a8a8e" stroke-width="1.6" stroke-dasharray="0.5 5" stroke-linecap="round"></path>
+        <circle cx="162" cy="34" r="4.5" fill="#ff5a1f" stroke="#fff" stroke-width="2"></circle>
+        <circle cx="320" cy="8" r="5" fill="#141415" stroke="#fff" stroke-width="2"></circle>
+      </svg>
+      <div class="flex between meta" style="margin-top: 4px"><span>3 points to Established</span><span>90 by Dec 2027</span></div>
+    </section>
+
+    <!-- Habits: one-tap rings -->
+    <section>
+      <div class="sh"><h2 class="h2"><dc-import name="Icon" i="habit" hint-size="16px,16px"></dc-import>Habits</h2><span class="meta">2 of 4</span></div>
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px">
+        <button style="border: 0; background: #f3f2ee; border-radius: 14px; padding: 12px 4px; display: flex; flex-direction: column; align-items: center; gap: 8px; min-height: 92px"><span class="ring done lg" aria-hidden="true" style="width: 32px; height: 32px"></span><span style="font-size: 11px; line-height: 13px; color: #a8a59e; text-align: center">Wake by 7:00</span></button>
+        <button style="border: 0; background: #f3f2ee; border-radius: 14px; padding: 12px 4px; display: flex; flex-direction: column; align-items: center; gap: 8px; min-height: 92px"><span class="ring done lg" aria-hidden="true" style="width: 32px; height: 32px"></span><span style="font-size: 11px; line-height: 13px; color: #a8a59e; text-align: center">Read book</span></button>
+        <button style="border: 0; background: #f3f2ee; border-radius: 14px; padding: 12px 4px; display: flex; flex-direction: column; align-items: center; gap: 8px; min-height: 92px"><span class="ring lg" aria-hidden="true" style="width: 32px; height: 32px"></span><span style="font-size: 11px; line-height: 13px; text-align: center">Meditate<br><span style="color: #77746e">2 PM</span></span></button>
+        <button style="border: 0; background: #f3f2ee; border-radius: 14px; padding: 12px 4px; display: flex; flex-direction: column; align-items: center; gap: 8px; min-height: 92px"><span class="ring lg" aria-hidden="true" style="width: 32px; height: 32px"></span><span style="font-size: 11px; line-height: 13px; text-align: center">Master skill</span></button>
+      </div>
+    </section>
+
+    <!-- Next up -->
+    <section>
+      <div class="sh"><h2 class="h2"><dc-import name="Icon" i="calendar" hint-size="16px,16px"></dc-import>Next up</h2><a href="#" class="meta">Full schedule</a></div>
+      <div class="col g8">
+        <div class="tile flex g12" style="min-height: 56px"><span class="meta num" style="width: 44px; color: #111">12:00</span><div class="grow"><div class="item">Client call</div><div class="meta" style="margin-top: 3px">45 min · in 2h 28m</div></div><button class="btn" style="height: 36px"><dc-import name="Icon" i="video" s="14" hint-size="14px,14px"></dc-import>Join</button></div>
+        <div class="tile flex g12" style="min-height: 56px"><span class="meta num" style="width: 44px; color: #111">2:00</span><div class="grow"><div class="item">Meditation</div><div class="meta" style="margin-top: 3px">Completes habit Meditate</div></div><button class="ring" aria-label="Complete Meditation" style="width: 24px; height: 24px"></button></div>
+        <div class="tile flex g12" style="min-height: 56px"><span class="meta num" style="width: 44px; color: #111">4:00</span><div class="grow"><div class="item">Define data model</div><div class="meta" style="margin-top: 3px">Task · Life System</div></div><button class="ring md" aria-label="Complete Define data model" style="width: 24px; height: 24px"></button></div>
+      </div>
+    </section>
+
+    <!-- Tasks -->
+    <section>
+      <div class="sh"><h2 class="h2"><dc-import name="Icon" i="tasks" hint-size="16px,16px"></dc-import>Tasks</h2><span class="meta">3 today</span></div>
+      <div class="col g10">
+        <div class="trow" style="min-height: 40px"><button class="ring hi" aria-label="Complete Send invoice" style="width: 24px; height: 24px"></button><div class="grow"><div class="item">Send invoice</div><div class="meta em" style="margin-top: 3px">Overdue · yesterday</div></div></div>
+        <div class="trow" style="min-height: 40px"><button class="ring hi" aria-label="Complete UI research" style="width: 24px; height: 24px"></button><div class="grow"><div class="item">UI research</div><div class="meta" style="margin-top: 3px">Focus running · 1 of 3 subtasks</div></div></div>
+        <div class="trow" style="min-height: 40px"><button class="ring" aria-label="Complete Weekly review" style="width: 24px; height: 24px"></button><div class="grow"><div class="item">Weekly review</div><div class="meta" style="margin-top: 3px">5:30 PM · weekly</div></div></div>
+      </div>
+    </section>
+
+    <!-- Insight -->
+    <section class="tile p">
+      <div class="flex g8"><dc-import name="Icon" i="insight" hint-size="16px,16px"></dc-import><span class="item">1 new insight</span></div>
+      <p class="item" style="margin: 8px 0 0; line-height: 19px">Meditation is done on 71% of early-wake days and 11% of late ones.</p>
+      <div class="flex wrap g6" style="margin-top: 8px"><span class="tag t-vi">Correlation</span><span class="tag">Cause not proven</span><span class="tag">30 days</span></div>
+      <button class="btn" style="margin-top: 12px; height: 40px">Test a fix for 14 days</button>
+    </section>
+
+    <!-- Sleep -->
+    <section class="tile flex between" style="padding: 14px 16px">
+      <div><div class="flex g8 meta"><dc-import name="Icon" i="sleep" s="14" hint-size="14px,14px"></dc-import>Sleep</div><div class="stat" style="margin-top: 4px">7h 10m</div><div class="meta">11:30 PM to 6:40 AM</div></div>
+      <span class="tag t-gr">82% consistent</span>
+    </section>
+  </main>
+
+  <!-- Tab bar -->
+  <nav aria-label="Tabs" style="position: absolute; left: 12px; right: 12px; bottom: 20px; height: 68px; background: #1e1e20; border-radius: 22px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: center; padding: 0 6px">
+    <a href="#" aria-current="page" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: #f5f5f4; font-size: 10px"><span style="color: #ff5a1f; display: flex"><dc-import name="Icon" i="today" s="20" hint-size="20px,20px"></dc-import></span>Today</a>
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: #9a9a9e; font-size: 10px"><dc-import name="Icon" i="tasks" s="20" hint-size="20px,20px"></dc-import>Tasks</a>
+    <a href="Focus.dc.html" aria-label="Focus" style="justify-self: center; width: 56px; height: 56px; border-radius: 9999px; background: #f5f5f4; color: #111; display: flex; align-items: center; justify-content: center; margin-top: -26px; box-shadow: 0 0 0 6px #0f0f10"><dc-import name="Icon" i="focus" s="24" w="1.9" hint-size="24px,24px"></dc-import></a>
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: #9a9a9e; font-size: 10px"><dc-import name="Icon" i="habit" s="20" hint-size="20px,20px"></dc-import>Habits</a>
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: #9a9a9e; font-size: 10px"><dc-import name="Icon" i="insight" s="20" hint-size="20px,20px"></dc-import>Insights</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1700}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

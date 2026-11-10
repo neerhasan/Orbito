@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sidebar</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ember.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<nav aria-label="Main" style="width: 232px; flex: 0 0 232px; padding: 2px 10px 24px 12px; display: flex; flex-direction: column; background: #0f0f10; color: #f5f5f4; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-weight: 500">
+
+  <section aria-label="Reminders" style="background: #1e1e20; border: 1px solid #ff5a1f; border-radius: 14px; padding: 12px 12px 14px 14px; display: flex; flex-direction: column; gap: 10px">
+    <div style="display: flex; align-items: center; justify-content: space-between">
+      <h2 style="margin: 0; font-size: 13px; line-height: 16px; font-weight: 600">Reminders</h2>
+      <button class="ib" aria-label="Add reminder" style="width: 24px; height: 24px; color: #9a9a9e"><dc-import name="Icon" i="plus" hint-size="16px,16px"></dc-import></button>
+    </div>
+    <sc-for list="{{reminders}}" as="r" hint-placeholder-count="3">
+      <div style="display: flex; gap: 10px; align-items: flex-start">
+        <button aria-label="Mark done: {{r.t}}" style="width: 16px; height: 16px; flex: none; margin-top: 1px; border-radius: 4px; border: 1.5px solid #6a6a6e; background: #262628; padding: 0"></button>
+        <div><div style="font-size: 13px; line-height: 16px">{{r.t}}</div><div style="font-size: 11px; line-height: 13px; font-weight: 400; color: #9a9a9e; margin-top: 2px">{{r.at}}</div></div>
+      </div>
+    </sc-for>
+    <sc-if value="{{noRem}}" hint-placeholder-val="{{false}}">
+      <div style="font-size: 12px; line-height: 16px; font-weight: 400; color: #9a9a9e">Nothing yet. Type “remind me” in the launcher to add one.</div>
+    </sc-if>
+  </section>
+
+  <sc-for list="{{groups}}" as="g" hint-placeholder-count="4">
+    <sc-if value="{{g.label}}" hint-placeholder-val="{{true}}">
+      <div style="font-size: 11px; line-height: 13px; color: #6a6a6e; padding-left: 8px; margin: 18px 0 6px">{{g.label}}</div>
+    </sc-if>
+    <sc-if value="{{g.first}}" hint-placeholder-val="{{false}}">
+      <div style="height: 16px"></div>
+    </sc-if>
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <sc-for list="{{g.items}}" as="it" hint-placeholder-count="3">
+        <sc-if value="{{it.on}}" hint-placeholder-val="{{false}}">
+          <a href="#" aria-current="page" style="height: 30px; border-radius: 8px; background: #262628; color: #f5f5f4; display: flex; align-items: center; gap: 10px; padding: 0 8px; font-size: 13px">
+            <span style="color: #ff5a1f; display: flex"><dc-import name="Icon" i="{{it.icon}}" hint-size="16px,16px"></dc-import></span>
+            <span style="flex: 1">{{it.label}}</span><span style="font-size: 11px; color: #9a9a9e">{{it.count}}</span>
+          </a>
+        </sc-if>
+        <sc-if value="{{it.off}}" hint-placeholder-val="{{true}}">
+          <a href="#" style="height: 30px; border-radius: 8px; color: #9a9a9e; display: flex; align-items: center; gap: 10px; padding: 0 8px; font-size: 13px">
+            <dc-import name="Icon" i="{{it.icon}}" hint-size="16px,16px"></dc-import>
+            <span style="flex: 1">{{it.label}}</span><span style="font-size: 11px; color: #6a6a6e">{{it.count}}</span>
+          </a>
+        </sc-if>
+      </sc-for>
+    </div>
+  </sc-for>
+
+  <div style="display: flex; align-items: center; justify-content: space-between; padding-left: 8px; margin: 18px 0 6px">
+    <span style="font-size: 11px; line-height: 13px; color: #6a6a6e">Life areas</span>
+    <button class="ib" aria-label="Add life area" style="width: 22px; height: 22px; color: #6a6a6e"><dc-import name="Icon" i="plus" s="14" hint-size="14px,14px"></dc-import></button>
+  </div>
+  <div style="display: flex; flex-direction: column; gap: 2px">
+    <sc-for list="{{areas}}" as="a" hint-placeholder-count="4">
+      <a href="#" style="height: 30px; border-radius: 8px; color: {{a.c}}; background: {{a.bg}}; display: flex; align-items: center; gap: 12px; padding: 0 12px; font-size: 13px"><span style="width: 7px; height: 7px; border-radius: 9999px; background: {{a.dot}}"></span>{{a.n}}</a>
+    </sc-for>
+  </div>
+
+  <div style="display: flex; align-items: center; justify-content: space-between; padding-left: 8px; margin: 18px 0 6px">
+    <span style="font-size: 11px; line-height: 13px; color: #6a6a6e">Folders</span>
+    <button class="ib" aria-label="Add folder" style="width: 22px; height: 22px; color: #6a6a6e"><dc-import name="Icon" i="plus" s="14" hint-size="14px,14px"></dc-import></button>
+  </div>
+  <div style="display: flex; flex-direction: column; gap: 2px">
+    <sc-for list="{{folders}}" as="f" hint-placeholder-count="3">
+      <a href="#" style="height: 30px; border-radius: 8px; color: #9a9a9e; display: flex; align-items: center; gap: 10px; padding: 0 8px; font-size: 13px">
+        <dc-import name="Icon" i="folder" hint-size="16px,16px"></dc-import>
+        <span style="flex: 1">{{f.n}}</span><span style="font-size: 11px; color: #6a6a6e">{{f.k}}</span>
+      </a>
+    </sc-for>
+  </div>
+
+  <div style="display: flex; align-items: center; justify-content: space-between; padding-left: 8px; margin: 18px 0 8px">
+    <span style="font-size: 11px; line-height: 13px; color: #6a6a6e">Tags</span>
+    <button class="ib" aria-label="Add tag" style="width: 22px; height: 22px; color: #6a6a6e"><dc-import name="Icon" i="plus" s="14" hint-size="14px,14px"></dc-import></button>
+  </div>
+  <div style="display: flex; flex-wrap: wrap; gap: 6px; padding-left: 8px">
+    <a href="#" style="font-size: 11px; line-height: 13px; color: #9a9a9e; background: #1e1e20; border-radius: 6px; padding: 4px 8px">#work</a>
+    <a href="#" style="font-size: 11px; line-height: 13px; color: #9a9a9e; background: #1e1e20; border-radius: 6px; padding: 4px 8px">#idea</a>
+    <a href="#" style="font-size: 11px; line-height: 13px; color: #9a9a9e; background: #1e1e20; border-radius: 6px; padding: 4px 8px">#family</a>
+  </div>
+
+  <a href="#" style="margin-top: 22px; height: 30px; border-radius: 8px; color: {{setC}}; background: {{setBg}}; display: flex; align-items: center; gap: 10px; padding: 0 8px; font-size: 13px">
+    <dc-import name="Icon" i="settings" hint-size="16px,16px"></dc-import>Settings
+  </a>
+</nav>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"fresh":{"editor":"boolean","default":false},"active":{"editor":"enum","default":"today","options":["today","upcoming","inbox","calendar","tasks","projects","goals","notes","habits","sleep","focus","time","analytics","insights","settings","health","career","financial","family"]},"$preview":{"width":232,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var a = this.props.active ?? 'today';
+    var fresh = !!this.props.fresh;
+    var mk = function (key, label, icon, count) {
+      return { key: key, label: label, icon: icon, count: count || '', on: a === key, off: a !== key };
+    };
+    var groups = [
+      { label: '', first: true, items: [mk('today', 'Today', 'today'), mk('upcoming', 'Upcoming', 'upcoming'), mk('inbox', 'Inbox', 'inbox', fresh ? '' : '3'), mk('calendar', 'Calendar', 'calendar')] },
+      { label: 'Plan', first: false, items: [mk('tasks', 'Tasks', 'tasks'), mk('projects', 'Projects', 'folder'), mk('goals', 'Goals', 'goal'), mk('notes', 'Notes', 'note')] },
+      { label: 'Daily', first: false, items: [mk('habits', 'Habits', 'habit'), mk('sleep', 'Sleep', 'sleep'), mk('focus', 'Focus', 'focus')] },
+      { label: 'Understand', first: false, items: [mk('time', 'Time', 'time'), mk('analytics', 'Analytics', 'analytics'), mk('insights', 'Insights', 'insight')] }
+    ];
+    var area = function (key, n, dot) {
+      var on = a === key;
+      return { n: n, dot: dot, c: on ? '#f5f5f4' : '#9a9a9e', bg: on ? '#262628' : 'transparent' };
+    };
+    return {
+      groups: groups,
+      reminders: fresh ? [] : [{ t: 'Send invoice to client', at: '5:00 PM' }, { t: 'Call family', at: '7:30 PM' }, { t: 'Prep tomorrow’s plan', at: '9:00 PM' }],
+      noRem: fresh,
+      areas: [area('health', 'Health', '#23a35a'), area('career', 'Career', '#2b62d9'), area('financial', 'Financial Freedom', '#e0a400'), area('family', 'Family', '#c65bd6')],
+      folders: fresh ? [{ n: 'Notes', k: '0' }] : [{ n: 'Work', k: '4' }, { n: 'Reviews', k: '6' }, { n: 'Reading', k: '3' }],
+      setC: a === 'settings' ? '#f5f5f4' : '#9a9a9e',
+      setBg: a === 'settings' ? '#262628' : 'transparent'
+    };
+  }
+}
+</script>
+</body>
+</html>
