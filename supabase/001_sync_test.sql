@@ -48,6 +48,7 @@ create policy "sync_test: own rows only"
 -- Let signed-in users reach the table at all. The rule above then limits
 -- them to their own rows. People who are not signed in get no access.
 revoke all on public.sync_test from anon;
+revoke all on public.sync_test from authenticated;
 grant select, insert, update, delete on public.sync_test to authenticated;
 
 -- 4. What PowerSync needs to copy the table to devices.
