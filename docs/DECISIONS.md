@@ -5,6 +5,9 @@ Decided by the founder:
 - Stack: Flutter, SQLite with Drift, Supabase, PowerSync.
 - Accounts, server and sync are in the first release.
 - The approval process is paused until the founder has tested v1.
+- 2026-11-11: M0 (sync proof) approved.
+- 2026-11-11: Life areas: 3 to 8 is a suggestion shown to the user, not a limit. Any number is allowed.
+- 2026-11-11: Build the Windows (PC) version first. Work on the Android screens starts only after the founder has finalised the PC version. The code stays shared and the Android build must keep compiling, but no Android layouts are designed or tested until then.
 
 Defaults used until the founder changes them:
 - Sign-in: email and password, verification off during the test.

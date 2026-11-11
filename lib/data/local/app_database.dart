@@ -2,23 +2,18 @@ import 'package:drift/drift.dart';
 
 part 'app_database.g.dart';
 
-/// M0 test table. It exists only to prove that sign-in and sync work.
+/// The columns every synced table has.
 ///
 /// Timestamps are kept as text (ISO 8601, UTC) because that is how PowerSync
 /// stores them on the device.
-@DataClassName('SyncTestRow')
-class SyncTestRows extends Table {
-  @override
-  String get tableName => 'sync_test';
-
+mixin SyncColumns on Table {
   /// UUID made on the device.
   TextColumn get id => text()();
   TextColumn get userId => text()();
-
-  /// The SQL column is called `text`. It is named `body` in Dart because
-  /// `text` is already the name of Drift's column builder.
-  TextColumn get body => text().named('text')();
   TextColumn get createdAt => text()();
+
+  /// The device time is only a placeholder. The server replaces it with its
+  /// own time when the row is uploaded.
   TextColumn get updatedAt => text()();
 
   /// Set when the row is deleted (soft delete), so other devices learn of it.
@@ -28,7 +23,100 @@ class SyncTestRows extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-@DriftDatabase(tables: [SyncTestRows])
+/// M0 test table. It exists only to prove that sign-in and sync work.
+@DataClassName('SyncTestRow')
+class SyncTestRows extends Table with SyncColumns {
+  @override
+  String get tableName => 'sync_test';
+
+  /// The SQL column is called `text`. It is named `body` in Dart because
+  /// `text` is already the name of Drift's column builder.
+  TextColumn get body => text().named('text')();
+}
+
+/// A part of life the user looks after, for example Health or Career.
+@DataClassName('LifeArea')
+class LifeAreas extends Table with SyncColumns {
+  @override
+  String get tableName => 'life_areas';
+
+  TextColumn get name => text()();
+
+  /// A colour name from `AreaColors`, for example `green`.
+  TextColumn get color => text()();
+}
+
+/// Something the user wants to reach. It may belong to one life area.
+@DataClassName('Goal')
+class Goals extends Table with SyncColumns {
+  @override
+  String get tableName => 'goals';
+
+  TextColumn get title => text()();
+  TextColumn get lifeAreaId => text().nullable()();
+
+  /// A day as `YYYY-MM-DD`.
+  TextColumn get targetDate => text().nullable()();
+
+  /// One sign that tells the user the goal is reached.
+  TextColumn get doneWhen => text().nullable()();
+
+  /// 0 to 100, set by the user.
+  IntColumn get progress => integer()();
+}
+
+/// A group of tasks. It may serve one goal.
+@DataClassName('Project')
+class Projects extends Table with SyncColumns {
+  @override
+  String get tableName => 'projects';
+
+  TextColumn get name => text()();
+  TextColumn get goalId => text().nullable()();
+
+  /// A colour name from `ProjectColors`, for example `blue`. Never orange:
+  /// orange means "now".
+  TextColumn get color => text()();
+}
+
+/// One thing to do. It may belong to a project and may link to a goal.
+@DataClassName('Task')
+class Tasks extends Table with SyncColumns {
+  @override
+  String get tableName => 'tasks';
+
+  TextColumn get title => text()();
+  TextColumn get projectId => text().nullable()();
+  TextColumn get goalId => text().nullable()();
+
+  /// A day as `YYYY-MM-DD`.
+  TextColumn get dueDate => text().nullable()();
+
+  /// One of `TaskPriority`: `none`, `medium`, `high`.
+  TextColumn get priority => text()();
+
+  /// One of `TaskStatus`: `open`, `done`.
+  TextColumn get status => text()();
+
+  /// When the task was completed (ISO 8601, UTC). Empty while it is open.
+  TextColumn get completedAt => text().nullable()();
+}
+
+/// The values the `priority` column of a task may hold.
+abstract final class TaskPriority {
+  static const none = 'none';
+  static const medium = 'medium';
+  static const high = 'high';
+  static const all = [none, medium, high];
+}
+
+/// The values the `status` column of a task may hold.
+abstract final class TaskStatus {
+  static const open = 'open';
+  static const done = 'done';
+}
+
+@DriftDatabase(tables: [SyncTestRows, LifeAreas, Goals, Projects, Tasks])
 class AppDatabase extends _$AppDatabase {
   /// In the app, PowerSync creates and owns the tables, so Drift must not
   /// create them. Tests pass `tablesManagedBySync: false` to get plain tables

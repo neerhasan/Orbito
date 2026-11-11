@@ -3,7 +3,9 @@ import 'package:powersync/powersync.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../data/local/app_database.dart';
+import '../data/repositories/plan_repository.dart';
 import '../data/repositories/sync_test_repository.dart';
+import '../data/repositories/task_repository.dart';
 import '../data/sync/sync_service.dart';
 import '../data/sync/sync_status_text.dart';
 
@@ -26,6 +28,16 @@ final syncTestRepositoryProvider = Provider<SyncTestRepository>(
     ref.watch(appDatabaseProvider),
     newId: () => uuid.v4(),
   ),
+);
+
+final planRepositoryProvider = Provider<PlanRepository>(
+  (ref) =>
+      PlanRepository(ref.watch(appDatabaseProvider), newId: () => uuid.v4()),
+);
+
+final taskRepositoryProvider = Provider<TaskRepository>(
+  (ref) =>
+      TaskRepository(ref.watch(appDatabaseProvider), newId: () => uuid.v4()),
 );
 
 /// The signed-in user, or null when nobody is signed in.

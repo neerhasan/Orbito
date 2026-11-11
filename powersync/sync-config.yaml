@@ -1,15 +1,18 @@
-# Orbito M0: what PowerSync sends to each device.
-# Paste this whole file into the PowerSync dashboard (the sync config editor
-# of your instance), then validate and deploy it.
-#
-# Each signed-in user receives only the rows where user_id is their own id.
-# auth.user_id() comes from the signed sign-in token, so the app cannot
-# fake it.
-
 config:
   edition: 3
-
 streams:
   sync_test:
     auto_subscribe: true
     query: SELECT * FROM sync_test WHERE user_id = auth.user_id()
+  life_areas:
+    auto_subscribe: true
+    query: SELECT * FROM life_areas WHERE user_id = auth.user_id()
+  goals:
+    auto_subscribe: true
+    query: SELECT * FROM goals WHERE user_id = auth.user_id()
+  projects:
+    auto_subscribe: true
+    query: SELECT * FROM projects WHERE user_id = auth.user_id()
+  tasks:
+    auto_subscribe: true
+    query: SELECT * FROM tasks WHERE user_id = auth.user_id()

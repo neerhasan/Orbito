@@ -2,6 +2,27 @@
 
 Claude Code adds a new entry on top at the end of every session.
 
+### 2026-11-11 M1 step 1 of 5: data layer for life areas, goals, projects and tasks
+- Done:
+  - The founder approved M0. The GitHub Actions run that uses the three variables finished green with both downloads (`orbito-windows`, `orbito-android-apk`).
+  - Decisions recorded in `docs/DECISIONS.md`: life areas have a suggestion of 3 to 8, not a limit; the Windows version is built first, Android screens start after the founder finalises it.
+  - Four new tables on Supabase: `life_areas`, `goals`, `projects`, `tasks` (`supabase/003_core_tables.sql`, applied through the Supabase connector). Each has row-level security, the server-time trigger, and is in the `powersync` publication. Checked on the server.
+  - The same four tables on the device (Drift and the PowerSync schema), with shared columns in one place (`SyncColumns`).
+  - `PlanRepository` (life areas, goals, projects) and `TaskRepository`. Deleting an area, goal or project takes a choice: keep the linked items and remove the link, or delete them too. Counting methods exist for the warning text.
+  - The access-rule test now runs for every synced table.
+- Left to do:
+  - The founder pastes the new `powersync/sync-config.yaml` into PowerSync. Until then the new tables do not sync.
+  - M1 steps 2 to 5: app frame and look, setup and the area, goal and project pages, the Tasks page, testing.
+  - Open question for the founder: goal progress. The feature list says completing a task updates the related goal; the prototype has a hand-set slider. The data layer keeps a hand-set `progress` number for now.
+- Known problems:
+  - The links between the tables have no foreign keys on the server, on purpose: the app works offline and must be able to upload rows in any order. The app keeps the links tidy.
+  - Tasks hold only what feature F-01 lists (title, project, goal, due date, priority). The prototype also has subtasks, tags, a time of day, an estimate and "postponed" counts. These are not built.
+  - Supabase's security check reports one warning: "Leaked password protection" is off. It checks new passwords against a list of leaked ones. Not changed.
+  - The code generator (`dart run build_runner build`) ran out of memory once when run together with other commands. It worked when run alone.
+- Files changed: `supabase/003_core_tables.sql`, `powersync/sync-config.yaml`, `lib/data/local/app_database.dart` (and its generated file), `lib/data/sync/powersync_schema.dart`, `lib/data/repositories/plan_repository.dart`, `lib/data/repositories/task_repository.dart`, `lib/app/providers.dart`, `test/plan_repository_test.dart`, `test/task_repository_test.dart`, `test/integration/rls_test.dart`, `docs/DECISIONS.md`.
+- Test results: `flutter analyze`: no issues. `flutter test`: 52 passed, 0 skipped, including the access-rule test for all five tables against the real server. The app itself was not started in this step; no screen uses the new tables yet.
+- Next step: M1 step 2, the app frame and look.
+
 ### 2026-11-11 M0: all five manual tests passed on the PC and the phone
 - Done:
   - The app is installed on the founder's Android phone (iQOO Neo 9, Android 16) and runs with the real settings.

@@ -1,13 +1,24 @@
 // Proves on the REAL Supabase project that one account cannot see or change
-// another account's rows (row-level security).
+// another account's rows (row-level security), for every synced table.
 //
 // It needs the internet, the filled-in `.env`, and two test accounts in
-// `.env.test` (see `env.test.example`). Without them the test is skipped.
+// `.env.test` (see `env.test.example`). Without them the tests are skipped.
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:powersync/powersync.dart' show uuid;
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+/// Every synced table, with the name of one text column that must be filled
+/// in. All other columns have defaults on the server. Add each new table
+/// here.
+const _tables = {
+  'sync_test': 'text',
+  'life_areas': 'name',
+  'goals': 'title',
+  'projects': 'name',
+  'tasks': 'title',
+};
 
 Map<String, String> _readEnvFile(String path) {
   final file = File(path);
@@ -53,104 +64,103 @@ void main() {
     authOptions: const AuthClientOptions(autoRefreshToken: false),
   );
 
-  test(
-    'a second account cannot read, change, delete or forge the first '
-    'account\'s rows',
-    () async {
-      final accountA = newClient();
-      final accountB = newClient();
-      final signedOut = newClient();
-      addTearDown(accountA.dispose);
-      addTearDown(accountB.dispose);
-      addTearDown(signedOut.dispose);
+  for (final MapEntry(key: table, value: textColumn) in _tables.entries) {
+    test(
+      '$table: a second account cannot read, change, delete or forge the '
+      'first account\'s rows',
+      () async {
+        final accountA = newClient();
+        final accountB = newClient();
+        final signedOut = newClient();
+        addTearDown(accountA.dispose);
+        addTearDown(accountB.dispose);
+        addTearDown(signedOut.dispose);
 
-      await accountA.auth.signInWithPassword(
-        email: emailA,
-        password: passwordA,
-      );
-      await accountB.auth.signInWithPassword(
-        email: emailB,
-        password: passwordB,
-      );
-      final idOfA = accountA.auth.currentUser!.id;
-      expect(
-        accountB.auth.currentUser!.id,
-        isNot(idOfA),
-        reason: 'The two test accounts must be different accounts.',
-      );
+        await accountA.auth.signInWithPassword(
+          email: emailA,
+          password: passwordA,
+        );
+        await accountB.auth.signInWithPassword(
+          email: emailB,
+          password: passwordB,
+        );
+        final idOfA = accountA.auth.currentUser!.id;
+        expect(
+          accountB.auth.currentUser!.id,
+          isNot(idOfA),
+          reason: 'The two test accounts must be different accounts.',
+        );
 
-      final rowId = uuid.v4();
-      await accountA.from('sync_test').insert({
-        'id': rowId,
-        'user_id': idOfA,
-        'text': 'rls test row',
-      });
-      addTearDown(() => accountA.from('sync_test').delete().eq('id', rowId));
-
-      // The owner can read the row.
-      final ownView = await accountA.from('sync_test').select().eq('id', rowId);
-      expect(ownView, hasLength(1));
-
-      // The other account cannot read it.
-      final otherView = await accountB
-          .from('sync_test')
-          .select()
-          .eq('id', rowId);
-      expect(otherView, isEmpty);
-
-      // The other account cannot see ANY of the first account's rows.
-      final allOfA = await accountB
-          .from('sync_test')
-          .select()
-          .eq('user_id', idOfA);
-      expect(allOfA, isEmpty);
-
-      // The other account cannot change it.
-      final changed = await accountB
-          .from('sync_test')
-          .update({'text': 'changed by the wrong account'})
-          .eq('id', rowId)
-          .select();
-      expect(changed, isEmpty);
-
-      // The other account cannot delete it.
-      final removed = await accountB
-          .from('sync_test')
-          .delete()
-          .eq('id', rowId)
-          .select();
-      expect(removed, isEmpty);
-
-      // The row is untouched.
-      final after = await accountA
-          .from('sync_test')
-          .select()
-          .eq('id', rowId)
-          .single();
-      expect(after['text'], 'rls test row');
-
-      // The other account cannot create a row in the first account's name.
-      final forgedId = uuid.v4();
-      addTearDown(() => accountA.from('sync_test').delete().eq('id', forgedId));
-      await expectLater(
-        accountB.from('sync_test').insert({
-          'id': forgedId,
+        final rowId = uuid.v4();
+        await accountA.from(table).insert({
+          'id': rowId,
           'user_id': idOfA,
-          'text': 'forged',
-        }),
-        throwsA(isA<PostgrestException>()),
-      );
+          textColumn: 'rls test row',
+        });
+        addTearDown(() => accountA.from(table).delete().eq('id', rowId));
 
-      // Someone who is not signed in gets nothing.
-      List<Map<String, dynamic>> publicView;
-      try {
-        publicView = await signedOut.from('sync_test').select();
-      } on PostgrestException {
-        publicView = const [];
-      }
-      expect(publicView, isEmpty);
-    },
-    skip: skip,
-    timeout: const Timeout(Duration(minutes: 1)),
-  );
+        // The owner can read the row.
+        final ownView = await accountA.from(table).select().eq('id', rowId);
+        expect(ownView, hasLength(1));
+
+        // The other account cannot read it.
+        final otherView = await accountB.from(table).select().eq('id', rowId);
+        expect(otherView, isEmpty);
+
+        // The other account cannot see ANY of the first account's rows.
+        final allOfA = await accountB
+            .from(table)
+            .select()
+            .eq('user_id', idOfA);
+        expect(allOfA, isEmpty);
+
+        // The other account cannot change it.
+        final changed = await accountB
+            .from(table)
+            .update({textColumn: 'changed by the wrong account'})
+            .eq('id', rowId)
+            .select();
+        expect(changed, isEmpty);
+
+        // The other account cannot delete it.
+        final removed = await accountB
+            .from(table)
+            .delete()
+            .eq('id', rowId)
+            .select();
+        expect(removed, isEmpty);
+
+        // The row is untouched.
+        final after = await accountA
+            .from(table)
+            .select()
+            .eq('id', rowId)
+            .single();
+        expect(after[textColumn], 'rls test row');
+
+        // The other account cannot create a row in the first account's name.
+        final forgedId = uuid.v4();
+        addTearDown(() => accountA.from(table).delete().eq('id', forgedId));
+        await expectLater(
+          accountB.from(table).insert({
+            'id': forgedId,
+            'user_id': idOfA,
+            textColumn: 'forged',
+          }),
+          throwsA(isA<PostgrestException>()),
+        );
+
+        // Someone who is not signed in gets nothing.
+        List<Map<String, dynamic>> publicView;
+        try {
+          publicView = await signedOut.from(table).select();
+        } on PostgrestException {
+          publicView = const [];
+        }
+        expect(publicView, isEmpty);
+      },
+      skip: skip,
+      timeout: const Timeout(Duration(minutes: 1)),
+    );
+  }
 }
