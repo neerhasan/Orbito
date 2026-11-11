@@ -12,8 +12,9 @@ Claude Code adds a new entry on top at the end of every session.
   - Test 5 passed: after closing and restarting the PC app, the user is still signed in and the rows are still there.
   - The automatic access-rule test passed against the real server (`flutter test test/integration/rls_test.dart`: "All tests passed!", not skipped): a second account cannot read, change, delete or forge the first account's rows.
   - `.gitignore` now ignores every file that starts with `.env.`, after a file with passwords was saved for a moment under the name `.env.test.example`. It was never committed.
+  - The founder added the three public values as GitHub Actions variables. Whether the builds pick them up is not checked yet: it needs a run that starts after they were added.
 - Left to do:
-  - GitHub: add the three public values as Actions variables.
+  - Confirm that a GitHub Actions run started after the variables were added turns green, and that its app starts without the "not set up yet" screen.
   - With the founder's agreement: remove the unused database login `powersync_role`, and the extra test accounts.
   - The founder approves M0. M1 does not start before that.
 - Known problems:
