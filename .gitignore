@@ -50,3 +50,5 @@ app.*.map.json
 # Keys and test sign-ins. Never commit these.
 .env
 .env.test
+# Any other file that starts with ".env" may hold keys or passwords too.
+.env.*

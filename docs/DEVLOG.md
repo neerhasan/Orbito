@@ -10,8 +10,9 @@ Claude Code adds a new entry on top at the end of every session.
   - Test 3 passed in both directions. Checked on the server: `added offline` (phone) was made at 05:50:16 UTC and arrived at 05:50:51; `pc offline` (PC) was made at 05:53:00 UTC and arrived at 05:53:31. Both arrived only after the network came back.
   - Test 4 passed by hand: a second account on the phone shows an empty list, and its new row does not appear on the PC.
   - Test 5 passed: after closing and restarting the PC app, the user is still signed in and the rows are still there.
+  - The automatic access-rule test passed against the real server (`flutter test test/integration/rls_test.dart`: "All tests passed!", not skipped): a second account cannot read, change, delete or forge the first account's rows.
+  - `.gitignore` now ignores every file that starts with `.env.`, after a file with passwords was saved for a moment under the name `.env.test.example`. It was never committed.
 - Left to do:
-  - The automatic access-rule test: the founder fills in `.env.test` with two test accounts, then run `flutter test test/integration/rls_test.dart`.
   - GitHub: add the three public values as Actions variables.
   - With the founder's agreement: remove the unused database login `powersync_role`, and the extra test accounts.
   - The founder approves M0. M1 does not start before that.
