@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:orbito/data/local/app_database.dart';
@@ -50,11 +51,23 @@ void main() {
       title: 'Buy shoes',
       projectId: project,
     );
-    final goalTask = await tasks.addTask(
-      userId: user,
-      title: 'Book the race',
-      goalId: goal,
-    );
+    // The app no longer links a task straight to a goal, but older tasks
+    // may carry such a link. One is written by hand to cover that.
+    const goalTask = 'old-goal-task';
+    await db
+        .into(db.tasks)
+        .insert(
+          TasksCompanion.insert(
+            id: goalTask,
+            userId: user,
+            title: 'Book the race',
+            goalId: Value(goal),
+            priority: TaskPriority.none,
+            status: TaskStatus.open,
+            createdAt: '2026-11-11T10:00:09.000Z',
+            updatedAt: '2026-11-11T10:00:09.000Z',
+          ),
+        );
     return (
       area: area,
       goal: goal,
@@ -120,6 +133,7 @@ void main() {
         ids.project,
         name: 'Plan B',
         color: 'teal',
+        icon: 'book',
         goalId: null,
       );
 
@@ -134,7 +148,58 @@ void main() {
       expect(goal.doneWhen, 'Finished a half marathon');
       expect(project.name, 'Plan B');
       expect(project.color, 'teal');
+      expect(project.icon, 'book');
       expect(project.goalId, isNull);
+    });
+
+    test('a life area name can be used only once', () async {
+      final health = await plan.addArea(
+        userId: user,
+        name: 'Health',
+        color: 'green',
+      );
+      final mind = await plan.addArea(
+        userId: user,
+        name: 'Mind',
+        color: 'blue',
+      );
+
+      await expectLater(
+        plan.addArea(userId: user, name: '  health ', color: 'pink'),
+        throwsA(isA<DuplicateNameException>()),
+      );
+      await expectLater(
+        plan.updateArea(mind, name: 'HEALTH', color: 'blue'),
+        throwsA(isA<DuplicateNameException>()),
+      );
+      final areas = await plan.watchAreas(user).first;
+      expect(areas.map((area) => area.name), ['Health', 'Mind']);
+
+      // Keeping its own name, with other capitals, is allowed.
+      await plan.updateArea(health, name: 'HEALTH', color: 'pink');
+      // Another user may use the same name.
+      await plan.addArea(userId: 'user-b', name: 'Health', color: 'green');
+      // A deleted area frees its name.
+      await plan.deleteArea(mind, linked: LinkedItems.keep);
+      await plan.addArea(userId: user, name: 'Mind', color: 'blue');
+
+      expect((await plan.watchAreas(user).first).map((area) => area.name), [
+        'HEALTH',
+        'Mind',
+      ]);
+    });
+
+    test('a new project gets the folder icon unless one is picked', () async {
+      await plan.addProject(userId: user, name: 'One', color: 'blue');
+      await plan.addProject(
+        userId: user,
+        name: 'Two',
+        color: 'blue',
+        icon: 'star',
+      );
+
+      final projects = await plan.watchProjects(user).first;
+      expect(projects.map((project) => project.icon), ['folder', 'star']);
     });
 
     test('goal progress stays between 0 and 100', () async {

@@ -222,6 +222,32 @@ abstract final class ProjectColors {
   }
 }
 
+/// The icons a project may have. The name is what is saved.
+abstract final class ProjectIcons {
+  static const fallback = 'folder';
+
+  static const all = <String, IconData>{
+    'folder': Icons.folder_outlined,
+    'work': Icons.work_outline,
+    'code': Icons.code,
+    'book': Icons.menu_book_outlined,
+    'school': Icons.school_outlined,
+    'idea': Icons.lightbulb_outline,
+    'fitness': Icons.fitness_center,
+    'heart': Icons.favorite_border,
+    'home': Icons.home_outlined,
+    'people': Icons.groups_outlined,
+    'money': Icons.savings_outlined,
+    'shop': Icons.shopping_bag_outlined,
+    'travel': Icons.flight_outlined,
+    'music': Icons.music_note_outlined,
+    'art': Icons.palette_outlined,
+    'star': Icons.star_border,
+  };
+
+  static IconData of(String? name) => all[name] ?? all[fallback]!;
+}
+
 /// Makes the first letter a capital: `blue` becomes `Blue`.
 String capitalize(String value) =>
     value.isEmpty ? value : value[0].toUpperCase() + value.substring(1);

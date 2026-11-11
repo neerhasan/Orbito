@@ -110,7 +110,11 @@ class _ProjectTile extends StatelessWidget {
               color: swatch.soft,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(Icons.folder_outlined, size: 20, color: swatch.text),
+            child: Icon(
+              ProjectIcons.of(project.icon),
+              size: 20,
+              color: swatch.text,
+            ),
           ),
           const SizedBox(width: 18),
           Expanded(
@@ -184,6 +188,9 @@ class _ProjectFormState extends ConsumerState<_ProjectForm> {
   late final _name = TextEditingController(text: widget.project?.name ?? '');
   final _newTask = TextEditingController();
   late String _color = widget.project?.color ?? widget.nextColor;
+  late String _icon = ProjectIcons.all.containsKey(widget.project?.icon)
+      ? widget.project!.icon!
+      : ProjectIcons.fallback;
   late String? _goalId = widget.project?.goalId;
   String? _error;
 
@@ -209,6 +216,7 @@ class _ProjectFormState extends ConsumerState<_ProjectForm> {
           userId: userId,
           name: _name.text,
           color: _color,
+          icon: _icon,
           goalId: _goalId,
         );
         if (!mounted) return;
@@ -216,12 +224,14 @@ class _ProjectFormState extends ConsumerState<_ProjectForm> {
         setState(() {
           _error = null;
           _goalId = null;
+          _icon = ProjectIcons.fallback;
         });
       } else {
         await plan.updateProject(
           project.id,
           name: _name.text,
           color: _color,
+          icon: _icon,
           goalId: _goalId,
         );
         if (!mounted) return;
@@ -337,6 +347,14 @@ class _ProjectFormState extends ConsumerState<_ProjectForm> {
           colors: ProjectColors.all,
           selected: _color,
           onChanged: (name) => setState(() => _color = name),
+        ),
+        const SizedBox(height: 14),
+        const FieldLabel('Icon'),
+        IconPicker(
+          icons: ProjectIcons.all,
+          selected: _icon,
+          swatch: ProjectColors.of(_color),
+          onChanged: (name) => setState(() => _icon = name),
         ),
         const SizedBox(height: 18),
         FilledButton(

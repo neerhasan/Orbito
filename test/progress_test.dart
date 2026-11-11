@@ -41,7 +41,7 @@ void main() {
   });
 
   group('tasksOfGoal', () {
-    test('takes direct tasks and the tasks of the goal\'s projects', () {
+    test('takes only the tasks of the goal\'s projects', () {
       final projects = [
         _project('p1', goalId: 'g1'),
         _project('p2', goalId: 'g2'),
@@ -58,10 +58,11 @@ void main() {
 
       final found = tasksOfGoal('g1', projects: projects, tasks: tasks);
 
-      expect(found.map((task) => task.id), ['direct', 'through-project']);
+      // 'direct' carries an old link straight to the goal. It does not count.
+      expect(found.map((task) => task.id), ['through-project']);
     });
 
-    test('counts a task once when it is linked both ways', () {
+    test('counts a task once when it also carries an old goal link', () {
       final projects = [_project('p1', goalId: 'g1')];
       final tasks = [_task('both', projectId: 'p1', goalId: 'g1')];
 

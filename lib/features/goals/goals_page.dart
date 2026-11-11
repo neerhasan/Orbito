@@ -73,9 +73,6 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
           projects: selected == null
               ? const []
               : projects.where((p) => p.goalId == selected.id).toList(),
-          ownTasks: selected == null
-              ? const []
-              : tasks.where((task) => task.goalId == selected.id).toList(),
           today: today,
           onClose: () => setState(() => _selectedId = null),
         ),
@@ -181,7 +178,6 @@ class _GoalForm extends ConsumerStatefulWidget {
     required this.goal,
     required this.areas,
     required this.projects,
-    required this.ownTasks,
     required this.today,
     required this.onClose,
   });
@@ -192,9 +188,6 @@ class _GoalForm extends ConsumerStatefulWidget {
 
   /// The projects that serve this goal.
   final List<Project> projects;
-
-  /// The tasks linked straight to this goal, not through a project.
-  final List<Task> ownTasks;
   final String today;
   final VoidCallback onClose;
 
@@ -207,7 +200,6 @@ class _GoalFormState extends ConsumerState<_GoalForm> {
   late final _doneWhen = TextEditingController(
     text: widget.goal?.doneWhen ?? '',
   );
-  final _newTask = TextEditingController();
   late String? _areaId = widget.goal?.lifeAreaId;
   late String? _targetDate = widget.goal?.targetDate;
   String? _error;
@@ -216,7 +208,6 @@ class _GoalFormState extends ConsumerState<_GoalForm> {
   void dispose() {
     _title.dispose();
     _doneWhen.dispose();
-    _newTask.dispose();
     super.dispose();
   }
 
@@ -280,26 +271,11 @@ class _GoalFormState extends ConsumerState<_GoalForm> {
     }
   }
 
-  Future<void> _addTask() async {
-    final userId = ref.read(userIdProvider);
-    final title = _newTask.text.trim();
-    if (userId == null || title.isEmpty) return;
-    try {
-      await ref
-          .read(taskRepositoryProvider)
-          .addTask(userId: userId, title: title, goalId: widget.goal!.id);
-      _newTask.clear();
-    } catch (error) {
-      if (mounted) showMessage(context, 'Could not add the task. ($error)');
-    }
-  }
-
   Future<void> _delete() async {
     final goal = widget.goal!;
     final projects = widget.projects.length;
-    final tasks = widget.ownTasks.length;
     final LinkedItems? linked;
-    if (projects == 0 && tasks == 0) {
+    if (projects == 0) {
       final confirmed = await confirmDialog(
         context,
         title: 'Delete ${goal.title}?',
@@ -308,17 +284,13 @@ class _GoalFormState extends ConsumerState<_GoalForm> {
       );
       linked = confirmed ? LinkedItems.keep : null;
     } else {
-      final parts = [
-        if (projects > 0) countOf(projects, 'project'),
-        if (tasks > 0) countOf(tasks, 'task'),
-      ];
       linked = await askAboutLinkedItems(
         context,
         title: 'Delete ${goal.title}?',
         message:
-            'Linked to this goal: ${parts.join(' and ')}. Keep them without '
-            'a goal, or delete them too? Deleting a project also deletes '
-            'its tasks.',
+            '${countOf(projects, 'project')} serve this goal. Keep them '
+            'without a goal, or delete them too? Deleting a project also '
+            'deletes its tasks.',
         keepLabel: 'Keep them',
         deleteLabel: 'Delete them too',
       );
@@ -448,56 +420,11 @@ class _GoalFormState extends ConsumerState<_GoalForm> {
                   ),
               ],
             ),
-          const SizedBox(height: 18),
-          Text('Tasks without a project', style: Ember.h3),
           const SizedBox(height: 8),
-          if (widget.ownTasks.isEmpty)
-            Text('None yet.', style: Ember.meta)
-          else
-            for (final task in widget.ownTasks)
-              Row(
-                children: [
-                  TaskRing(
-                    done: task.status == TaskStatus.done,
-                    priority: task.priority,
-                    label:
-                        '${task.status == TaskStatus.done ? 'Undo' : 'Complete'} '
-                        '${task.title}',
-                    onTap: () => ref
-                        .read(taskRepositoryProvider)
-                        .setDone(task.id, done: task.status != TaskStatus.done),
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      task.title,
-                      overflow: TextOverflow.ellipsis,
-                      style: task.status == TaskStatus.done
-                          ? Ember.item.copyWith(
-                              color: Ember.ink3,
-                              decoration: TextDecoration.lineThrough,
-                            )
-                          : Ember.item,
-                    ),
-                  ),
-                ],
-              ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  key: const Key('goal-new-task'),
-                  controller: _newTask,
-                  onSubmitted: (_) => _addTask(),
-                  decoration: const InputDecoration(
-                    hintText: 'Add a task to this goal',
-                  ),
-                ),
-              ),
-              const SizedBox(width: 6),
-              FilledButton(onPressed: _addTask, child: const Text('Add')),
-            ],
+          Text(
+            'Tasks belong to projects. Add tasks on the Projects or Tasks '
+            'page; the goal counts them through its projects.',
+            style: Ember.meta,
           ),
           const SizedBox(height: 14),
           TextButton.icon(

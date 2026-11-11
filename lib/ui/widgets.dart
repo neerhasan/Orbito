@@ -370,6 +370,65 @@ class SwatchPicker extends StatelessWidget {
   }
 }
 
+/// A grid of icon buttons. One is selected. [swatch] colours the selected
+/// one, so the user sees the icon as it will look.
+class IconPicker extends StatelessWidget {
+  const IconPicker({
+    super.key,
+    required this.icons,
+    required this.selected,
+    required this.swatch,
+    required this.onChanged,
+  });
+
+  final Map<String, IconData> icons;
+  final String selected;
+  final Swatch swatch;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      children: [
+        for (final MapEntry(key: name, value: icon) in icons.entries)
+          Semantics(
+            button: true,
+            selected: name == selected,
+            label: '${capitalize(name)} icon',
+            child: Tooltip(
+              message: capitalize(name),
+              child: Material(
+                color: name == selected ? swatch.soft : Ember.tile,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  side: name == selected
+                      ? const BorderSide(color: Ember.ink, width: 1.5)
+                      : BorderSide.none,
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                  key: Key('icon-$name'),
+                  onTap: () => onChanged(name),
+                  child: SizedBox(
+                    width: 32,
+                    height: 32,
+                    child: Icon(
+                      icon,
+                      size: 17,
+                      color: name == selected ? swatch.text : Ember.ink2,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
 /// Asks the user to confirm with [confirmLabel]. Returns true when they do.
 Future<bool> confirmDialog(
   BuildContext context, {

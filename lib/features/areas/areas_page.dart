@@ -136,6 +136,14 @@ class _AreaFormState extends ConsumerState<_AreaForm> {
       setState(() => _error = 'Give the area a name.');
       return;
     }
+    const duplicate = 'You already have an area with this name.';
+    final wanted = _name.text.trim().toLowerCase();
+    final ownName = widget.area?.name.trim().toLowerCase();
+    if (wanted != ownName &&
+        widget.existingNames.any((n) => n.trim().toLowerCase() == wanted)) {
+      setState(() => _error = duplicate);
+      return;
+    }
     final plan = ref.read(planRepositoryProvider);
     try {
       final area = widget.area;
@@ -150,6 +158,8 @@ class _AreaFormState extends ConsumerState<_AreaForm> {
         setState(() => _error = null);
         showMessage(context, 'Saved.');
       }
+    } on DuplicateNameException {
+      if (mounted) setState(() => _error = duplicate);
     } catch (error) {
       // The typed name stays in the box, so nothing is lost.
       if (mounted) showMessage(context, 'Could not save. Try again. ($error)');

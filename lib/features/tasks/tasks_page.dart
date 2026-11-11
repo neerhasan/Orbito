@@ -48,7 +48,7 @@ class _TasksPageState extends ConsumerState<TasksPage> {
     super.dispose();
   }
 
-  /// Adds a task. It takes over the project, goal and priority filters, so
+  /// Adds a task. It takes over the project and priority filters, so
   /// the new task is visible in the list the user is looking at.
   Future<void> _add() async {
     final userId = ref.read(userIdProvider);
@@ -61,7 +61,6 @@ class _TasksPageState extends ConsumerState<TasksPage> {
             userId: userId,
             title: title,
             projectId: _projectId,
-            goalId: _goalId,
             priority: _priority ?? TaskPriority.none,
           );
       _newTask.clear();
@@ -801,7 +800,6 @@ class _TaskForm extends ConsumerStatefulWidget {
 class _TaskFormState extends ConsumerState<_TaskForm> {
   late final _title = TextEditingController(text: widget.task.title);
   late String? _projectId = widget.task.projectId;
-  late String? _goalId = widget.task.goalId;
   late String? _dueDate = widget.task.dueDate;
   late String _priority = widget.task.priority;
   String? _error;
@@ -838,7 +836,6 @@ class _TaskFormState extends ConsumerState<_TaskForm> {
             widget.task.id,
             title: _title.text,
             projectId: _projectId,
-            goalId: _goalId,
             dueDate: _dueDate,
             priority: _priority,
           );
@@ -870,7 +867,13 @@ class _TaskFormState extends ConsumerState<_TaskForm> {
   @override
   Widget build(BuildContext context) {
     final projectIds = {for (final project in widget.projects) project.id};
-    final goalIds = {for (final goal in widget.goals) goal.id};
+    // A task serves its project; the project serves the goal.
+    final project = widget.projects
+        .where((p) => p.id == _projectId)
+        .firstOrNull;
+    final servedGoal = widget.goals
+        .where((goal) => goal.id == project?.goalId)
+        .firstOrNull;
     final dueDate = _dueDate;
     final fieldStyle = Ember.text(13, 16, weight: 400, color: Ember.ink);
     return Column(
@@ -913,23 +916,14 @@ class _TaskFormState extends ConsumerState<_TaskForm> {
           ],
           onChanged: (value) => setState(() => _projectId = value),
         ),
-        const SizedBox(height: 14),
-        const FieldLabel('Goal'),
-        DropdownButtonFormField<String?>(
-          key: const Key('task-goal'),
-          initialValue: goalIds.contains(_goalId) ? _goalId : null,
-          isExpanded: true,
-          style: fieldStyle,
-          items: [
-            const DropdownMenuItem(value: null, child: Text('None')),
-            for (final goal in widget.goals)
-              DropdownMenuItem(
-                value: goal.id,
-                child: Text(goal.title, overflow: TextOverflow.ellipsis),
-              ),
-          ],
-          onChanged: (value) => setState(() => _goalId = value),
-        ),
+        if (servedGoal != null) ...[
+          const SizedBox(height: 6),
+          Text(
+            'Serves the goal: ${servedGoal.title}',
+            key: const Key('task-served-goal'),
+            style: Ember.meta,
+          ),
+        ],
         const SizedBox(height: 14),
         const FieldLabel('Due date'),
         Row(

@@ -11,6 +11,16 @@ enum LinkedItems {
   delete,
 }
 
+/// Thrown when a name is already used by another item of the same kind.
+class DuplicateNameException implements Exception {
+  const DuplicateNameException(this.name);
+
+  final String name;
+
+  @override
+  String toString() => 'The name "$name" is already used.';
+}
+
 /// Reads and writes life areas, goals and projects (the chain life area,
 /// goal, project). It only ever touches the local database. Sync copies the
 /// changes to the server in the background.
@@ -47,40 +57,77 @@ class PlanRepository {
     return query.watch();
   }
 
+  /// Throws [DuplicateNameException] when the user already has a life area
+  /// with this name. Capital letters and spaces around the name do not
+  /// make a name different.
+  Future<void> _checkAreaNameIsFree(
+    String userId,
+    String name, {
+    String? exceptId,
+  }) async {
+    final areas =
+        await (_db.select(_db.lifeAreas)..where(
+              (row) => row.userId.equals(userId) & row.deletedAt.isNull(),
+            ))
+            .get();
+    final wanted = name.toLowerCase();
+    final taken = areas.any(
+      (area) => area.id != exceptId && area.name.trim().toLowerCase() == wanted,
+    );
+    if (taken) throw DuplicateNameException(name);
+  }
+
+  /// Saves a new life area and returns its id. A name can be used once:
+  /// a second area with the same name throws [DuplicateNameException].
   Future<String> addArea({
     required String userId,
     required String name,
     required String color,
   }) async {
-    final id = _newId();
-    final timestamp = _timestamp();
-    await _db
-        .into(_db.lifeAreas)
-        .insert(
-          LifeAreasCompanion.insert(
-            id: id,
-            userId: userId,
-            name: _required(name, 'name'),
-            color: color,
-            createdAt: timestamp,
-            updatedAt: timestamp,
-          ),
-        );
-    return id;
+    final trimmed = _required(name, 'name');
+    return _db.transaction(() async {
+      await _checkAreaNameIsFree(userId, trimmed);
+      final id = _newId();
+      final timestamp = _timestamp();
+      await _db
+          .into(_db.lifeAreas)
+          .insert(
+            LifeAreasCompanion.insert(
+              id: id,
+              userId: userId,
+              name: trimmed,
+              color: color,
+              createdAt: timestamp,
+              updatedAt: timestamp,
+            ),
+          );
+      return id;
+    });
   }
 
+  /// Renaming to the name of another area throws [DuplicateNameException].
   Future<void> updateArea(
     String id, {
     required String name,
     required String color,
-  }) {
-    return (_db.update(_db.lifeAreas)..where((row) => row.id.equals(id))).write(
-      LifeAreasCompanion(
-        name: Value(_required(name, 'name')),
-        color: Value(color),
-        updatedAt: Value(_timestamp()),
-      ),
-    );
+  }) async {
+    final trimmed = _required(name, 'name');
+    return _db.transaction(() async {
+      final area = await (_db.select(
+        _db.lifeAreas,
+      )..where((row) => row.id.equals(id))).getSingleOrNull();
+      if (area == null) return;
+      await _checkAreaNameIsFree(area.userId, trimmed, exceptId: id);
+      await (_db.update(
+        _db.lifeAreas,
+      )..where((row) => row.id.equals(id))).write(
+        LifeAreasCompanion(
+          name: Value(trimmed),
+          color: Value(color),
+          updatedAt: Value(_timestamp()),
+        ),
+      );
+    });
   }
 
   /// How many goals belong to this life area.
@@ -192,7 +239,9 @@ class PlanRepository {
     );
   }
 
-  /// How many projects and tasks link straight to this goal.
+  /// How many projects and tasks link straight to this goal. The app no
+  /// longer links a task straight to a goal (a task serves a project, the
+  /// project serves the goal), but older tasks may still carry such a link.
   Future<({int projects, int tasks})> countLinkedToGoal(String goalId) async {
     final projects = await _projectIdsOfGoal(goalId);
     final tasks = await _taskIds(_db.tasks.goalId.equals(goalId));
@@ -259,6 +308,7 @@ class PlanRepository {
     required String userId,
     required String name,
     required String color,
+    String icon = 'folder',
     String? goalId,
   }) async {
     final id = _newId();
@@ -272,6 +322,7 @@ class PlanRepository {
             name: _required(name, 'name'),
             goalId: Value(goalId),
             color: color,
+            icon: Value(icon),
             createdAt: timestamp,
             updatedAt: timestamp,
           ),
@@ -283,12 +334,14 @@ class PlanRepository {
     String id, {
     required String name,
     required String color,
+    required String icon,
     required String? goalId,
   }) {
     return (_db.update(_db.projects)..where((row) => row.id.equals(id))).write(
       ProjectsCompanion(
         name: Value(_required(name, 'name')),
         color: Value(color),
+        icon: Value(icon),
         goalId: Value(goalId),
         updatedAt: Value(_timestamp()),
       ),

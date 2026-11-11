@@ -8,7 +8,10 @@ Decided by the founder:
 - 2026-11-11: M0 (sync proof) approved.
 - 2026-11-11: Life areas: 3 to 8 is a suggestion shown to the user, not a limit. Any number is allowed.
 - 2026-11-11: Build the Windows (PC) version first. Work on the Android screens starts only after the founder has finalised the PC version. The code stays shared and the Android build must keep compiling, but no Android layouts are designed or tested until then.
-- 2026-11-12: Goal progress is automatic: tasks done out of all tasks that count for the goal. No slider. Tasks that count: tasks linked straight to the goal, and tasks of the projects that serve the goal (this second part is Claude's reading of "linked", say if it is wrong). A goal with no tasks shows 0%. The hand-set `progress` column in the `goals` table is no longer used by any screen; it stays in the database for now.
+- 2026-11-12: Goal progress is automatic: tasks done out of all tasks that count for the goal. No slider. A goal with no tasks shows 0%. The hand-set `progress` column in the `goals` table is no longer used by any screen; it stays in the database for now.
+- 2026-11-12 (after the founder's first M1 test): A task serves a project only, and the project serves the goal. A task has no goal of its own. The tasks that count for a goal are the tasks of its projects. The `goal_id` column of `tasks` is no longer written or read by the app; it stays in the database for now.
+- 2026-11-12: A life area name can be used only once per user. Capital letters and spaces around the name do not make a name different.
+- 2026-11-12: A project has an icon, picked from a fixed list of 16 (Claude chose the list; say if icons are missing).
 
 Defaults used until the founder changes them:
 - Sign-in: email and password, verification off during the test.

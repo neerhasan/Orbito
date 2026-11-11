@@ -23,29 +23,29 @@ The phone is not part of this test. The decision is: PC first.
 2. Type a new name on the right, pick a colour, click **Add area**. Expected: it appears in the list.
 3. Click **Add area** with an empty name. Expected: the message "Give the area a name.", and nothing is added.
 4. Click an area in the list, change its name, click **Save**. Expected: the new name shows in the list and in the menu.
+5. Close the form with the X. Type the name of an area you already have and click **Add area**. Expected: the message "You already have an area with this name.", and no second area.
 
 ## Test 3: goals
 
 1. Click **Goals** in the menu.
 2. Add a goal: a title, a life area, a target date, and a "done when" line. Click **Add goal**.
 3. Expected: the goal is in the list with its area and date. It shows "No tasks yet" and 0%.
-4. Click the goal. On the right, type a task in "Add a task to this goal" and press Enter. Add a second one.
-5. Click the circle in front of one task. Expected: the goal shows "1 of 2 tasks" and 50%.
+4. Click the goal. Expected: there is no box to add a task here. A task belongs to a project, and the project serves the goal.
 
 ## Test 4: projects
 
 1. Click **Projects** in the menu.
-2. Add a project: a name, the goal from test 3 under "Serves goal", and a colour. Click **Add project**.
+2. Add a project: a name, the goal from test 3 under "Serves goal", a colour and an icon. Click **Add project**. Expected: the project is in the list with the icon you picked, in the colour you picked.
 3. Click the project. Add two tasks on the right. Complete one.
 4. Expected: the project shows "1 of 2 tasks" and 50%.
-5. Go back to **Goals**. Expected: the goal now counts four tasks (two of its own and two from the project) and shows "2 of 4 tasks", 50%.
+5. Go back to **Goals**. Expected: the goal counts the two tasks of its project and shows "1 of 2 tasks", 50%.
 
 ## Test 5: the Tasks page
 
 1. Click **Tasks** in the menu.
 2. Expected: every open task is on one line. Tasks of a project show the project name on the right in the project's colour.
 3. Type a task in "Add a task" and press Enter. Expected: it appears under "No date".
-4. Click the new task. On the right, click **Today** next to the date, click **High**, click **Save**. Expected: the task moves to the "Today" group, the word "Today" is orange, and a small "High" label sits next to the title.
+4. Click the new task. On the right there is a project box and no goal box. Pick the project from test 4. Expected: a line under the box says which goal the task now serves. Then click **Today** next to the date, click **High**, click **Save**. Expected: the task moves to the "Today" group, the word "Today" is orange, and a small "High" label sits next to the title.
 5. Chart: click the circle in front of a task. Expected: the task leaves the list and the orange point at the right end of the chart goes up by one. Click **Week**, **Month** and **Year**: the chart changes each time.
 6. Grouping: change "Group: Due date" to Project, then Goal, then Priority. Expected: the headings change each time.
 7. Sorting: change "Sort: Due date" to Title. Expected: tasks inside a group are in A to Z order.

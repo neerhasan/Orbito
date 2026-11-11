@@ -157,6 +157,17 @@ void main() {
       expect(find.text('Money'), findsOneWidget);
       expect(find.text('2 areas'), findsOneWidget);
       expect(find.text('Give the area a name.'), findsNothing);
+
+      // The same name again, with other capitals, is refused.
+      await tester.enterText(find.byKey(const Key('area-name')), ' money ');
+      await _tap(tester, 'area-save');
+      await _settle(tester);
+      expect(
+        find.text('You already have an area with this name.'),
+        findsOneWidget,
+      );
+      final saved = await _read(tester, () => _plan.watchAreas(_user).first);
+      expect(saved.map((area) => area.name), ['Health', 'Money']);
     });
 
     _testPage('deleting an area can keep its goals', (tester) async {
@@ -192,7 +203,9 @@ void main() {
   });
 
   group('the Goals page', () {
-    _testPage('adds a goal, and its percent follows its tasks', (tester) async {
+    _testPage('adds a goal; tasks are not added to a goal directly', (
+      tester,
+    ) async {
       await _read(
         tester,
         () => _plan.addArea(userId: _user, name: 'Health', color: 'green'),
@@ -219,18 +232,8 @@ void main() {
 
       await _tap(tester, 'goal-${goals.single.id}');
       expect(find.text('Edit goal'), findsOneWidget);
-      await tester.enterText(
-        find.byKey(const Key('goal-new-task')),
-        'Book the race',
-      );
-      await tester.testTextInput.receiveAction(TextInputAction.done);
-      await _settle(tester);
-      expect(find.text('0 of 1 task'), findsOneWidget);
-
-      await tester.tap(find.bySemanticsLabel('Complete Book the race'));
-      await _settle(tester);
-      expect(find.text('1 of 1 task'), findsOneWidget);
-      expect(find.text('100%'), findsOneWidget);
+      expect(find.byKey(const Key('goal-new-task')), findsNothing);
+      expect(find.textContaining('Tasks belong to projects'), findsOneWidget);
     });
 
     _testPage('counts the tasks of a project that serves the goal', (
@@ -395,6 +398,7 @@ void main() {
         'Training plan',
       );
       await _tap(tester, 'color-teal');
+      await _tap(tester, 'icon-star');
       await _tap(tester, 'project-save');
       await _settle(tester);
 
@@ -404,6 +408,8 @@ void main() {
       );
       expect(projects.single.name, 'Training plan');
       expect(projects.single.color, 'teal');
+      expect(projects.single.icon, 'star');
+      expect(find.byIcon(Icons.star_border), findsNWidgets(2));
       expect(find.text('Training plan'), findsOneWidget);
       expect(find.text('0 of 0 tasks'), findsOneWidget);
 

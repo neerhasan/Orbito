@@ -11,8 +11,8 @@ int percentDone(List<Task> tasks) {
   return (done * 100 / tasks.length).round();
 }
 
-/// The tasks that count for a goal: tasks linked straight to the goal, and
-/// tasks of the projects that serve the goal. Each task counts once.
+/// The tasks that count for a goal: the tasks of the projects that serve
+/// the goal. A task serves a project only; it never links to a goal itself.
 List<Task> tasksOfGoal(
   String goalId, {
   required List<Project> projects,
@@ -24,6 +24,6 @@ List<Task> tasksOfGoal(
   };
   return [
     for (final task in tasks)
-      if (task.goalId == goalId || projectIds.contains(task.projectId)) task,
+      if (projectIds.contains(task.projectId)) task,
   ];
 }

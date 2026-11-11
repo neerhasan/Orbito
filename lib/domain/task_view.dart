@@ -50,9 +50,9 @@ class TaskFilter {
   final String? priority;
 }
 
-/// The goal a task serves: its own goal, or else the goal of its project.
+/// The goal a task serves: the goal of its project. A task never links to
+/// a goal itself.
 String? goalIdOfTask(Task task, List<Project> projects) {
-  if (task.goalId != null) return task.goalId;
   for (final project in projects) {
     if (project.id == task.projectId) return project.goalId;
   }
@@ -71,7 +71,6 @@ List<Task> filterTasks(
                   (task.status == TaskStatus.done)) &&
           (filter.projectId == null || task.projectId == filter.projectId) &&
           (filter.goalId == null ||
-              task.goalId == filter.goalId ||
               goalIdOfTask(task, projects) == filter.goalId) &&
           (filter.priority == null || task.priority == filter.priority))
         task,

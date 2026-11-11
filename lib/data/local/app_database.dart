@@ -77,9 +77,14 @@ class Projects extends Table with SyncColumns {
   /// A colour name from `ProjectColors`, for example `blue`. Never orange:
   /// orange means "now".
   TextColumn get color => text()();
+
+  /// An icon name from `ProjectIcons`, for example `folder`. Empty on rows
+  /// made before icons existed; the app then shows the folder.
+  TextColumn get icon => text().nullable()();
 }
 
-/// One thing to do. It may belong to a project and may link to a goal.
+/// One thing to do. It may belong to a project. The project serves the
+/// goal; the `goalId` column is no longer written by the app.
 @DataClassName('Task')
 class Tasks extends Table with SyncColumns {
   @override

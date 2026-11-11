@@ -2,6 +2,22 @@
 
 Claude Code adds a new entry on top at the end of every session.
 
+### 2026-11-12 M1 fixes after the founder's first test
+- Done:
+  - PowerSync could not read the four new tables ("permission denied"): the read access in `003_core_tables.sql` went to the wrong login. Fixed on the server and recorded in `supabase/004_powersync_read.sql`. The founder then deployed the sync config.
+  - A life area name can be used only once. `PlanRepository.addArea` and `updateArea` refuse a duplicate (`DuplicateNameException`); the Life areas page shows "You already have an area with this name."; first-run setup skips a name that already exists.
+  - A project has an icon. New column `projects.icon` (`supabase/005_project_icon.sql`, applied through the Supabase connector), 16 icons in `ProjectIcons`, an icon picker on the project form.
+  - A task serves a project only. The goal box is gone from the task form (it shows which goal the project serves), tasks can no longer be added on the Goals page, and a goal counts only the tasks of its projects.
+- Left to do: the founder tests again with `docs/M1-TEST.md` (updated).
+- Known problems:
+  - Duplicate areas made before this fix are not removed. The founder deletes the extra ones on the Life areas page.
+  - The "only once" rule is checked on the device. Two devices that are both offline can still each create the same name; after sync both exist. A rule on the server would block the upload and stop sync, so there is none.
+  - Tasks that were linked straight to a goal before this fix keep that link in the database, but no screen shows or counts it. They are tasks without a project now.
+  - The `goal_id` column of `tasks` and the `progress` column of `goals` are unused.
+- Files changed: `lib/data/repositories/plan_repository.dart`, `lib/data/repositories/task_repository.dart`, `lib/data/local/app_database.dart` (and its generated file), `lib/data/sync/powersync_schema.dart`, `lib/domain/progress.dart`, `lib/domain/task_view.dart`, `lib/ui/ember.dart`, `lib/ui/widgets.dart`, the four page files and the setup page, the tests, `supabase/004_powersync_read.sql`, `supabase/005_project_icon.sql`, `docs/DECISIONS.md`, `docs/M1-TEST.md`.
+- Test results: `flutter analyze`: no issues. `flutter test`: 85 passed, 0 skipped. `flutter build windows --release`: built.
+- Next step: the founder's second M1 test.
+
 ### 2026-11-12 M1 steps 4 and 5 of 5: Tasks page and test guide (Windows)
 - Done:
   - Tasks page (`lib/features/tasks/tasks_page.dart`): one-line rows with the priority next to the title and the project name on the right in the project's colour; a box to add a task; list view with grouping (due date, project, goal, priority, none), sorting (due date, priority, newest, title) and filters (status, project, goal, priority); a month view; on the right a form to change or delete the selected task.

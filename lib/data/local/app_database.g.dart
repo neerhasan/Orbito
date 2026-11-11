@@ -1588,6 +1588,15 @@ class $ProjectsTable extends Projects with TableInfo<$ProjectsTable, Project> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _iconMeta = const VerificationMeta('icon');
+  @override
+  late final GeneratedColumn<String> icon = GeneratedColumn<String>(
+    'icon',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1598,6 +1607,7 @@ class $ProjectsTable extends Projects with TableInfo<$ProjectsTable, Project> {
     name,
     goalId,
     color,
+    icon,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1668,6 +1678,12 @@ class $ProjectsTable extends Projects with TableInfo<$ProjectsTable, Project> {
     } else if (isInserting) {
       context.missing(_colorMeta);
     }
+    if (data.containsKey('icon')) {
+      context.handle(
+        _iconMeta,
+        icon.isAcceptableOrUnknown(data['icon']!, _iconMeta),
+      );
+    }
     return context;
   }
 
@@ -1709,6 +1725,10 @@ class $ProjectsTable extends Projects with TableInfo<$ProjectsTable, Project> {
         DriftSqlType.string,
         data['${effectivePrefix}color'],
       )!,
+      icon: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}icon'],
+      ),
     );
   }
 
@@ -1736,6 +1756,10 @@ class Project extends DataClass implements Insertable<Project> {
   /// A colour name from `ProjectColors`, for example `blue`. Never orange:
   /// orange means "now".
   final String color;
+
+  /// An icon name from `ProjectIcons`, for example `folder`. Empty on rows
+  /// made before icons existed; the app then shows the folder.
+  final String? icon;
   const Project({
     required this.id,
     required this.userId,
@@ -1745,6 +1769,7 @@ class Project extends DataClass implements Insertable<Project> {
     required this.name,
     this.goalId,
     required this.color,
+    this.icon,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1761,6 +1786,9 @@ class Project extends DataClass implements Insertable<Project> {
       map['goal_id'] = Variable<String>(goalId);
     }
     map['color'] = Variable<String>(color);
+    if (!nullToAbsent || icon != null) {
+      map['icon'] = Variable<String>(icon);
+    }
     return map;
   }
 
@@ -1778,6 +1806,7 @@ class Project extends DataClass implements Insertable<Project> {
           ? const Value.absent()
           : Value(goalId),
       color: Value(color),
+      icon: icon == null && nullToAbsent ? const Value.absent() : Value(icon),
     );
   }
 
@@ -1795,6 +1824,7 @@ class Project extends DataClass implements Insertable<Project> {
       name: serializer.fromJson<String>(json['name']),
       goalId: serializer.fromJson<String?>(json['goalId']),
       color: serializer.fromJson<String>(json['color']),
+      icon: serializer.fromJson<String?>(json['icon']),
     );
   }
   @override
@@ -1809,6 +1839,7 @@ class Project extends DataClass implements Insertable<Project> {
       'name': serializer.toJson<String>(name),
       'goalId': serializer.toJson<String?>(goalId),
       'color': serializer.toJson<String>(color),
+      'icon': serializer.toJson<String?>(icon),
     };
   }
 
@@ -1821,6 +1852,7 @@ class Project extends DataClass implements Insertable<Project> {
     String? name,
     Value<String?> goalId = const Value.absent(),
     String? color,
+    Value<String?> icon = const Value.absent(),
   }) => Project(
     id: id ?? this.id,
     userId: userId ?? this.userId,
@@ -1830,6 +1862,7 @@ class Project extends DataClass implements Insertable<Project> {
     name: name ?? this.name,
     goalId: goalId.present ? goalId.value : this.goalId,
     color: color ?? this.color,
+    icon: icon.present ? icon.value : this.icon,
   );
   Project copyWithCompanion(ProjectsCompanion data) {
     return Project(
@@ -1841,6 +1874,7 @@ class Project extends DataClass implements Insertable<Project> {
       name: data.name.present ? data.name.value : this.name,
       goalId: data.goalId.present ? data.goalId.value : this.goalId,
       color: data.color.present ? data.color.value : this.color,
+      icon: data.icon.present ? data.icon.value : this.icon,
     );
   }
 
@@ -1854,7 +1888,8 @@ class Project extends DataClass implements Insertable<Project> {
           ..write('deletedAt: $deletedAt, ')
           ..write('name: $name, ')
           ..write('goalId: $goalId, ')
-          ..write('color: $color')
+          ..write('color: $color, ')
+          ..write('icon: $icon')
           ..write(')'))
         .toString();
   }
@@ -1869,6 +1904,7 @@ class Project extends DataClass implements Insertable<Project> {
     name,
     goalId,
     color,
+    icon,
   );
   @override
   bool operator ==(Object other) =>
@@ -1881,7 +1917,8 @@ class Project extends DataClass implements Insertable<Project> {
           other.deletedAt == this.deletedAt &&
           other.name == this.name &&
           other.goalId == this.goalId &&
-          other.color == this.color);
+          other.color == this.color &&
+          other.icon == this.icon);
 }
 
 class ProjectsCompanion extends UpdateCompanion<Project> {
@@ -1893,6 +1930,7 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
   final Value<String> name;
   final Value<String?> goalId;
   final Value<String> color;
+  final Value<String?> icon;
   final Value<int> rowid;
   const ProjectsCompanion({
     this.id = const Value.absent(),
@@ -1903,6 +1941,7 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
     this.name = const Value.absent(),
     this.goalId = const Value.absent(),
     this.color = const Value.absent(),
+    this.icon = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ProjectsCompanion.insert({
@@ -1914,6 +1953,7 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
     required String name,
     this.goalId = const Value.absent(),
     required String color,
+    this.icon = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        userId = Value(userId),
@@ -1930,6 +1970,7 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
     Expression<String>? name,
     Expression<String>? goalId,
     Expression<String>? color,
+    Expression<String>? icon,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1941,6 +1982,7 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
       if (name != null) 'name': name,
       if (goalId != null) 'goal_id': goalId,
       if (color != null) 'color': color,
+      if (icon != null) 'icon': icon,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1954,6 +1996,7 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
     Value<String>? name,
     Value<String?>? goalId,
     Value<String>? color,
+    Value<String?>? icon,
     Value<int>? rowid,
   }) {
     return ProjectsCompanion(
@@ -1965,6 +2008,7 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
       name: name ?? this.name,
       goalId: goalId ?? this.goalId,
       color: color ?? this.color,
+      icon: icon ?? this.icon,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1996,6 +2040,9 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
     if (color.present) {
       map['color'] = Variable<String>(color.value);
     }
+    if (icon.present) {
+      map['icon'] = Variable<String>(icon.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2013,6 +2060,7 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
           ..write('name: $name, ')
           ..write('goalId: $goalId, ')
           ..write('color: $color, ')
+          ..write('icon: $icon, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -3534,6 +3582,7 @@ typedef $$ProjectsTableCreateCompanionBuilder = ProjectsCompanion Function({
   required String name,
   Value<String?> goalId,
   required String color,
+  Value<String?> icon,
   Value<int> rowid,
 });
 typedef $$ProjectsTableUpdateCompanionBuilder = ProjectsCompanion Function({
@@ -3545,6 +3594,7 @@ typedef $$ProjectsTableUpdateCompanionBuilder = ProjectsCompanion Function({
   Value<String> name,
   Value<String?> goalId,
   Value<String> color,
+  Value<String?> icon,
   Value<int> rowid,
 });
 
@@ -3594,6 +3644,11 @@ class $$ProjectsTableFilterComposer
 
   ColumnFilters<String> get color => $composableBuilder(
     column: $table.color,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get icon => $composableBuilder(
+    column: $table.icon,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -3646,6 +3701,11 @@ class $$ProjectsTableOrderingComposer
     column: $table.color,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get icon => $composableBuilder(
+    column: $table.icon,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ProjectsTableAnnotationComposer
@@ -3680,6 +3740,9 @@ class $$ProjectsTableAnnotationComposer
 
   GeneratedColumn<String> get color =>
       $composableBuilder(column: $table.color, builder: (column) => column);
+
+  GeneratedColumn<String> get icon =>
+      $composableBuilder(column: $table.icon, builder: (column) => column);
 }
 
 class $$ProjectsTableTableManager
@@ -3718,6 +3781,7 @@ class $$ProjectsTableTableManager
                 Value<String> name = const Value.absent(),
                 Value<String?> goalId = const Value.absent(),
                 Value<String> color = const Value.absent(),
+                Value<String?> icon = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ProjectsCompanion(
                 id: id,
@@ -3728,6 +3792,7 @@ class $$ProjectsTableTableManager
                 name: name,
                 goalId: goalId,
                 color: color,
+                icon: icon,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -3740,6 +3805,7 @@ class $$ProjectsTableTableManager
                 required String name,
                 Value<String?> goalId = const Value.absent(),
                 required String color,
+                Value<String?> icon = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ProjectsCompanion.insert(
                 id: id,
@@ -3750,6 +3816,7 @@ class $$ProjectsTableTableManager
                 name: name,
                 goalId: goalId,
                 color: color,
+                icon: icon,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

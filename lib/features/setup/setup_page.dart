@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
+import '../../data/repositories/plan_repository.dart';
 import '../../ui/ember.dart';
 import '../../ui/widgets.dart';
 
@@ -60,11 +61,15 @@ class _SetupPageState extends ConsumerState<SetupPage> {
       var index = 0;
       for (final (name, _) in suggestedAreas) {
         if (!_chosen.contains(name)) continue;
-        await plan.addArea(
-          userId: userId,
-          name: name,
-          color: areaColorAt(index++),
-        );
+        try {
+          await plan.addArea(
+            userId: userId,
+            name: name,
+            color: areaColorAt(index++),
+          );
+        } on DuplicateNameException {
+          // The area arrived from another device meanwhile. One is enough.
+        }
       }
     } catch (error) {
       if (mounted) {

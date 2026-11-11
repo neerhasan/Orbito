@@ -39,11 +39,11 @@ class TaskRepository {
   }
 
   /// Saves a new open task and returns its id. [dueDate] is `YYYY-MM-DD`.
+  /// A task serves a project only; the project serves the goal.
   Future<String> addTask({
     required String userId,
     required String title,
     String? projectId,
-    String? goalId,
     String? dueDate,
     String priority = TaskPriority.none,
   }) async {
@@ -57,7 +57,6 @@ class TaskRepository {
             userId: userId,
             title: _title(title),
             projectId: Value(projectId),
-            goalId: Value(goalId),
             dueDate: Value(dueDate),
             priority: _priority(priority),
             status: TaskStatus.open,
@@ -72,7 +71,6 @@ class TaskRepository {
     String id, {
     required String title,
     required String? projectId,
-    required String? goalId,
     required String? dueDate,
     required String priority,
   }) {
@@ -80,7 +78,6 @@ class TaskRepository {
       TasksCompanion(
         title: Value(_title(title)),
         projectId: Value(projectId),
-        goalId: Value(goalId),
         dueDate: Value(dueDate),
         priority: Value(_priority(priority)),
         updatedAt: Value(_timestamp()),

@@ -62,7 +62,6 @@ void main() {
       userId: 'user-a',
       title: 'Old',
       projectId: 'project-1',
-      goalId: 'goal-1',
       dueDate: '2026-11-20',
     );
 
@@ -70,7 +69,6 @@ void main() {
       id,
       title: 'New',
       projectId: null,
-      goalId: 'goal-2',
       dueDate: null,
       priority: TaskPriority.medium,
     );
@@ -78,7 +76,6 @@ void main() {
     final task = (await tasks.watchTasks('user-a').first).single;
     expect(task.title, 'New');
     expect(task.projectId, isNull);
-    expect(task.goalId, 'goal-2');
     expect(task.dueDate, isNull);
     expect(task.priority, TaskPriority.medium);
   });
@@ -91,7 +88,6 @@ void main() {
         id,
         title: ' ',
         projectId: null,
-        goalId: null,
         dueDate: null,
         priority: TaskPriority.none,
       ),

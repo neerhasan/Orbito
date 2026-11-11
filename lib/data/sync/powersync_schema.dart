@@ -36,6 +36,7 @@ const powerSyncSchema = Schema([
     Column.text('name'),
     Column.text('goal_id'),
     Column.text('color'),
+    Column.text('icon'),
     Column.text('created_at'),
     Column.text('updated_at'),
     Column.text('deleted_at'),

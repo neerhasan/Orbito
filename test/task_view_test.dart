@@ -101,13 +101,14 @@ void main() {
       expect(_ids(found), ['in-p1']);
     });
 
-    test('a goal filter also finds tasks of the goal\'s projects', () {
+    test('a goal filter finds the tasks of the goal\'s projects only', () {
       final found = filterTasks(
         tasks,
         const TaskFilter(goalId: 'g1'),
         projects: projects,
       );
-      expect(_ids(found), ['in-p1', 'direct-g1']);
+      // 'direct-g1' carries an old link straight to the goal. It is ignored.
+      expect(_ids(found), ['in-p1']);
     });
 
     test('filters by priority, and filters combine', () {
@@ -238,7 +239,7 @@ void main() {
             goals: goals,
           ),
         ),
-        ['Goal g1:1', 'Goal g2:2', 'No goal:3'],
+        ['Goal g1:1', 'No goal:2,3'],
       );
       expect(
         labels(
