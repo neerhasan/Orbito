@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../features/sync_test/sign_in_screen.dart';
-import '../features/sync_test/sync_test_screen.dart';
+import '../features/auth/sign_in_screen.dart';
+import '../ui/ember.dart';
+import '../ui/widgets.dart';
 import 'providers.dart';
+import 'shell.dart';
 
-ThemeData _theme() => ThemeData(
-  colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueGrey),
-  useMaterial3: true,
-);
-
-/// The app once the keys are in place: sign-in screen or the test screen.
+/// The app once the keys are in place: the sign-in screen, or the app frame
+/// with its pages.
 class OrbitoApp extends ConsumerWidget {
   const OrbitoApp({super.key});
 
@@ -20,18 +18,41 @@ class OrbitoApp extends ConsumerWidget {
     return MaterialApp(
       title: 'Orbito',
       debugShowCheckedModeBanner: false,
-      theme: _theme(),
+      theme: Ember.theme(),
       home: user.when(
         loading: () =>
             const Scaffold(body: Center(child: CircularProgressIndicator())),
-        error: (error, _) =>
-            Scaffold(body: Center(child: Text('Sign-in problem: $error'))),
+        error: (error, _) => Scaffold(
+          body: Center(
+            child: Text(
+              'Sign-in problem: $error',
+              style: Ember.body.copyWith(color: Ember.onShell),
+            ),
+          ),
+        ),
         data: (signedIn) => signedIn == null
             ? const SignInScreen()
-            : SyncTestScreen(key: ValueKey(signedIn.id), user: signedIn),
+            : AppShell(
+                key: ValueKey(signedIn.id),
+                email: signedIn.email ?? signedIn.id,
+                pageBuilder: buildPage,
+              ),
       ),
     );
   }
+}
+
+/// The content of each page.
+Widget buildPage(AppPage page) {
+  return PageLayout(
+    main: [
+      PageHeader(title: page.label),
+      const EmptyHint(
+        title: 'This page is being built',
+        text: 'It arrives with the next step of milestone M1.',
+      ),
+    ],
+  );
 }
 
 /// Shown instead of the app when the `.env` file is missing values.
@@ -45,34 +66,41 @@ class SetupNeededApp extends StatelessWidget {
     return MaterialApp(
       title: 'Orbito',
       debugShowCheckedModeBanner: false,
-      theme: _theme(),
+      theme: Ember.theme(),
       home: Scaffold(
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 480),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Orbito is not set up yet',
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'These values are missing from the .env file in the '
-                    'project folder:',
-                  ),
-                  const SizedBox(height: 8),
-                  for (final name in missing) Text('•  $name'),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'Fill them in, then stop the app and start it again. '
-                    'See docs/M0-SETUP.md.',
-                  ),
-                ],
+              child: Container(
+                padding: const EdgeInsets.all(32),
+                decoration: BoxDecoration(
+                  color: Ember.paper,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Orbito is not set up yet',
+                      style: Ember.h1Small.copyWith(color: Ember.ink),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'These values are missing from the .env file in the '
+                      'project folder:',
+                    ),
+                    const SizedBox(height: 8),
+                    for (final name in missing) Text('•  $name'),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Fill them in, then stop the app and start it again. '
+                      'See docs/M0-SETUP.md.',
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

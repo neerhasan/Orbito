@@ -2,6 +2,21 @@
 
 Claude Code adds a new entry on top at the end of every session.
 
+### 2026-11-11 M1 step 2 of 5: app frame and look (Windows)
+- Done:
+  - The Ember look in code: colours, text styles and the theme (`lib/ui/ember.dart`), shared parts such as panel, tile, tag and colour picker (`lib/ui/widgets.dart`).
+  - The Inter font is in the app as one variable font file (`assets/fonts/Inter.ttf`, licence in `assets/fonts/Inter-OFL.txt`). No new package.
+  - The app frame (`lib/app/shell.dart`): side menu with Tasks, Projects, Goals and Life areas, the sync status, the email and sign out.
+  - The sign-in screen moved to `lib/features/auth/` and was restyled. It has a button to show the typed password.
+  - The M0 test screen, its repository and its tests were removed. The table `sync_test` stays on the server and in the sync config.
+- Left to do: M1 steps 3 to 5. The four pages show "This page is being built" for now.
+- Known problems:
+  - The side menu has a fixed width and the layout is made for a desktop window. Narrow windows and the phone are not handled yet (decision: PC first).
+  - The sign-in screen has no "forgot password" link. Password reset belongs to M5.
+- Files changed: `lib/ui/ember.dart`, `lib/ui/widgets.dart`, `lib/app/shell.dart`, `lib/app/app.dart`, `lib/app/providers.dart`, `lib/features/auth/sign_in_screen.dart`, `test/widget_test.dart`, `pubspec.yaml`, `assets/fonts/`; removed `lib/features/sync_test/`, `lib/data/repositories/sync_test_repository.dart`, `test/sync_test_repository_test.dart`.
+- Test results: `flutter analyze`: no issues. `flutter test`: 49 passed, 0 skipped. `flutter build windows --debug`: built. The app was started on the PC and the frame was checked by eye from a picture of the window: signed in, status "Synced", fonts and colours as designed. The Android build was not run in this step.
+- Next step: M1 step 3, first-run setup and the pages for life areas, goals and projects.
+
 ### 2026-11-11 M1 step 1 of 5: data layer for life areas, goals, projects and tasks
 - Done:
   - The founder approved M0. The GitHub Actions run that uses the three variables finished green with both downloads (`orbito-windows`, `orbito-android-apk`).

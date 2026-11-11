@@ -72,6 +72,14 @@ flutter:
   assets:
     - .env
 
+  # Inter is the app's font (SIL Open Font License, see
+  # assets/fonts/Inter-OFL.txt). It is one "variable" file that holds every
+  # weight.
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter.ttf
+
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

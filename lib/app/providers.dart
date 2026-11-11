@@ -4,12 +4,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../data/local/app_database.dart';
 import '../data/repositories/plan_repository.dart';
-import '../data/repositories/sync_test_repository.dart';
 import '../data/repositories/task_repository.dart';
 import '../data/sync/sync_service.dart';
 import '../data/sync/sync_status_text.dart';
 
-/// These three are created in `main()` and handed in when the app starts.
+/// These are created in `main()` and handed in when the app starts.
 final supabaseProvider = Provider<SupabaseClient>(
   (ref) => throw UnimplementedError('Set in main()'),
 );
@@ -21,13 +20,6 @@ final syncServiceProvider = Provider<SyncService>(
 );
 final appDatabaseProvider = Provider<AppDatabase>(
   (ref) => throw UnimplementedError('Set in main()'),
-);
-
-final syncTestRepositoryProvider = Provider<SyncTestRepository>(
-  (ref) => SyncTestRepository(
-    ref.watch(appDatabaseProvider),
-    newId: () => uuid.v4(),
-  ),
 );
 
 final planRepositoryProvider = Provider<PlanRepository>(
@@ -49,10 +41,37 @@ final currentUserProvider = StreamProvider<User?>((ref) async* {
   }
 });
 
-/// The signed-in user's test rows, read from the local database.
-final syncTestRowsProvider = StreamProvider.family<List<SyncTestRow>, String>(
-  (ref, userId) => ref.watch(syncTestRepositoryProvider).watchRows(userId),
+/// The id of the signed-in user, or null.
+final userIdProvider = Provider<String?>(
+  (ref) => ref.watch(currentUserProvider).value?.id,
 );
+
+// The signed-in user's data, read from the local database. The screens use
+// only these, never the network.
+
+final lifeAreasProvider = StreamProvider<List<LifeArea>>((ref) {
+  final userId = ref.watch(userIdProvider);
+  if (userId == null) return Stream.value(const []);
+  return ref.watch(planRepositoryProvider).watchAreas(userId);
+});
+
+final goalsProvider = StreamProvider<List<Goal>>((ref) {
+  final userId = ref.watch(userIdProvider);
+  if (userId == null) return Stream.value(const []);
+  return ref.watch(planRepositoryProvider).watchGoals(userId);
+});
+
+final projectsProvider = StreamProvider<List<Project>>((ref) {
+  final userId = ref.watch(userIdProvider);
+  if (userId == null) return Stream.value(const []);
+  return ref.watch(planRepositoryProvider).watchProjects(userId);
+});
+
+final tasksProvider = StreamProvider<List<Task>>((ref) {
+  final userId = ref.watch(userIdProvider);
+  if (userId == null) return Stream.value(const []);
+  return ref.watch(taskRepositoryProvider).watchTasks(userId);
+});
 
 /// How many local changes have not reached the server yet.
 final pendingUploadsProvider = StreamProvider<int>((ref) {
