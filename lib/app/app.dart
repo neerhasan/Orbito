@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../features/areas/areas_page.dart';
 import '../features/auth/sign_in_screen.dart';
+import '../features/goals/goals_page.dart';
 import '../features/projects/projects_page.dart';
 import '../features/setup/setup_page.dart';
 import '../ui/ember.dart';
@@ -70,7 +71,8 @@ class PageHost extends ConsumerWidget {
     return switch (page) {
       AppPage.areas => const AreasPage(),
       AppPage.projects => const ProjectsPage(),
-      AppPage.tasks || AppPage.goals => PageLayout(
+      AppPage.goals => const GoalsPage(),
+      AppPage.tasks => PageLayout(
         main: [
           PageHeader(title: page.label),
           const EmptyHint(

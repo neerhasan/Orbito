@@ -4,15 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/providers.dart';
 import '../../data/local/app_database.dart';
 import '../../data/repositories/plan_repository.dart';
+import '../../domain/progress.dart';
 import '../../ui/ember.dart';
 import '../../ui/widgets.dart';
-
-/// The share of [tasks] that are done, from 0 to 100.
-int percentDone(List<Task> tasks) {
-  if (tasks.isEmpty) return 0;
-  final done = tasks.where((task) => task.status == TaskStatus.done).length;
-  return (done * 100 / tasks.length).round();
-}
 
 /// The Projects page: the list on the left, and on the right a form to add
 /// a project or the details of the selected one.

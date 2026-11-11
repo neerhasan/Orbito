@@ -2,6 +2,20 @@
 
 Claude Code adds a new entry on top at the end of every session.
 
+### 2026-11-12 M1 step 3 of 5, part 2: Goals page (Windows)
+- Done:
+  - The founder chose: goal progress is automatic from tasks (recorded in `docs/DECISIONS.md`).
+  - Goals page (`lib/features/goals/goals_page.dart`): list with life area, target date and percent; a form with title, life area, target date and "done when"; the projects that serve the goal; the goal's own tasks with a complete button and a quick "add task" box; delete with the keep-or-delete question.
+  - The progress rules are in one file, `lib/domain/progress.dart`: percent of tasks done, and which tasks count for a goal.
+- Left to do: M1 step 4 (the Tasks page) and step 5 (test guide).
+- Known problems:
+  - `PlanRepository.setGoalProgress` and the `progress` column are unused now. Not removed: removing a column needs a change on the server too.
+  - The target date opens Flutter's standard date picker. It was not checked by Claude in the real app, and no automatic test opens it.
+  - The founder has still not pasted `powersync/sync-config.yaml` into PowerSync.
+- Files changed: `lib/features/goals/goals_page.dart`, `lib/domain/progress.dart`, `lib/features/projects/projects_page.dart`, `lib/app/app.dart`, `test/progress_test.dart`, `test/plan_pages_test.dart`, `docs/DECISIONS.md`.
+- Test results: `flutter analyze`: no issues. `flutter test`: 60 passed, 0 skipped. The Windows app was not rebuilt or opened after this part.
+- Next step: M1 step 4, the Tasks page.
+
 ### 2026-11-11 M1 step 3 of 5, part 1: first-run setup, Life areas page, Projects page (Windows)
 - Done:
   - First-run setup (`lib/features/setup/setup_page.dart`): ten suggested life areas to pick from, "Skip for now", and a note while the first download from the server has not finished.

@@ -190,6 +190,79 @@ void main() {
     });
   });
 
+  group('the Goals page', () {
+    _testPage('adds a goal, and its percent follows its tasks', (tester) async {
+      await _read(
+        tester,
+        () => _plan.addArea(userId: _user, name: 'Health', color: 'green'),
+      );
+      await _pumpPage(tester, AppPage.goals);
+      expect(find.text('No goals yet'), findsOneWidget);
+
+      await _tap(tester, 'goal-save');
+      expect(find.text('Give the goal a title.'), findsOneWidget);
+
+      await tester.enterText(find.byKey(const Key('goal-title')), 'Run 10 km');
+      await tester.enterText(
+        find.byKey(const Key('goal-done-when')),
+        'I finish a 10 km race',
+      );
+      await _tap(tester, 'goal-save');
+      await _settle(tester);
+
+      final goals = await _read(tester, () => _plan.watchGoals(_user).first);
+      expect(goals.single.title, 'Run 10 km');
+      expect(goals.single.doneWhen, 'I finish a 10 km race');
+      expect(find.text('No tasks yet'), findsOneWidget);
+      expect(find.text('0%'), findsOneWidget);
+
+      await _tap(tester, 'goal-${goals.single.id}');
+      expect(find.text('Edit goal'), findsOneWidget);
+      await tester.enterText(
+        find.byKey(const Key('goal-new-task')),
+        'Book the race',
+      );
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await _settle(tester);
+      expect(find.text('0 of 1 task'), findsOneWidget);
+
+      await tester.tap(find.bySemanticsLabel('Complete Book the race'));
+      await _settle(tester);
+      expect(find.text('1 of 1 task'), findsOneWidget);
+      expect(find.text('100%'), findsOneWidget);
+    });
+
+    _testPage('counts the tasks of a project that serves the goal', (
+      tester,
+    ) async {
+      await _read(tester, () async {
+        await _plan.addArea(userId: _user, name: 'Health', color: 'green');
+        final goal = await _plan.addGoal(userId: _user, title: 'Run 10 km');
+        final project = await _plan.addProject(
+          userId: _user,
+          name: 'Training plan',
+          color: 'blue',
+          goalId: goal,
+        );
+        final done = await _tasks.addTask(
+          userId: _user,
+          title: 'Buy shoes',
+          projectId: project,
+        );
+        await _tasks.addTask(
+          userId: _user,
+          title: 'Week 1',
+          projectId: project,
+        );
+        await _tasks.setDone(done, done: true);
+      });
+      await _pumpPage(tester, AppPage.goals);
+
+      expect(find.text('1 of 2 tasks'), findsOneWidget);
+      expect(find.text('50%'), findsOneWidget);
+    });
+  });
+
   group('the Projects page', () {
     _testPage('adds a project with a colour, then a task', (tester) async {
       await _read(
