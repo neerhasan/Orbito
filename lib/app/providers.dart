@@ -32,6 +32,10 @@ final taskRepositoryProvider = Provider<TaskRepository>(
       TaskRepository(ref.watch(appDatabaseProvider), newId: () => uuid.v4()),
 );
 
+/// The current time. The screens ask this instead of the system clock, so
+/// tests can set the day.
+final clockProvider = Provider<DateTime Function()>((ref) => DateTime.now);
+
 /// The signed-in user, or null when nobody is signed in.
 final currentUserProvider = StreamProvider<User?>((ref) async* {
   final auth = ref.watch(supabaseProvider).auth;

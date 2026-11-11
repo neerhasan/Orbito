@@ -63,6 +63,7 @@ Future<void> _pumpPage(WidgetTester tester, AppPage page) async {
         taskRepositoryProvider.overrideWithValue(_tasks),
         userIdProvider.overrideWithValue(_user),
         firstSyncDoneProvider.overrideWithValue(true),
+        clockProvider.overrideWithValue(() => DateTime(2026, 11, 11, 12)),
       ],
       child: MaterialApp(
         theme: Ember.theme(),
@@ -260,6 +261,120 @@ void main() {
 
       expect(find.text('1 of 2 tasks'), findsOneWidget);
       expect(find.text('50%'), findsOneWidget);
+    });
+  });
+
+  group('the Tasks page', () {
+    _testPage('adds a task, completes it, and the chart counts it', (
+      tester,
+    ) async {
+      await _read(
+        tester,
+        () => _plan.addArea(userId: _user, name: 'Health', color: 'green'),
+      );
+      await _pumpPage(tester, AppPage.tasks);
+      expect(find.text('No tasks yet'), findsOneWidget);
+      expect(find.text('0 open'), findsOneWidget);
+      expect(find.text('Last 14 days · 0 done · 0.0 a day'), findsOneWidget);
+
+      await tester.enterText(find.byKey(const Key('task-new')), 'Buy shoes');
+      await _tap(tester, 'task-add');
+      await _settle(tester);
+
+      expect(find.text('Buy shoes'), findsOneWidget);
+      expect(find.text('1 open'), findsOneWidget);
+      expect(find.text('No date · 1'), findsOneWidget);
+
+      await tester.tap(find.bySemanticsLabel('Complete Buy shoes'));
+      await _settle(tester);
+
+      expect(find.text('No open tasks'), findsOneWidget);
+      expect(find.text('0 open'), findsOneWidget);
+      expect(find.text('Last 14 days · 1 done · 0.1 a day'), findsOneWidget);
+
+      await _tap(tester, 'chart-week');
+      expect(find.text('Last 7 days · 1 done · 0.1 a day'), findsOneWidget);
+    });
+
+    _testPage('shows project and priority on the row, filters, and has a '
+        'month view', (tester) async {
+      final ids = await _read(tester, () async {
+        await _plan.addArea(userId: _user, name: 'Health', color: 'green');
+        final project = await _plan.addProject(
+          userId: _user,
+          name: 'Training plan',
+          color: 'teal',
+        );
+        final inProject = await _tasks.addTask(
+          userId: _user,
+          title: 'Run 5 km',
+          projectId: project,
+          dueDate: '2026-11-11',
+          priority: TaskPriority.high,
+        );
+        await _tasks.addTask(userId: _user, title: 'Call mum');
+        return inProject;
+      });
+      await _pumpPage(tester, AppPage.tasks);
+
+      expect(find.text('Today · 1'), findsOneWidget);
+      expect(find.text('No date · 1'), findsOneWidget);
+      expect(find.text('High'), findsOneWidget);
+      expect(find.text('Today'), findsOneWidget);
+      expect(find.text('Training plan'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('filter-project')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Training plan').last);
+      await tester.pumpAndSettle();
+      await _settle(tester);
+
+      expect(find.text('Run 5 km'), findsOneWidget);
+      expect(find.text('Call mum'), findsNothing);
+
+      await _tap(tester, 'view-month');
+      expect(find.text('November 2026'), findsOneWidget);
+      expect(find.byKey(Key('month-task-$ids')), findsOneWidget);
+      expect(find.byKey(const Key('group')), findsNothing);
+
+      await _tap(tester, 'month-next');
+      expect(find.text('December 2026'), findsOneWidget);
+      expect(find.byKey(Key('month-task-$ids')), findsNothing);
+    });
+
+    _testPage('changes and deletes a task', (tester) async {
+      final id = await _read(tester, () async {
+        await _plan.addArea(userId: _user, name: 'Health', color: 'green');
+        return _tasks.addTask(userId: _user, title: 'Buy shoes');
+      });
+      await _pumpPage(tester, AppPage.tasks);
+      expect(find.text('Pick a task'), findsOneWidget);
+
+      await _tap(tester, 'task-$id');
+      await tester.enterText(
+        find.byKey(const Key('task-title')),
+        'Buy running shoes',
+      );
+      await _tap(tester, 'priority-high');
+      await _tap(tester, 'task-date-today');
+      await _tap(tester, 'task-save');
+      await _settle(tester);
+
+      var saved = await _read(tester, () => _tasks.watchTasks(_user).first);
+      expect(saved.single.title, 'Buy running shoes');
+      expect(saved.single.priority, TaskPriority.high);
+      expect(saved.single.dueDate, '2026-11-11');
+      expect(find.text('Today · 1'), findsOneWidget);
+
+      await _tap(tester, 'task-delete');
+      await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+      await tester.pumpAndSettle();
+      await _settle(tester);
+
+      saved = await _read(tester, () => _tasks.watchTasks(_user).first);
+      expect(saved, isEmpty);
+      expect(find.text('No tasks yet'), findsOneWidget);
+      expect(find.text('Pick a task'), findsOneWidget);
     });
   });
 

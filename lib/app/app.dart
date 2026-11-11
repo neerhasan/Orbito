@@ -6,6 +6,7 @@ import '../features/auth/sign_in_screen.dart';
 import '../features/goals/goals_page.dart';
 import '../features/projects/projects_page.dart';
 import '../features/setup/setup_page.dart';
+import '../features/tasks/tasks_page.dart';
 import '../ui/ember.dart';
 import '../ui/widgets.dart';
 import 'providers.dart';
@@ -72,15 +73,7 @@ class PageHost extends ConsumerWidget {
       AppPage.areas => const AreasPage(),
       AppPage.projects => const ProjectsPage(),
       AppPage.goals => const GoalsPage(),
-      AppPage.tasks => PageLayout(
-        main: [
-          PageHeader(title: page.label),
-          const EmptyHint(
-            title: 'This page is being built',
-            text: 'It arrives with the next step of milestone M1.',
-          ),
-        ],
-      ),
+      AppPage.tasks => const TasksPage(),
     };
   }
 }

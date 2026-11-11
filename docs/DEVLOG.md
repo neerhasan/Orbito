@@ -2,6 +2,27 @@
 
 Claude Code adds a new entry on top at the end of every session.
 
+### 2026-11-12 M1 steps 4 and 5 of 5: Tasks page and test guide (Windows)
+- Done:
+  - Tasks page (`lib/features/tasks/tasks_page.dart`): one-line rows with the priority next to the title and the project name on the right in the project's colour; a box to add a task; list view with grouping (due date, project, goal, priority, none), sorting (due date, priority, newest, title) and filters (status, project, goal, priority); a month view; on the right a form to change or delete the selected task.
+  - Completion chart (`lib/features/tasks/completion_chart.dart`): tasks completed per day with a toggle for week, 2 weeks, month and year. Drawn by the app itself, no new package.
+  - The rules for filtering, sorting, grouping, the chart numbers and the month grid are plain functions in `lib/domain/task_view.dart`, with their own tests.
+  - The screens now ask `clockProvider` for the time, so tests can set the day.
+  - `docs/M1-TEST.md`: the founder's hands-on test guide for M1.
+- Left to do: the founder runs `docs/M1-TEST.md` and approves or reports problems. Then M2.
+- Known problems:
+  - The founder has still not pasted `powersync/sync-config.yaml` into PowerSync. Until then the new tables do not reach the server. This is step 1 of the test guide.
+  - Claude did not click through the real Windows app. The pages were checked with automatic tests and by eye on pictures drawn from the same code with sample data. The first real click-through is the founder's test.
+  - The date picker (goal target date, task due date) is not covered by an automatic test.
+  - Orange is used for "now" (overdue, today) and, as in the design files, for the high-priority ring and label. If orange must mean only "now", the high-priority colour needs the founder's choice.
+  - The goal filter and the "Goal" grouping count a task for a goal when it is linked directly or through its project.
+  - In the month view a day shows at most three tasks, then "+N more". There is no way yet to open the full list of that day except the list view.
+  - A new task typed on the Tasks page takes over the active project, goal and priority filters, so it stays visible. It never gets a due date.
+  - The layout is for a desktop window; narrow windows and the phone are not handled (decision: PC first).
+- Files changed: `lib/features/tasks/tasks_page.dart`, `lib/features/tasks/completion_chart.dart`, `lib/domain/task_view.dart`, `lib/app/app.dart`, `lib/app/providers.dart`, `test/task_view_test.dart`, `test/plan_pages_test.dart`, `docs/M1-TEST.md`, `docs/DECISIONS.md`.
+- Test results: `flutter analyze`: no issues. `flutter test`: 83 passed, 0 skipped, including the access-rule test for all five tables against the real server. `flutter build windows --release`: built, and the app starts. The Android build was not run in this session.
+- Next step: the founder's M1 test. No M2 work before the founder approves M1.
+
 ### 2026-11-12 M1 step 3 of 5, part 2: Goals page (Windows)
 - Done:
   - The founder chose: goal progress is automatic from tasks (recorded in `docs/DECISIONS.md`).

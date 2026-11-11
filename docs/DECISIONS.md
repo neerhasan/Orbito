@@ -8,6 +8,7 @@ Decided by the founder:
 - 2026-11-11: M0 (sync proof) approved.
 - 2026-11-11: Life areas: 3 to 8 is a suggestion shown to the user, not a limit. Any number is allowed.
 - 2026-11-11: Build the Windows (PC) version first. Work on the Android screens starts only after the founder has finalised the PC version. The code stays shared and the Android build must keep compiling, but no Android layouts are designed or tested until then.
+- 2026-11-12: Goal progress is automatic: tasks done out of all tasks that count for the goal. No slider. Tasks that count: tasks linked straight to the goal, and tasks of the projects that serve the goal (this second part is Claude's reading of "linked", say if it is wrong). A goal with no tasks shows 0%. The hand-set `progress` column in the `goals` table is no longer used by any screen; it stays in the database for now.
 
 Defaults used until the founder changes them:
 - Sign-in: email and password, verification off during the test.
