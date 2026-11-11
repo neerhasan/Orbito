@@ -25,9 +25,15 @@ void main() {
 
   /// Builds area -> goal -> project -> task, plus a task linked straight to
   /// the goal. Returns the ids.
-  Future<({String area, String goal, String project, String task, String goalTask})>
+  Future<
+    ({String area, String goal, String project, String task, String goalTask})
+  >
   buildChain() async {
-    final area = await plan.addArea(userId: user, name: 'Health', color: 'green');
+    final area = await plan.addArea(
+      userId: user,
+      name: 'Health',
+      color: 'green',
+    );
     final goal = await plan.addGoal(
       userId: user,
       title: 'Run 10 km',

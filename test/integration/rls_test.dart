@@ -108,10 +108,7 @@ void main() {
         expect(otherView, isEmpty);
 
         // The other account cannot see ANY of the first account's rows.
-        final allOfA = await accountB
-            .from(table)
-            .select()
-            .eq('user_id', idOfA);
+        final allOfA = await accountB.from(table).select().eq('user_id', idOfA);
         expect(allOfA, isEmpty);
 
         // The other account cannot change it.

@@ -87,6 +87,15 @@ final _rawSyncStatusProvider = StreamProvider<SyncStatus>((ref) async* {
   yield* powerSync.statusStream;
 });
 
+/// True once this device has downloaded the user's data at least once.
+/// Until then an empty list may only mean "not downloaded yet".
+final firstSyncDoneProvider = Provider<bool>((ref) {
+  final status =
+      ref.watch(_rawSyncStatusProvider).value ??
+      ref.watch(powerSyncProvider).currentStatus;
+  return status.hasSynced ?? false;
+});
+
 /// The words for the sync status line.
 final syncStatusTextProvider = Provider<SyncStatusText>((ref) {
   final status =

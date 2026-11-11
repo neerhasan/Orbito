@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../features/areas/areas_page.dart';
 import '../features/auth/sign_in_screen.dart';
+import '../features/projects/projects_page.dart';
+import '../features/setup/setup_page.dart';
 import '../ui/ember.dart';
 import '../ui/widgets.dart';
 import 'providers.dart';
@@ -43,16 +46,41 @@ class OrbitoApp extends ConsumerWidget {
 }
 
 /// The content of each page.
-Widget buildPage(AppPage page) {
-  return PageLayout(
-    main: [
-      PageHeader(title: page.label),
-      const EmptyHint(
-        title: 'This page is being built',
-        text: 'It arrives with the next step of milestone M1.',
+Widget buildPage(AppPage page) => PageHost(page: page);
+
+/// Shows the open page, or the first-run setup while the user has no life
+/// areas yet.
+class PageHost extends ConsumerWidget {
+  const PageHost({super.key, required this.page});
+
+  final AppPage page;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final areas = ref.watch(lifeAreasProvider);
+    if (areas.isLoading && !areas.hasValue) {
+      return const PageLayout(
+        main: [Center(child: CircularProgressIndicator())],
+      );
+    }
+    final noAreas = areas.value?.isEmpty ?? true;
+    if (noAreas && !ref.watch(setupSkippedProvider)) {
+      return const SetupPage();
+    }
+    return switch (page) {
+      AppPage.areas => const AreasPage(),
+      AppPage.projects => const ProjectsPage(),
+      AppPage.tasks || AppPage.goals => PageLayout(
+        main: [
+          PageHeader(title: page.label),
+          const EmptyHint(
+            title: 'This page is being built',
+            text: 'It arrives with the next step of milestone M1.',
+          ),
+        ],
       ),
-    ],
-  );
+    };
+  }
 }
 
 /// Shown instead of the app when the `.env` file is missing values.

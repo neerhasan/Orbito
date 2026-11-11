@@ -100,7 +100,10 @@ abstract final class Ember {
         filled: true,
         fillColor: tile,
         isDense: true,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 11,
+        ),
         hintStyle: text(13, 16, weight: 400, color: ink2),
         labelStyle: text(13, 16, weight: 400, color: ink2),
         floatingLabelStyle: text(13, 16, color: ink2),

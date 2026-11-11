@@ -5,11 +5,8 @@ import '../local/app_database.dart';
 /// Reads and writes tasks. It only ever touches the local database. Sync
 /// copies the changes to the server in the background.
 class TaskRepository {
-  TaskRepository(
-    this._db, {
-    required this._newId,
-    DateTime Function()? now,
-  }) : _now = now ?? DateTime.now;
+  TaskRepository(this._db, {required this._newId, DateTime Function()? now})
+    : _now = now ?? DateTime.now;
 
   final AppDatabase _db;
   final String Function() _newId;

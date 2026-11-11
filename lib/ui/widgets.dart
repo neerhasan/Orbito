@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../data/repositories/plan_repository.dart' show LinkedItems;
 import 'ember.dart';
 
 /// A paper-coloured panel with rounded corners. Its content scrolls.
@@ -229,6 +230,60 @@ class Tag extends StatelessWidget {
   }
 }
 
+/// The round "complete" button in front of a task. The border shows the
+/// priority: orange for high, amber for medium.
+class TaskRing extends StatelessWidget {
+  const TaskRing({
+    super.key,
+    required this.done,
+    required this.priority,
+    required this.onTap,
+    required this.label,
+  });
+
+  final bool done;
+  final String priority;
+  final VoidCallback onTap;
+
+  /// Read by screen readers, for example "Complete Buy shoes".
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final border = done
+        ? Ember.ink
+        : switch (priority) {
+            'high' => Ember.now,
+            'medium' => Ember.amber,
+            _ => Ember.ring,
+          };
+    return Semantics(
+      button: true,
+      checked: done,
+      label: label,
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(5),
+          child: Container(
+            width: 18,
+            height: 18,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: done ? Ember.ink : Colors.transparent,
+              border: Border.all(color: border, width: 1.6),
+            ),
+            child: done
+                ? const Icon(Icons.check, size: 12, color: Ember.white)
+                : null,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// The small grey label above a form field.
 class FieldLabel extends StatelessWidget {
   const FieldLabel(this.text, {super.key});
@@ -341,6 +396,45 @@ Future<bool> confirmDialog(
   );
   return result ?? false;
 }
+
+/// Asks what to do with linked items before a delete. Returns null when the
+/// user cancels, so nothing is deleted.
+Future<LinkedItems?> askAboutLinkedItems(
+  BuildContext context, {
+  required String title,
+  required String message,
+  required String keepLabel,
+  required String deleteLabel,
+}) {
+  return showDialog<LinkedItems>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text(title),
+      content: Text(message),
+      actionsOverflowButtonSpacing: 8,
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        OutlinedButton(
+          key: const Key('linked-delete'),
+          onPressed: () => Navigator.of(context).pop(LinkedItems.delete),
+          child: Text(deleteLabel),
+        ),
+        FilledButton(
+          key: const Key('linked-keep'),
+          onPressed: () => Navigator.of(context).pop(LinkedItems.keep),
+          child: Text(keepLabel),
+        ),
+      ],
+    ),
+  );
+}
+
+/// `1 goal`, `2 goals`.
+String countOf(int count, String singular, [String? plural]) =>
+    count == 1 ? '1 $singular' : '$count ${plural ?? '${singular}s'}';
 
 /// Shows a short message at the bottom of the window.
 void showMessage(BuildContext context, String message) {

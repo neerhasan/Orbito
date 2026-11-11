@@ -100,19 +100,22 @@ void main() {
     expect((await tasks.watchTasks('user-a').first).single.title, 'Keep me');
   });
 
-  test('completing sets the status and the time; undoing clears them', () async {
-    final id = await tasks.addTask(userId: 'user-a', title: 'Task');
+  test(
+    'completing sets the status and the time; undoing clears them',
+    () async {
+      final id = await tasks.addTask(userId: 'user-a', title: 'Task');
 
-    await tasks.setDone(id, done: true);
-    var task = (await tasks.watchTasks('user-a').first).single;
-    expect(task.status, TaskStatus.done);
-    expect(task.completedAt, '2026-11-11T10:00:01.000Z');
+      await tasks.setDone(id, done: true);
+      var task = (await tasks.watchTasks('user-a').first).single;
+      expect(task.status, TaskStatus.done);
+      expect(task.completedAt, '2026-11-11T10:00:01.000Z');
 
-    await tasks.setDone(id, done: false);
-    task = (await tasks.watchTasks('user-a').first).single;
-    expect(task.status, TaskStatus.open);
-    expect(task.completedAt, isNull);
-  });
+      await tasks.setDone(id, done: false);
+      task = (await tasks.watchTasks('user-a').first).single;
+      expect(task.status, TaskStatus.open);
+      expect(task.completedAt, isNull);
+    },
+  );
 
   test('a deleted task is hidden but stays in the database', () async {
     final id = await tasks.addTask(userId: 'user-a', title: 'Gone');

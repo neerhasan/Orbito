@@ -15,11 +15,8 @@ enum LinkedItems {
 /// goal, project). It only ever touches the local database. Sync copies the
 /// changes to the server in the background.
 class PlanRepository {
-  PlanRepository(
-    this._db, {
-    required this._newId,
-    DateTime Function()? now,
-  }) : _now = now ?? DateTime.now;
+  PlanRepository(this._db, {required this._newId, DateTime Function()? now})
+    : _now = now ?? DateTime.now;
 
   final AppDatabase _db;
   final String Function() _newId;
@@ -110,13 +107,14 @@ class PlanRepository {
           ),
         );
       }
-      await (_db.update(_db.lifeAreas)..where((row) => row.id.equals(id)))
-          .write(
-            LifeAreasCompanion(
-              deletedAt: Value(timestamp),
-              updatedAt: Value(timestamp),
-            ),
-          );
+      await (_db.update(
+        _db.lifeAreas,
+      )..where((row) => row.id.equals(id))).write(
+        LifeAreasCompanion(
+          deletedAt: Value(timestamp),
+          updatedAt: Value(timestamp),
+        ),
+      );
     });
   }
 
@@ -227,14 +225,11 @@ class PlanRepository {
           ),
         );
       }
-      await (_db.update(_db.tasks)
-            ..where((row) => row.goalId.equals(id) & row.deletedAt.isNull()))
-          .write(
-            TasksCompanion(
-              goalId: const Value(null),
-              updatedAt: Value(timestamp),
-            ),
-          );
+      await (_db.update(
+        _db.tasks,
+      )..where((row) => row.goalId.equals(id) & row.deletedAt.isNull())).write(
+        TasksCompanion(goalId: const Value(null), updatedAt: Value(timestamp)),
+      );
     }
     await (_db.update(_db.goals)..where((row) => row.id.equals(id))).write(
       GoalsCompanion(deletedAt: Value(timestamp), updatedAt: Value(timestamp)),
