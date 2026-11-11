@@ -2,6 +2,21 @@
 
 Claude Code adds a new entry on top at the end of every session.
 
+### 2026-11-11 M1 step 3 of 5, part 1: first-run setup, Life areas page, Projects page (Windows)
+- Done:
+  - First-run setup (`lib/features/setup/setup_page.dart`): ten suggested life areas to pick from, "Skip for now", and a note while the first download from the server has not finished.
+  - Life areas page (`lib/features/areas/areas_page.dart`): list with goal counts, a form to add, rename, recolour and delete. Deleting an area with goals asks: keep the goals or delete them too.
+  - Projects page (`lib/features/projects/projects_page.dart`): list with percent from tasks done, a form with name, goal and colour, the project's tasks with a complete button, a quick "add task" box, and delete with the same keep-or-delete question.
+  - Date helpers in `lib/domain/dates.dart`.
+- Left to do: the Goals page (waits for the founder's answer on goal progress), the Tasks page, the test guide.
+- Known problems:
+  - The founder has not yet pasted the new `powersync/sync-config.yaml` into PowerSync. Until then areas, goals, projects and tasks stay on the device and do not reach the server.
+  - Deleting the last life area brings the first-run setup back. "Skip for now" lasts only until the app closes.
+  - The tests found one layout bug (the text on a suggestion tile was 2 pixels too tall); fixed.
+- Files changed: `lib/features/setup/setup_page.dart`, `lib/features/areas/areas_page.dart`, `lib/features/projects/projects_page.dart`, `lib/domain/dates.dart`, `lib/ui/widgets.dart`, `lib/app/app.dart`, `lib/app/providers.dart`, `test/plan_pages_test.dart`; formatting only in some other files.
+- Test results: `flutter analyze`: no issues. `flutter test`: 54 passed, 0 skipped (5 new page tests). `flutter build windows --release`: built. The app was started on the PC and the setup screen was checked by eye from a picture of the window. Adding areas and projects by hand in the real app was not done by Claude; the page tests cover it.
+- Next step: the Goals page, then M1 step 4, the Tasks page.
+
 ### 2026-11-11 M1 step 2 of 5: app frame and look (Windows)
 - Done:
   - The Ember look in code: colours, text styles and the theme (`lib/ui/ember.dart`), shared parts such as panel, tile, tag and colour picker (`lib/ui/widgets.dart`).
