@@ -53,6 +53,11 @@ flutter run -d android
 
 The first build takes several minutes. The app opens on the phone. Keep the Windows app open too.
 
+Two things that can go wrong here:
+
+- **The phone asks whether to install the app.** On some phones (for example iQOO and vivo) this question shows for only about 10 seconds. Keep the phone unlocked and tap **Install** quickly. If you miss it, the install ends with `User rejected permissions`. Just run it again.
+- **The PC sees the phone but nothing happens.** The cable or the USB port may be unstable. Use Wi-Fi instead: with the phone and the PC on the same Wi-Fi, open **Developer options**, turn **Wireless debugging** on, tap its name, then tap **Pair device with pairing code**. Give Claude Code the 6-digit code and the address shown. The code is safe to share; it expires after a minute or two.
+
 ## Part 6: the M0 test
 
 Do every step. Write the result in `docs/TEST-NOTES-TEMPLATE.md`.

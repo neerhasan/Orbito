@@ -2,6 +2,27 @@
 
 Claude Code adds a new entry on top at the end of every session.
 
+### 2026-11-11 M0: all five manual tests passed on the PC and the phone
+- Done:
+  - The app is installed on the founder's Android phone (iQOO Neo 9, Android 16) and runs with the real settings.
+  - Test 1 passed: the same account (`test3@orbito.test`) is signed in on the PC and the phone, both show **Sync: Synced**.
+  - Test 2 passed: a row added on the PC appears on the phone, and a row added on the phone appears on the PC.
+  - Test 3 passed in both directions. Checked on the server: `added offline` (phone) was made at 05:50:16 UTC and arrived at 05:50:51; `pc offline` (PC) was made at 05:53:00 UTC and arrived at 05:53:31. Both arrived only after the network came back.
+  - Test 4 passed by hand: a second account on the phone shows an empty list, and its new row does not appear on the PC.
+  - Test 5 passed: after closing and restarting the PC app, the user is still signed in and the rows are still there.
+- Left to do:
+  - The automatic access-rule test: the founder fills in `.env.test` with two test accounts, then run `flutter test test/integration/rls_test.dart`.
+  - GitHub: add the three public values as Actions variables.
+  - With the founder's agreement: remove the unused database login `powersync_role`, and the extra test accounts.
+  - The founder approves M0. M1 does not start before that.
+- Known problems:
+  - Installing over the USB cable failed: the PC saw the phone, but commands froze. Installing over Wi-Fi (**Wireless debugging**) worked. The cable or the USB port is the likely cause; this was not investigated further.
+  - On this phone an install question shows for about 10 seconds. If nobody taps it, the install ends with `INSTALL_FAILED_ABORTED: User rejected permissions`.
+  - Sign-in was refused several times because of small typing differences in the email. Five test accounts exist on the server now. The sign-in screen has no "forgot password" option and no way to show the typed password. Both are worth adding with the real sign-in screen.
+- Files changed: `docs/DEVLOG.md`, `docs/M0-SETUP.md`.
+- Test results: the five manual tests above passed. No code changed since the last run of `flutter analyze` (no issues) and `flutter test` (24 passed, 1 skipped).
+- Next step: the founder fills in `.env.test` for the automatic access-rule test.
+
 ### 2026-11-11 M0: servers created, sync proven from the PC (phone tests still open)
 - Done:
   - Supabase project `orbito` created (region Mumbai, `ap-south-1`). Email confirmation is off. Table `sync_test` is live with row-level security, one policy, the server-time trigger and the `powersync` publication. Supabase's security check reports no problems.
