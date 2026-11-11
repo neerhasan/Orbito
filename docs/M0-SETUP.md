@@ -11,19 +11,14 @@ Menu names on the Supabase and PowerSync websites change from time to time. If a
 1. Go to https://supabase.com and sign in. Click **New project**. Name it `orbito`. Choose the region closest to you. Let Supabase generate the database password and save it in your password manager. Click **Create new project** and wait until it is ready.
 2. Switch off email confirmation for the friends test: in the left menu click **Authentication**, then **Sign In / Providers**, then **Email**. Turn **Confirm email** off. Click **Save**.
 3. Create the test table: in the left menu click **SQL Editor**, then **New query**. Open the file `supabase/001_sync_test.sql` from this project, copy all of it, paste it into the editor and click **Run**. You should see "Success. No rows returned".
-4. Create the login that PowerSync uses: click **New query** again. Open `supabase/002_powersync_role.sql`, copy all of it and paste it into the editor. In the editor, replace `REPLACE_WITH_A_LONG_PASSWORD` with a long password that you make up (30 or more letters and numbers). Save that password in your password manager. Click **Run**.
+4. Skip this step if you use the **Connect Supabase** button in Part 2 (recommended). PowerSync then makes its own database login. Only if you connect by hand: click **New query** again, open `supabase/002_powersync_role.sql`, copy all of it and paste it into the editor. In the editor, replace `REPLACE_WITH_A_LONG_PASSWORD` with a long password that you make up (30 or more letters and numbers). Save that password in your password manager. Click **Run**.
 
 ## Part 2: PowerSync (the sync service)
 
-1. Go to https://www.powersync.com and create a free account. Create a project and an instance. Name the instance `orbito`. Choose the region closest to your Supabase region.
-2. Connect it to the database. PowerSync asks for a database connection. Fill in:
-   - **Host, port and database name:** in Supabase click **Connect** at the top of the page. Use the values shown under **Direct connection**.
-   - **Username:** `powersync_role`
-   - **Password:** the password you made up in Part 1, step 4.
-   
-   Click **Test connection**, then save.
-3. Turn on Supabase sign-in: in the instance settings open **Client Auth**. Tick **Use Supabase Auth**. Leave the "JWT Secret" box empty. Save and deploy.
-4. Add the sync config: open the sync config editor of the instance (it may be called **Sync Streams** or **Sync Rules**). Delete what is there. Open the file `powersync/sync-config.yaml` from this project, copy all of it, paste it in, then click **Validate** and **Deploy**.
+1. Go to https://www.powersync.com and create a free account. Create a project. Choose the region closest to your Supabase region (for Supabase in Mumbai that is **IN**). One instance is enough.
+2. Connect it to the database: click **Connect Supabase**, sign in to Supabase when asked, and pick the project `orbito`. If a box says "Unsaved Changes", click **Discard Changes**. Under **Tables to Replicate** tick only `public.sync_test`. Then click **Configure and Deploy**.
+3. Turn on Supabase sign-in: open **Client Auth**. Tick **Use Supabase Auth**. Leave the "JWT Secret" box empty. Under **JWT Audience** add the word `authenticated`. Save and deploy. Without `authenticated` the app shows **Sync: Offline** with the error `Unexpected "aud" claim value`.
+4. Add the sync config: open the sync config editor of the instance (it may be called **Sync Streams** or **Sync Rules**). Delete what is there. Open the file `powersync/sync-config.yaml` from this project, copy all of it, paste it in, then click **Validate** and **Deploy**. If validation fails with `getaddrinfo ENOTFOUND` right after you made the instance, its address is not ready yet. Wait a minute and validate again.
 5. Copy the **Instance URL** of your instance (the **Connect** button shows it). It looks like `https://something.powersync.journeyapps.com`. You need it in Part 3.
 
 ## Part 3: the `.env` file (the app's three public settings)
@@ -101,7 +96,7 @@ If any test fails, stop and tell Claude Code which step failed and what the stat
 
 ## Part 7: GitHub (automatic builds)
 
-1. The project lives in the private repository https://github.com/neerhasan/Orbito. Claude Code pushes each saved version to it.
+1. The project lives in the public repository https://github.com/neerhasan/Orbito. Anyone can read it, so no key or password may ever be saved in it. Claude Code pushes each saved version to it.
 2. Fill in `.env` first (Part 3), so you have the three values at hand.
 3. On GitHub open the repository, then **Settings**, then **Secrets and variables**, then **Actions**, then the **Variables** tab. Click **New repository variable** three times and add `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` and `POWERSYNC_URL` with the same values as in `.env`. These three are public values, so "Variables" is the right place. Never add a secret key here.
 4. Open the **Actions** tab. Pass if the **Build** run turns green and offers two downloads: `orbito-windows` and `orbito-android-apk`.

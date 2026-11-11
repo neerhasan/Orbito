@@ -2,6 +2,30 @@
 
 Claude Code adds a new entry on top at the end of every session.
 
+### 2026-11-11 M0: servers created, sync proven from the PC (phone tests still open)
+- Done:
+  - Supabase project `orbito` created (region Mumbai, `ap-south-1`). Email confirmation is off. Table `sync_test` is live with row-level security, one policy, the server-time trigger and the `powersync` publication. Supabase's security check reports no problems.
+  - PowerSync project "Orbito" created (region IN, one instance), connected with the **Connect Supabase** button, sync config deployed, Supabase sign-in turned on.
+  - `.env` filled in by the founder. The Windows app was rebuilt with the real settings.
+  - On the PC: account created, test screen opens, status line shows **Sync: Synced**, the row `from pc` was added. Checked on the server: the row is in Supabase with the right user, and PowerSync's replication slot is active.
+  - The GitHub Actions run for the first M0 commit finished green.
+  - `supabase/001_sync_test.sql`: signed-in users now get only select, insert, update and delete. Supabase's defaults had also given truncate, references and trigger.
+  - `docs/M0-SETUP.md` updated to the steps that really worked.
+- Left to do:
+  - Phone: install the app, sign in with the same account, then Tests 2 to 5 in `docs/M0-SETUP.md` (row travels both ways, offline then reconnect, second account sees nothing, restart keeps data).
+  - Founder fills in `.env.test`, then run the access-rule test against the real server.
+  - GitHub: add the three public values as Actions variables.
+  - With the founder's agreement: remove the unused database login `powersync_role`.
+- Known problems:
+  - Sync is proven in one direction only (PC to server). Server to device, the phone and the offline case are not tested yet. M0 is not finished.
+  - PowerSync rejected sign-in at first: `PSYNC_S2105 Unexpected "aud" claim value: "authenticated"`. Fix: add `authenticated` under **JWT Audience** in PowerSync Client Auth.
+  - The hand-made login `powersync_role` (from `supabase/002_powersync_role.sql`) is unused, because the Connect Supabase button made its own login. It still exists in the database.
+  - The repository is public now. The older entry below still says private.
+  - The Supabase connector declines SQL that contains `drop` statements, so the live table was created without the `drop ... if exists` lines of the SQL file. The result is the same on an empty project.
+- Files changed: `supabase/001_sync_test.sql`, `docs/M0-SETUP.md`, `docs/DEVLOG.md`.
+- Test results: `flutter analyze`: no issues. `flutter test`: 24 passed, 1 skipped (the access-rule test, which needs `.env.test`).
+- Next step: the founder puts the app on the Android phone (Part 5 of `docs/M0-SETUP.md`).
+
 ### 2026-11-11 M0: project setup and sync proof (code written, sync not yet proven)
 - Done:
   - PC tools installed: Flutter 3.47.9 (`C:\src\flutter`), Visual Studio 2022 with "Desktop development with C++", Android Studio, Android SDK 36, NDK 28.2 and CMake 3.22.1. Windows Developer Mode is on. `flutter doctor` reports no issues.
