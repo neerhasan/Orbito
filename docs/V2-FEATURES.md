@@ -34,6 +34,14 @@ These were never part of v1.
 - F-23 Sharing
 - F-24 Post-beta additions
 - F-25 Apple versions (Mac, iPhone, iPad)
+- F-26 Widgets for Windows, Android and iOS (added by the founder on 2026-11-13, see below)
+
+## Widgets (F-26): keep room open
+The founder wants widgets on Windows, Android and iOS in a future version. Nothing is built for this in v1. What it means for v1:
+- Keep the data and the rules (reading tasks, habits and so on) in the repositories and `lib/domain/`, apart from the screens, so a widget can reuse them later.
+- Widgets are small native pieces on each system (home-screen widget on Android, widget on iOS, a widget for the Windows widgets board). They will read the same local data. How exactly is decided when the feature is specified.
+- The iOS widget needs the Apple release (F-25), a Mac and the $99 per year membership. Windows and Android widgets can come first.
+- This feature goes through the Feature Specification (full description and acceptance criteria) before it is built. What the widgets show (for example today's tasks, habits or the focus timer) is still to be decided with the founder.
 
 ## Open items for v2
 - Score formula and stage names (founder to approve).

@@ -32,6 +32,7 @@ Revision notes (2026-11-11): version 0.2 (approved) moved accounts, server and s
 | F-23 | Sharing | P2 | No | F-14 |
 | F-24 | Post-beta additions | P2 | No | TBD |
 | F-25 | Apple versions (Mac, iPhone, iPad) | P2 | No | F-01 to F-11, F-14 |
+| F-26 | Widgets for Windows, Android and iOS | P2 | No | F-01, F-02, F-03, F-14 |
 
 ## 2. Feature details (repeat per feature)
 
@@ -166,12 +167,13 @@ Short descriptions only. Full details: TBD - pending later iteration; each featu
 - F-19 Web version. F-20 Apple Watch. F-21 AI helpers. F-22 More integrations. F-23 Sharing.
 - F-25 Apple versions (Mac, iPhone, iPad): built after all features are confirmed. Needs a Mac and a $99 per year developer membership. The first release (F-01 to F-11 and F-14) targets Windows and Android only.
 - F-24 Post-beta additions: a place for any feature the founder adds after the beta launch.
+- F-26 Widgets for Windows, Android and iOS (added 2026-11-13): small widgets outside the app showing chosen information such as today's tasks or habits. What they show and the exact design are TBD - pending founder decision. iOS widgets need the Apple release (F-25). v1 keeps the data and rules separate from the screens so widgets can be added later.
 
 ## 3. MVP scope (P0 list)
 F-01 to F-07, F-11 and F-14. (F-08, F-09 and F-10 moved to v2 on 2026-11-13; see `docs/V2-FEATURES.md`. In v1 the Today dashboard has no energy-mode switcher and no Life line section.)
 
 ## 4. Future features (V2, P1, P2)
-V2 (second build, held by the founder): F-08, F-09 and F-10. P1: F-12, F-13 and F-15 to F-18. P2: F-19 to F-25. New ideas are added here as new IDs and go through Phase 02 before they are built.
+V2 (second build, held by the founder): F-08, F-09 and F-10. P1: F-12, F-13 and F-15 to F-18. P2: F-19 to F-26. New ideas are added here as new IDs and go through Phase 02 before they are built.
 
 ## 5. Feature dependency map
 Everything depends on F-11 (storage), and all user data syncs through F-14. Tasks, habits and focus depend on F-05 (life areas, goals, projects). The dashboard, Quick Launcher, energy modes, score and fail-day step depend on the core features. Insights depend on habits, focus and sleep data. Billing and calendar sync depend on accounts (F-14).
