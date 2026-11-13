@@ -6,6 +6,7 @@ import '../../data/local/app_database.dart';
 import '../../domain/dates.dart';
 import '../../domain/task_view.dart';
 import '../../ui/ember.dart';
+import '../../ui/motion.dart';
 import '../../ui/widgets.dart';
 import 'completion_chart.dart';
 
@@ -527,6 +528,10 @@ class TaskRow extends StatelessWidget {
     final done = task.status == TaskStatus.done;
     final due = task.dueDate;
     final note = showNote ? firstLine(task.notes) : null;
+    return Appear(child: _row(context, done, due, note));
+  }
+
+  Widget _row(BuildContext context, bool done, String? due, String? note) {
     return Material(
       color: selected ? Ember.tile : Colors.transparent,
       borderRadius: BorderRadius.circular(8),
@@ -539,7 +544,7 @@ class TaskRow extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _line(done, due),
+              _line(context, done, due),
               if (note != null)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(34, 0, 8, 4),
@@ -566,7 +571,7 @@ class TaskRow extends StatelessWidget {
     );
   }
 
-  Widget _line(bool done, String? due) {
+  Widget _line(BuildContext context, bool done, String? due) {
     return Row(
       children: [
         TaskRing(
@@ -580,8 +585,10 @@ class TaskRow extends StatelessWidget {
           child: Row(
             children: [
               Flexible(
-                child: Text(
-                  task.title,
+                // A completed title fades to grey.
+                child: AnimatedDefaultTextStyle(
+                  duration: Motion.of(context, Motion.base),
+                  curve: Motion.soft,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: done
@@ -589,7 +596,8 @@ class TaskRow extends StatelessWidget {
                           color: Ember.ink3,
                           decoration: TextDecoration.lineThrough,
                         )
-                      : Ember.item,
+                      : Ember.item.copyWith(color: Ember.ink),
+                  child: Text(task.title),
                 ),
               ),
               if (task.priority != TaskPriority.none) ...[

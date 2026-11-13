@@ -19,6 +19,8 @@ Decided by the founder:
   - Goals and life areas can have an icon from the same list as projects (now 17 icons, `flag` added). A life area may also have no icon; it then shows its dot.
   - A goal has its own colour, picked like a project colour (founder chose option A). Orange is not offered.
   - A project shows its goal as the goal's icon and name in the goal's colour, without the word "Goal:".
+- 2026-11-13: M1 approved by the founder "for now"; design changes to M1 may follow later. M2 may start.
+- 2026-11-13: Soft, fluid ("liquid") animation everywhere. One place holds the timing and curves (`lib/ui/motion.dart`). When Windows has animation effects turned off, the app does not animate. Screens follow the designs in `docs/design/source/`.
 - 2026-11-13: Widgets for Windows, Android and iOS are wanted in a future version (new feature F-26, P2). Nothing is built in v1; v1 keeps the data and rules separate from the screens so widgets can be added later. Details are in `docs/V2-FEATURES.md`.
 
 Defaults used until the founder changes them:

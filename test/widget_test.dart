@@ -90,6 +90,20 @@ void main() {
       expect(find.text('page: areas'), findsOneWidget);
     });
 
+    testWidgets('pages cross-fade softly instead of jumping', (tester) async {
+      await _pumpShell(tester);
+
+      await tester.tap(find.byKey(const Key('menu-goals')));
+      await tester.pump(const Duration(milliseconds: 100));
+      // Halfway through, the old page is fading out as the new one arrives.
+      expect(find.text('page: tasks'), findsOneWidget);
+      expect(find.text('page: goals'), findsOneWidget);
+
+      await tester.pumpAndSettle();
+      expect(find.text('page: tasks'), findsNothing);
+      expect(find.text('page: goals'), findsOneWidget);
+    });
+
     testWidgets('with no life areas the menu invites the first one', (
       tester,
     ) async {

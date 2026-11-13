@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../ui/ember.dart';
+import '../ui/motion.dart';
 import '../ui/widgets.dart';
 import 'providers.dart';
 
@@ -54,9 +55,12 @@ class AppShell extends ConsumerWidget {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(0, 8, 8, 8),
-                child: KeyedSubtree(
-                  key: ValueKey(page),
-                  child: pageBuilder(page),
+                // Pages cross-fade and rise softly into place.
+                child: SoftSwitcher(
+                  child: KeyedSubtree(
+                    key: ValueKey(page),
+                    child: pageBuilder(page),
+                  ),
                 ),
               ),
             ),
@@ -190,32 +194,40 @@ class _MenuItem extends StatelessWidget {
     final color = selected ? Ember.onShell : Ember.onShell2;
     return Padding(
       padding: const EdgeInsets.only(bottom: 2),
-      child: Material(
-        color: selected ? Ember.active : Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          hoverColor: Ember.raised,
-          child: SizedBox(
-            height: 30,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Row(
-                children: [
-                  IconTheme.merge(
-                    data: IconThemeData(color: color),
-                    child: leading,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      label,
-                      overflow: TextOverflow.ellipsis,
-                      style: Ember.text(13, 16, color: color),
+      child: AnimatedContainer(
+        duration: Motion.of(context, Motion.base),
+        curve: Motion.soft,
+        decoration: BoxDecoration(
+          color: selected ? Ember.active : Ember.shell.withValues(alpha: 0),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Material(
+          type: MaterialType.transparency,
+          borderRadius: BorderRadius.circular(8),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            hoverColor: Ember.raised,
+            child: SizedBox(
+              height: 30,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Row(
+                  children: [
+                    IconTheme.merge(
+                      data: IconThemeData(color: color),
+                      child: leading,
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        label,
+                        overflow: TextOverflow.ellipsis,
+                        style: Ember.text(13, 16, color: color),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

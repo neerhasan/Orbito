@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data/repositories/plan_repository.dart' show LinkedItems;
 import 'ember.dart';
+import 'motion.dart';
 
 /// A paper-coloured panel with rounded corners. Its content scrolls.
 class Panel extends StatelessWidget {
@@ -18,6 +19,15 @@ class Panel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final column = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var i = 0; i < children.length; i++) ...[
+          if (i > 0) SizedBox(height: gap),
+          children[i],
+        ],
+      ],
+    );
     return Container(
       decoration: BoxDecoration(
         color: Ember.paper,
@@ -28,15 +38,17 @@ class Panel extends StatelessWidget {
         style: Ember.item.copyWith(color: Ember.ink),
         child: SingleChildScrollView(
           padding: padding,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              for (var i = 0; i < children.length; i++) ...[
-                if (i > 0) SizedBox(height: gap),
-                children[i],
-              ],
-            ],
-          ),
+          // When content is added or removed, the panel grows or shrinks
+          // softly instead of jumping. AnimatedSize cannot run with a zero
+          // duration, so with less motion the column is used as it is.
+          child: Motion.reduced(context)
+              ? column
+              : AnimatedSize(
+                  duration: Motion.base,
+                  curve: Motion.soft,
+                  alignment: Alignment.topCenter,
+                  child: column,
+                ),
         ),
       ),
     );
@@ -63,8 +75,25 @@ class PageLayout extends StatelessWidget {
             width: 340,
             child: Panel(
               padding: const EdgeInsets.fromLTRB(20, 22, 20, 24),
-              gap: 18,
-              children: rail!,
+              children: [
+                // A new form or detail (another key) cross-fades in.
+                SoftSwitcher(
+                  child: Column(
+                    key: ValueKey(
+                      Object.hashAll(
+                        rail!.map((child) => child.key ?? child.runtimeType),
+                      ),
+                    ),
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      for (var i = 0; i < rail!.length; i++) ...[
+                        if (i > 0) const SizedBox(height: 18),
+                        rail![i],
+                      ],
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -95,8 +124,9 @@ class PageHeader extends StatelessWidget {
   }
 }
 
-/// A soft grey tile. With [onTap] it is a button.
-class Tile extends StatelessWidget {
+/// A soft grey tile. With [onTap] it is a button: it darkens a little under
+/// the pointer and gives softly when pressed. A new tile fades in.
+class Tile extends StatefulWidget {
   const Tile({
     super.key,
     required this.child,
@@ -113,20 +143,51 @@ class Tile extends StatelessWidget {
   final EdgeInsets padding;
 
   @override
+  State<Tile> createState() => _TileState();
+}
+
+class _TileState extends State<Tile> {
+  bool _hover = false;
+
+  @override
   Widget build(BuildContext context) {
-    final shape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(12),
-      side: selected
-          ? const BorderSide(color: Ember.ink, width: 1.5)
-          : BorderSide.none,
-    );
-    return Material(
-      color: color,
-      shape: shape,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(padding: padding, child: child),
+    final tappable = widget.onTap != null;
+    final color = tappable && _hover
+        ? Color.lerp(widget.color, Ember.ink, 0.035)!
+        : widget.color;
+    return Appear(
+      child: Pressable(
+        enabled: tappable,
+        child: AnimatedContainer(
+          duration: Motion.of(context, Motion.base),
+          curve: Motion.soft,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: widget.selected ? Ember.ink : Colors.transparent,
+              width: 1.5,
+            ),
+          ),
+          child: Material(
+            type: MaterialType.transparency,
+            borderRadius: BorderRadius.circular(12),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: widget.onTap,
+              onHover: tappable
+                  ? (hover) => setState(() => _hover = hover)
+                  : null,
+              hoverColor: Colors.transparent,
+              child: Padding(
+                // The border is always there (clear when not selected), so
+                // the content does not move when a tile is selected.
+                padding: widget.padding - const EdgeInsets.all(1.5),
+                child: widget.child,
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -309,7 +370,10 @@ class TaskRing extends StatelessWidget {
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.all(5),
-          child: Container(
+          // Ticking fills the ring softly and the check grows into place.
+          child: AnimatedContainer(
+            duration: Motion.of(context, Motion.base),
+            curve: Motion.soft,
             width: 18,
             height: 18,
             decoration: BoxDecoration(
@@ -317,9 +381,12 @@ class TaskRing extends StatelessWidget {
               color: done ? Ember.ink : Colors.transparent,
               border: Border.all(color: border, width: 1.6),
             ),
-            child: done
-                ? const Icon(Icons.check, size: 12, color: Ember.white)
-                : null,
+            child: AnimatedScale(
+              scale: done ? 1 : 0,
+              duration: Motion.of(context, Motion.base),
+              curve: Motion.settle,
+              child: const Icon(Icons.check, size: 12, color: Ember.white),
+            ),
           ),
         ),
       ),
@@ -350,13 +417,19 @@ class ProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(3),
-      child: LinearProgressIndicator(
-        value: percent.clamp(0, 100) / 100,
-        minHeight: 6,
-        backgroundColor: Ember.line,
-        color: Ember.ink,
+    // The bar flows to its new length instead of jumping.
+    return TweenAnimationBuilder<double>(
+      tween: Tween(end: percent.clamp(0, 100) / 100),
+      duration: Motion.of(context, Motion.slow),
+      curve: Motion.soft,
+      builder: (context, value, _) => ClipRRect(
+        borderRadius: BorderRadius.circular(3),
+        child: LinearProgressIndicator(
+          value: value,
+          minHeight: 6,
+          backgroundColor: Ember.line,
+          color: Ember.ink,
+        ),
       ),
     );
   }

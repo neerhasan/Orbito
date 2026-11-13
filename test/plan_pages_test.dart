@@ -67,6 +67,11 @@ Future<void> _pumpPage(WidgetTester tester, AppPage page) async {
       ],
       child: MaterialApp(
         theme: Ember.theme(),
+        // Animations off: the tests check the end state of each screen.
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(disableAnimations: true),
+          child: child!,
+        ),
         home: Scaffold(body: PageHost(page: page)),
       ),
     ),

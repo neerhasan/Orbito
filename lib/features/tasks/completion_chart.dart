@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../domain/task_view.dart';
 import '../../ui/ember.dart';
+import '../../ui/motion.dart';
 
 /// A line chart of tasks completed per day (or per month). The last point
 /// is today and is the only orange one.
@@ -25,16 +26,30 @@ class CompletionChart extends StatelessWidget {
       label: 'Chart of tasks completed. $summary',
       child: SizedBox(
         height: 132,
-        child: CustomPaint(painter: _ChartPainter(points), size: Size.infinite),
+        // The line rises softly from the floor when the chart appears or
+        // its range changes.
+        child: TweenAnimationBuilder<double>(
+          key: ValueKey(points.length),
+          tween: Tween(begin: 0, end: 1),
+          duration: Motion.of(context, Motion.slow),
+          curve: Motion.soft,
+          builder: (context, rise, _) => CustomPaint(
+            painter: _ChartPainter(points, rise),
+            size: Size.infinite,
+          ),
+        ),
       ),
     );
   }
 }
 
 class _ChartPainter extends CustomPainter {
-  _ChartPainter(this.points);
+  _ChartPainter(this.points, this.rise);
 
   final List<ChartPoint> points;
+
+  /// 0 to 1: how far the line has risen from the floor.
+  final double rise;
 
   static const _left = 22.0;
   static const _right = 10.0;
@@ -90,7 +105,7 @@ class _ChartPainter extends CustomPainter {
       final x = points.length == 1
           ? _left + width
           : _left + width * index / (points.length - 1);
-      final y = _top + height - height * points[index].count / top;
+      final y = _top + height - height * points[index].count / top * rise;
       return Offset(x, y);
     }
 
@@ -129,5 +144,6 @@ class _ChartPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_ChartPainter old) => old.points != points;
+  bool shouldRepaint(_ChartPainter old) =>
+      old.points != points || old.rise != rise;
 }
