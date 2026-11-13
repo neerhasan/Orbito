@@ -2,6 +2,15 @@
 
 Claude Code adds a new entry on top at the end of every session.
 
+### 2026-11-13 M3: Today, the Quick Launcher and the Inbox (Windows)
+- Done:
+  - Server: `supabase/008_inbox_preferences.sql` (inbox_items, preferences) with row-level security; applied. Privacy test covers all 11 tables (passed). Sync config: two new streams (the founder deploys).
+  - `lib/domain/launcher.dart`: port of the prototype parseLine (21 tests). `lib/domain/today.dart`: the Today sections and their stored order (5 tests).
+  - Quick Launcher (Ctrl K or the search box) with a preview before confirming; Inbox page (make a task, remove); Settings page (Today sections on/off and order, synced); Today page after the design; Today and Inbox in the menu, Settings at the bottom; Today is the start page.
+- Left to do: the founder deploys the sync config and runs `docs/M3-TEST.md`.
+- Known problems: none new.
+- Test results: `flutter analyze`: no issues. `flutter test --concurrency=2`: 160 passed. Windows release built and started; a screenshot of Today matched the design layout.
+
 ### 2026-11-13 Redesign after "Tasks · list + detail"
 - Done:
   - The founder's new design files are in `docs/design/source/` (Tasks, Sidebar, Titlebar, Icon).

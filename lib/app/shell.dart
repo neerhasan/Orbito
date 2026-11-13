@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/local/app_database.dart';
 import '../domain/dates.dart';
 import '../domain/habits.dart' show todayProgress;
 import '../features/focus/focus_page.dart';
+import '../features/launcher/launcher.dart';
 import '../ui/ember.dart';
 import '../ui/motion.dart';
 import '../ui/widgets.dart';
@@ -12,13 +14,16 @@ import 'providers.dart';
 
 /// The pages the side menu can open.
 enum AppPage {
+  today('Today', Icons.wb_sunny_outlined),
+  inbox('Inbox', Icons.inbox_outlined),
   tasks('Tasks', Icons.check_circle_outline),
   projects('Projects', Icons.folder_outlined),
   goals('Goals', Icons.flag_outlined),
   habits('Habits', Icons.repeat),
   sleep('Sleep', Icons.bedtime_outlined),
   focus('Focus', Icons.timer_outlined),
-  areas('Life areas', Icons.blur_circular_outlined);
+  areas('Life areas', Icons.blur_circular_outlined),
+  settings('Settings', Icons.settings_outlined);
 
   const AppPage(this.label, this.icon);
 
@@ -28,7 +33,7 @@ enum AppPage {
 
 class CurrentPage extends Notifier<AppPage> {
   @override
-  AppPage build() => AppPage.tasks;
+  AppPage build() => AppPage.today;
 
   void open(AppPage page) => state = page;
 }
@@ -79,11 +84,22 @@ class AppShell extends ConsumerWidget {
               onExit: () =>
                   ref.read(currentPageProvider.notifier).open(AppPage.tasks),
             )
-          : _frame(page),
+          : _frame(context, ref, page),
     );
   }
 
-  Widget _frame(AppPage page) {
+  Widget _frame(BuildContext context, WidgetRef ref, AppPage page) {
+    // Ctrl K opens the Quick Launcher from anywhere in the app.
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.keyK, control: true): () =>
+            openLauncher(context, ref),
+      },
+      child: Focus(autofocus: true, child: _scaffold(page)),
+    );
+  }
+
+  Widget _scaffold(AppPage page) {
     return Scaffold(
       key: const ValueKey('app-frame'),
       backgroundColor: Ember.shell,
@@ -117,6 +133,15 @@ class AppShell extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Opens the Quick Launcher; a focus session started from it opens focus
+/// mode.
+void openLauncher(BuildContext context, WidgetRef ref) {
+  showQuickLauncher(
+    context,
+    onFocus: () => ref.read(currentPageProvider.notifier).open(AppPage.focus),
+  );
 }
 
 /// The bar across the top: logo, search, the running timer, New and the
@@ -164,7 +189,7 @@ class _TitleBar extends ConsumerWidget {
           ),
           ConstrainedBox(
             constraints: const BoxConstraints(minWidth: 240, maxWidth: 480),
-            child: const _SearchBox(),
+            child: _SearchBox(onTap: () => openLauncher(context, ref)),
           ),
           Expanded(
             child: Row(
@@ -199,9 +224,11 @@ class _TitleBar extends ConsumerWidget {
   }
 }
 
-/// The search box. It opens the Quick Launcher once that exists (M3).
+/// The search box: it opens the Quick Launcher.
 class _SearchBox extends StatelessWidget {
-  const _SearchBox();
+  const _SearchBox({required this.onTap});
+
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -214,10 +241,7 @@ class _SearchBox extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           key: const Key('search'),
-          onTap: () => showMessage(
-            context,
-            'Search and the Quick Launcher come in the next step (M3).',
-          ),
+          onTap: onTap,
           child: SizedBox(
             height: 34,
             child: Padding(
@@ -378,6 +402,7 @@ class _SideMenu extends ConsumerWidget {
     final openTasks = tasks.where((t) => t.status != TaskStatus.done).length;
     final habitsToday = todayProgress(habits, logs, today: today);
     final habitsLeft = habitsToday.planned - habitsToday.done;
+    final inbox = ref.watch(inboxProvider).value ?? const <InboxItem>[];
     void open(AppPage target) =>
         ref.read(currentPageProvider.notifier).open(target);
 
@@ -398,6 +423,12 @@ class _SideMenu extends ConsumerWidget {
           Expanded(
             child: ListView(
               children: [
+                const SizedBox(height: 16),
+                item(AppPage.today),
+                item(
+                  AppPage.inbox,
+                  count: inbox.isEmpty ? '' : '${inbox.length}',
+                ),
                 const _GroupLabel('Plan'),
                 item(AppPage.tasks, count: openTasks == 0 ? '' : '$openTasks'),
                 item(AppPage.projects),
@@ -454,6 +485,8 @@ class _SideMenu extends ConsumerWidget {
               ],
             ),
           ),
+          item(AppPage.settings),
+          const SizedBox(height: 8),
           const _SyncStatus(),
         ],
       ),

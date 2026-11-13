@@ -28,6 +28,7 @@ The M2 designs and the prototype show these. They are not in the first-release s
 - Repeating tasks that count as habits.
 - Sleep from a watch or phone ("Device sync").
 - Subtasks and "Up next" in focus mode.
+- On the Today page (M3 design): Schedule with time blocks, Reminders, meetings, the Life line and Life area scores (with F-09), Insights (F-12) and Notes (F-13).
 
 ## Already planned for later (P1 and P2, from the Feature Specification)
 These were never part of v1.

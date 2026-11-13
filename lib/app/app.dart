@@ -6,10 +6,13 @@ import '../features/auth/sign_in_screen.dart';
 import '../features/focus/focus_page.dart';
 import '../features/goals/goals_page.dart';
 import '../features/habits/habits_page.dart';
+import '../features/inbox/inbox_page.dart';
 import '../features/projects/projects_page.dart';
+import '../features/settings/settings_page.dart';
 import '../features/setup/setup_page.dart';
 import '../features/sleep/sleep_page.dart';
 import '../features/tasks/tasks_page.dart';
+import '../features/today/today_page.dart';
 import '../ui/ember.dart';
 import '../ui/widgets.dart';
 import 'providers.dart';
@@ -77,6 +80,9 @@ class PageHost extends ConsumerWidget {
       AppPage.projects => const ProjectsPage(),
       AppPage.goals => const GoalsPage(),
       AppPage.tasks => const TasksPage(),
+      AppPage.today => const TodayPage(),
+      AppPage.inbox => const InboxPage(),
+      AppPage.settings => const SettingsPage(),
       AppPage.habits => const HabitsPage(),
       AppPage.sleep => const SleepPage(),
       AppPage.focus => const FocusPage(),

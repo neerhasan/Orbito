@@ -3,6 +3,7 @@ import 'package:powersync/powersync.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../data/local/app_database.dart';
+import '../data/repositories/capture_repository.dart';
 import '../data/repositories/focus_repository.dart';
 import '../data/repositories/habit_repository.dart';
 import '../data/repositories/plan_repository.dart';
@@ -126,6 +127,28 @@ final focusSessionsProvider = StreamProvider<List<FocusSession>>((ref) {
   final userId = ref.watch(userIdProvider);
   if (userId == null) return Stream.value(const []);
   return ref.watch(focusRepositoryProvider).watchSessions(userId);
+});
+
+final captureRepositoryProvider = Provider<CaptureRepository>(
+  (ref) => CaptureRepository(
+    ref.watch(appDatabaseProvider),
+    newId: () => uuid.v4(),
+    stableId: stableId,
+  ),
+);
+
+/// The Inbox, newest first.
+final inboxProvider = StreamProvider<List<InboxItem>>((ref) {
+  final userId = ref.watch(userIdProvider);
+  if (userId == null) return Stream.value(const []);
+  return ref.watch(captureRepositoryProvider).watchInbox(userId);
+});
+
+/// The stored choice of Today sections, or null before the user made one.
+final todaySectionsProvider = StreamProvider<String?>((ref) {
+  final userId = ref.watch(userIdProvider);
+  if (userId == null) return Stream.value(null);
+  return ref.watch(captureRepositoryProvider).watchTodaySections(userId);
 });
 
 /// The focus timer running on this device, or null.

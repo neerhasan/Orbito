@@ -6,12 +6,14 @@ import 'package:orbito/app/app.dart';
 import 'package:orbito/app/providers.dart';
 import 'package:orbito/app/shell.dart';
 import 'package:orbito/data/local/app_database.dart';
+import 'package:orbito/data/repositories/capture_repository.dart';
 import 'package:orbito/data/repositories/focus_repository.dart';
 import 'package:orbito/data/repositories/habit_repository.dart';
 import 'package:orbito/data/repositories/plan_repository.dart';
 import 'package:orbito/data/repositories/sleep_repository.dart';
 import 'package:orbito/data/repositories/task_repository.dart';
 import 'package:orbito/data/sync/sync_status_text.dart';
+import 'package:orbito/domain/today.dart';
 import 'package:orbito/ui/ember.dart';
 
 const _user = 'user-a';
@@ -22,6 +24,7 @@ late TaskRepository _tasks;
 late HabitRepository _habits;
 late SleepRepository _sleep;
 late FocusRepository _focus;
+late CaptureRepository _capture;
 
 /// The time the app sees: Friday 13 November 2026, 9:00.
 late DateTime _clock;
@@ -79,6 +82,7 @@ Future<void> _pumpPage(WidgetTester tester, AppPage page) async {
         habitRepositoryProvider.overrideWithValue(_habits),
         sleepRepositoryProvider.overrideWithValue(_sleep),
         focusRepositoryProvider.overrideWithValue(_focus),
+        captureRepositoryProvider.overrideWithValue(_capture),
         userIdProvider.overrideWithValue(_user),
         firstSyncDoneProvider.overrideWithValue(true),
         clockProvider.overrideWithValue(() => _clock),
@@ -112,6 +116,12 @@ void _testPage(String description, Future<void> Function(WidgetTester) body) {
     _habits = HabitRepository(_db, newId: newId, stableId: stableId, now: now);
     _sleep = SleepRepository(_db, stableId: stableId, now: now);
     _focus = FocusRepository(_db, newId: newId, now: now);
+    _capture = CaptureRepository(
+      _db,
+      newId: newId,
+      stableId: stableId,
+      now: now,
+    );
 
     await body(tester);
 
@@ -147,6 +157,7 @@ Future<void> _pumpApp(WidgetTester tester) async {
         habitRepositoryProvider.overrideWithValue(_habits),
         sleepRepositoryProvider.overrideWithValue(_sleep),
         focusRepositoryProvider.overrideWithValue(_focus),
+        captureRepositoryProvider.overrideWithValue(_capture),
         userIdProvider.overrideWithValue(_user),
         firstSyncDoneProvider.overrideWithValue(true),
         clockProvider.overrideWithValue(() => _clock),
@@ -175,6 +186,98 @@ Future<void> _wait(WidgetTester tester, Duration time) async {
 }
 
 void main() {
+  group('M3: the Quick Launcher, the Inbox, Settings and Today', () {
+    _testPage('the Quick Launcher makes a task and keeps the rest', (
+      tester,
+    ) async {
+      await _pumpApp(tester);
+      expect(find.byKey(const Key('today-greeting')), findsOneWidget);
+
+      await _tap(tester, 'search');
+      await tester.pump();
+      expect(find.byKey(const Key('launcher')), findsOneWidget);
+      await tester.enterText(
+        find.byKey(const Key('launcher-line')),
+        'task call bank tomorrow high',
+      );
+      await tester.pump();
+      // The user sees what will be created before confirming.
+      expect(find.text('Tomorrow'), findsWidgets);
+      expect(find.text('High priority'), findsOneWidget);
+      await _tap(tester, 'launcher-run');
+      await _settle(tester);
+
+      final tasks = await _read(tester, () => _tasks.watchTasks(_user).first);
+      expect(tasks.single.title, 'Call bank');
+      expect(tasks.single.dueDate, '2026-11-14');
+      expect(tasks.single.priority, TaskPriority.high);
+      expect(find.byKey(const Key('launcher')), findsNothing);
+
+      // A line it cannot sort goes to the Inbox; nothing is lost.
+      await _tap(tester, 'search');
+      await tester.pump();
+      await tester.enterText(
+        find.byKey(const Key('launcher-line')),
+        'maybe learn the guitar',
+      );
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await _settle(tester);
+      final inbox = await _read(tester, () => _capture.watchInbox(_user).first);
+      expect(inbox.single.body, 'maybe learn the guitar');
+    });
+
+    _testPage('an Inbox line becomes a task', (tester) async {
+      await _read(
+        tester,
+        () => _capture.addToInbox(userId: _user, text: 'call bank tomorrow'),
+      );
+      await _pumpPage(tester, AppPage.inbox);
+      final item = (await _read(
+        tester,
+        () => _capture.watchInbox(_user).first,
+      )).single;
+      expect(find.text('call bank tomorrow'), findsOneWidget);
+
+      await _tap(tester, 'inbox-task-${item.id}');
+      await _settle(tester);
+      final tasks = await _read(tester, () => _tasks.watchTasks(_user).first);
+      expect(tasks.single.title, 'Call bank');
+      expect(tasks.single.dueDate, '2026-11-14');
+      expect(find.text('Nothing waiting'), findsOneWidget);
+    });
+
+    _testPage('Settings switch a Today section off; the choice is kept', (
+      tester,
+    ) async {
+      await _pumpPage(tester, AppPage.settings);
+      await _tap(tester, 'section-switch-greeting');
+      await _settle(tester);
+      final stored = await _read(
+        tester,
+        () => _capture.watchTodaySections(_user).first,
+      );
+      expect(readSections(stored).contains(TodaySection.greeting), isFalse);
+    });
+
+    _testPage('Today with every section off offers the defaults', (
+      tester,
+    ) async {
+      await _read(
+        tester,
+        () => _capture.saveTodaySections(
+          userId: _user,
+          sections: writeSections(const []),
+        ),
+      );
+      await _pumpPage(tester, AppPage.today);
+      expect(find.text('No sections are switched on'), findsOneWidget);
+      await _tap(tester, 'today-restore');
+      await _settle(tester);
+      expect(find.byKey(const Key('today-greeting')), findsOneWidget);
+      expect(find.byKey(const Key('today-section-calendar')), findsOneWidget);
+    });
+  });
+
   group('the focus timer', () {
     _testPage('start on a task, pause, leave, come back, stop and save', (
       tester,

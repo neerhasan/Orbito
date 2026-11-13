@@ -63,7 +63,7 @@ void main() {
   });
 
   group('the app frame', () {
-    testWidgets('opens on Tasks and shows the menu, email and sync status', (
+    testWidgets('opens on Today and shows the menu, email and sync status', (
       tester,
     ) async {
       await _pumpShell(
@@ -74,7 +74,7 @@ void main() {
         ),
       );
 
-      expect(find.text('page: tasks'), findsOneWidget);
+      expect(find.text('page: today'), findsOneWidget);
       expect(find.text('Tasks'), findsOneWidget);
       expect(find.text('Projects'), findsOneWidget);
       expect(find.text('Goals'), findsOneWidget);
@@ -109,11 +109,11 @@ void main() {
       await tester.tap(find.byKey(const Key('menu-goals')));
       await tester.pump(const Duration(milliseconds: 100));
       // Halfway through, the old page is fading out as the new one arrives.
-      expect(find.text('page: tasks'), findsOneWidget);
+      expect(find.text('page: today'), findsOneWidget);
       expect(find.text('page: goals'), findsOneWidget);
 
       await tester.pumpAndSettle();
-      expect(find.text('page: tasks'), findsNothing);
+      expect(find.text('page: today'), findsNothing);
       expect(find.text('page: goals'), findsOneWidget);
     });
 
