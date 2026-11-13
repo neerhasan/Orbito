@@ -16,3 +16,15 @@ streams:
   tasks:
     auto_subscribe: true
     query: SELECT * FROM tasks WHERE user_id = auth.user_id()
+  habits:
+    auto_subscribe: true
+    query: SELECT * FROM habits WHERE user_id = auth.user_id()
+  habit_logs:
+    auto_subscribe: true
+    query: SELECT * FROM habit_logs WHERE user_id = auth.user_id()
+  focus_sessions:
+    auto_subscribe: true
+    query: SELECT * FROM focus_sessions WHERE user_id = auth.user_id()
+  sleep_logs:
+    auto_subscribe: true
+    query: SELECT * FROM sleep_logs WHERE user_id = auth.user_id()

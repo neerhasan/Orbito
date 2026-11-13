@@ -9,15 +9,19 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:powersync/powersync.dart' show uuid;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Every synced table, with the name of one text column that must be filled
-/// in. All other columns have defaults on the server. Add each new table
-/// here.
-const _tables = {
-  'sync_test': 'text',
-  'life_areas': 'name',
-  'goals': 'title',
-  'projects': 'name',
-  'tasks': 'title',
+/// Every synced table, with one column the test writes: its first value and
+/// a second value the wrong account tries to change it to. All other
+/// columns have defaults on the server. Add each new table here.
+const _tables = <String, (String, Object, Object)>{
+  'sync_test': ('text', 'rls test row', 'changed'),
+  'life_areas': ('name', 'rls test row', 'changed'),
+  'goals': ('title', 'rls test row', 'changed'),
+  'projects': ('name', 'rls test row', 'changed'),
+  'tasks': ('title', 'rls test row', 'changed'),
+  'habits': ('name', 'rls test row', 'changed'),
+  'habit_logs': ('status', 'done', 'skip'),
+  'focus_sessions': ('focus_seconds', 60, 999),
+  'sleep_logs': ('bed_time', '23:00', '01:00'),
 };
 
 Map<String, String> _readEnvFile(String path) {
@@ -64,7 +68,8 @@ void main() {
     authOptions: const AuthClientOptions(autoRefreshToken: false),
   );
 
-  for (final MapEntry(key: table, value: textColumn) in _tables.entries) {
+  for (final MapEntry(key: table, value: (column, first, second))
+      in _tables.entries) {
     test(
       '$table: a second account cannot read, change, delete or forge the '
       'first account\'s rows',
@@ -95,7 +100,7 @@ void main() {
         await accountA.from(table).insert({
           'id': rowId,
           'user_id': idOfA,
-          textColumn: 'rls test row',
+          column: first,
         });
         addTearDown(() => accountA.from(table).delete().eq('id', rowId));
 
@@ -114,7 +119,7 @@ void main() {
         // The other account cannot change it.
         final changed = await accountB
             .from(table)
-            .update({textColumn: 'changed by the wrong account'})
+            .update({column: second})
             .eq('id', rowId)
             .select();
         expect(changed, isEmpty);
@@ -133,7 +138,7 @@ void main() {
             .select()
             .eq('id', rowId)
             .single();
-        expect(after[textColumn], 'rls test row');
+        expect(after[column], first);
 
         // The other account cannot create a row in the first account's name.
         final forgedId = uuid.v4();
@@ -142,7 +147,7 @@ void main() {
           accountB.from(table).insert({
             'id': forgedId,
             'user_id': idOfA,
-            textColumn: 'forged',
+            column: first,
           }),
           throwsA(isA<PostgrestException>()),
         );

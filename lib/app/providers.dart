@@ -3,7 +3,10 @@ import 'package:powersync/powersync.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../data/local/app_database.dart';
+import '../data/repositories/focus_repository.dart';
+import '../data/repositories/habit_repository.dart';
 import '../data/repositories/plan_repository.dart';
+import '../data/repositories/sleep_repository.dart';
 import '../data/repositories/task_repository.dart';
 import '../data/sync/sync_service.dart';
 import '../data/sync/sync_status_text.dart';
@@ -30,6 +33,30 @@ final planRepositoryProvider = Provider<PlanRepository>(
 final taskRepositoryProvider = Provider<TaskRepository>(
   (ref) =>
       TaskRepository(ref.watch(appDatabaseProvider), newId: () => uuid.v4()),
+);
+
+/// A fixed namespace for ids made from text (UUID version 5): the same text
+/// gives the same id on every device. Never change it, or rows made before
+/// the change get new ids.
+const _orbitoNamespace = '0f1c6a52-5d8e-4b3a-9c7e-2b6f4e1d8a90';
+
+String stableId(String key) => uuid.v5(_orbitoNamespace, key);
+
+final habitRepositoryProvider = Provider<HabitRepository>(
+  (ref) => HabitRepository(
+    ref.watch(appDatabaseProvider),
+    newId: () => uuid.v4(),
+    stableId: stableId,
+  ),
+);
+
+final sleepRepositoryProvider = Provider<SleepRepository>(
+  (ref) => SleepRepository(ref.watch(appDatabaseProvider), stableId: stableId),
+);
+
+final focusRepositoryProvider = Provider<FocusRepository>(
+  (ref) =>
+      FocusRepository(ref.watch(appDatabaseProvider), newId: () => uuid.v4()),
 );
 
 /// The current time. The screens ask this instead of the system clock, so
@@ -75,6 +102,37 @@ final tasksProvider = StreamProvider<List<Task>>((ref) {
   final userId = ref.watch(userIdProvider);
   if (userId == null) return Stream.value(const []);
   return ref.watch(taskRepositoryProvider).watchTasks(userId);
+});
+
+final habitsProvider = StreamProvider<List<Habit>>((ref) {
+  final userId = ref.watch(userIdProvider);
+  if (userId == null) return Stream.value(const []);
+  return ref.watch(habitRepositoryProvider).watchHabits(userId);
+});
+
+final habitLogsProvider = StreamProvider<List<HabitLog>>((ref) {
+  final userId = ref.watch(userIdProvider);
+  if (userId == null) return Stream.value(const []);
+  return ref.watch(habitRepositoryProvider).watchLogs(userId);
+});
+
+final sleepLogsProvider = StreamProvider<List<SleepLog>>((ref) {
+  final userId = ref.watch(userIdProvider);
+  if (userId == null) return Stream.value(const []);
+  return ref.watch(sleepRepositoryProvider).watchNights(userId);
+});
+
+final focusSessionsProvider = StreamProvider<List<FocusSession>>((ref) {
+  final userId = ref.watch(userIdProvider);
+  if (userId == null) return Stream.value(const []);
+  return ref.watch(focusRepositoryProvider).watchSessions(userId);
+});
+
+/// The focus timer running on this device, or null.
+final focusTimerProvider = StreamProvider<FocusTimer?>((ref) {
+  final userId = ref.watch(userIdProvider);
+  if (userId == null) return Stream.value(null);
+  return ref.watch(focusRepositoryProvider).watchTimer(userId);
 });
 
 /// How many local changes have not reached the server yet.

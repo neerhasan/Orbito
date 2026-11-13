@@ -121,6 +121,112 @@ class Tasks extends Table with SyncColumns {
   TextColumn get notes => text().nullable()();
 }
 
+/// Something the user wants to do regularly, for example "Read 20 minutes".
+@DataClassName('Habit')
+class Habits extends Table with SyncColumns {
+  @override
+  String get tableName => 'habits';
+
+  TextColumn get name => text()();
+  TextColumn get lifeAreaId => text().nullable()();
+
+  /// Usual time of day as `HH:MM`, or empty.
+  TextColumn get usualTime => text().nullable()();
+
+  /// The planned weekdays as digits, Monday = 1 ... Sunday = 7. A day that
+  /// is not planned does not count for or against the habit.
+  TextColumn get days => text()();
+}
+
+/// One mark of a habit on one day: done or skipped. Un-marking deletes the
+/// row (soft delete), so the day is open again.
+@DataClassName('HabitLog')
+class HabitLogs extends Table with SyncColumns {
+  @override
+  String get tableName => 'habit_logs';
+
+  TextColumn get habitId => text()();
+
+  /// A day as `YYYY-MM-DD`.
+  TextColumn get day => text()();
+
+  /// One of `HabitMark`: `done`, `skip`.
+  TextColumn get status => text()();
+}
+
+/// Time worked in one focus session, saved to a task or to no task.
+@DataClassName('FocusSession')
+class FocusSessions extends Table with SyncColumns {
+  @override
+  String get tableName => 'focus_sessions';
+
+  TextColumn get taskId => text().nullable()();
+
+  /// ISO 8601, UTC.
+  TextColumn get startedAt => text()();
+  TextColumn get endedAt => text()();
+
+  /// Time actually worked; pauses are not counted.
+  IntColumn get focusSeconds => integer()();
+}
+
+/// One night of sleep, filed under the morning the user woke up.
+@DataClassName('SleepLog')
+class SleepLogs extends Table with SyncColumns {
+  @override
+  String get tableName => 'sleep_logs';
+
+  /// The morning, `YYYY-MM-DD`.
+  TextColumn get day => text()();
+
+  /// `HH:MM`.
+  TextColumn get bedTime => text()();
+  TextColumn get wakeTime => text()();
+
+  /// One of `Rested`, or empty.
+  TextColumn get rested => text().nullable()();
+  TextColumn get note => text().nullable()();
+}
+
+/// The focus timer that is running on this device. It is kept only on this
+/// device (never synced), so the time is not lost if the app closes. There
+/// is at most one row.
+@DataClassName('FocusTimer')
+class FocusTimers extends Table {
+  @override
+  String get tableName => 'focus_timer';
+
+  TextColumn get id => text()();
+  TextColumn get userId => text()();
+  TextColumn get taskId => text().nullable()();
+
+  /// When the session began (ISO 8601, UTC).
+  TextColumn get startedAt => text()();
+
+  /// When the clock last started running, or empty while paused.
+  TextColumn get runningSince => text().nullable()();
+
+  /// Milliseconds worked before [runningSince].
+  IntColumn get workedMs => integer()();
+
+  /// The planned length in minutes, or empty for no planned length.
+  IntColumn get targetMinutes => integer().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// The values the `status` column of a habit mark may hold.
+abstract final class HabitMark {
+  static const done = 'done';
+  static const skip = 'skip';
+}
+
+/// The values the `rested` column of a night may hold.
+abstract final class Rested {
+  static const all = ['poor', 'okay', 'good', 'great'];
+}
+
 /// The values the `priority` column of a task may hold.
 abstract final class TaskPriority {
   static const none = 'none';
@@ -135,7 +241,20 @@ abstract final class TaskStatus {
   static const done = 'done';
 }
 
-@DriftDatabase(tables: [SyncTestRows, LifeAreas, Goals, Projects, Tasks])
+@DriftDatabase(
+  tables: [
+    SyncTestRows,
+    LifeAreas,
+    Goals,
+    Projects,
+    Tasks,
+    Habits,
+    HabitLogs,
+    FocusSessions,
+    SleepLogs,
+    FocusTimers,
+  ],
+)
 class AppDatabase extends _$AppDatabase {
   /// In the app, PowerSync creates and owns the tables, so Drift must not
   /// create them. Tests pass `tablesManagedBySync: false` to get plain tables
