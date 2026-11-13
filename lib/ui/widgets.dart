@@ -193,6 +193,227 @@ class _TileState extends State<Tile> {
   }
 }
 
+/// A section title with an icon, and something small on the right (a
+/// legend or a hint), as in the design's `.sh` row.
+class SectionHeader extends StatelessWidget {
+  const SectionHeader({
+    super.key,
+    required this.icon,
+    required this.title,
+    this.trailing,
+  });
+
+  final IconData icon;
+  final String title;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Wrap(
+        alignment: WrapAlignment.spaceBetween,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 12,
+        runSpacing: 6,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 16, color: Ember.ink),
+              const SizedBox(width: 8),
+              Text(title, style: Ember.h2),
+            ],
+          ),
+          ?trailing,
+        ],
+      ),
+    );
+  }
+}
+
+/// Lays tiles out in equal columns, each at least [minWidth] wide, as in
+/// the design's `.grid.s`.
+class TileGrid extends StatelessWidget {
+  const TileGrid({super.key, required this.children, this.minWidth = 160});
+
+  final List<Widget> children;
+  final double minWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    const gap = 12.0;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final fit = ((constraints.maxWidth + gap) / (minWidth + gap)).floor();
+        final columns = fit.clamp(1, children.length);
+        final rows = <Widget>[];
+        for (var start = 0; start < children.length; start += columns) {
+          final cells = children.skip(start).take(columns).toList();
+          rows.add(
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (var i = 0; i < columns; i++) ...[
+                    if (i > 0) const SizedBox(width: gap),
+                    Expanded(
+                      child: i < cells.length ? cells[i] : const SizedBox(),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          );
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (var i = 0; i < rows.length; i++) ...[
+              if (i > 0) const SizedBox(height: gap),
+              rows[i],
+            ],
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// A number tile: a small label, a big value, and a line under it.
+class StatTile extends StatelessWidget {
+  const StatTile({
+    super.key,
+    required this.label,
+    required this.value,
+    this.detail,
+    this.below,
+    this.valueSize = 24,
+  });
+
+  final String label;
+  final String value;
+  final String? detail;
+
+  /// Shown under the value instead of (or before) [detail], for example a
+  /// progress bar.
+  final Widget? below;
+  final double valueSize;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tile(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: Ember.meta),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Ember.stat.copyWith(
+              color: Ember.ink,
+              fontSize: valueSize,
+              height: (valueSize + 5) / valueSize,
+            ),
+          ),
+          if (below != null) ...[const SizedBox(height: 10), below!],
+          if (detail != null) ...[
+            const SizedBox(height: 6),
+            Text(detail!, style: Ember.meta),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// A row of buttons where one is chosen, as in the design's `.seg`. The
+/// chosen one slides softly to its new place.
+class Segmented<T> extends StatelessWidget {
+  const Segmented({
+    super.key,
+    required this.keyPrefix,
+    required this.value,
+    required this.options,
+    required this.onChanged,
+    this.expand = false,
+  });
+
+  final String keyPrefix;
+  final T value;
+
+  /// Each option: its value and its label.
+  final List<(T, String)> options;
+  final ValueChanged<T> onChanged;
+
+  /// Stretch to the full width, each option the same width.
+  final bool expand;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget option(T option, String label) {
+      final chosen = option == value;
+      final button = Semantics(
+        button: true,
+        selected: chosen,
+        child: AnimatedContainer(
+          duration: Motion.of(context, Motion.base),
+          curve: Motion.soft,
+          decoration: BoxDecoration(
+            color: chosen ? Ember.white : Ember.tile.withValues(alpha: 0),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Material(
+            type: MaterialType.transparency,
+            borderRadius: BorderRadius.circular(6),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              key: Key('$keyPrefix-$option'),
+              onTap: () => onChanged(option),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 11,
+                  vertical: 6,
+                ),
+                child: Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  style: Ember.text(
+                    12,
+                    15,
+                    color: chosen ? Ember.ink : Ember.ink2,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      return expand ? Expanded(child: button) : button;
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        color: Ember.tile,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,
+        children: [
+          for (var i = 0; i < options.length; i++) ...[
+            if (i > 0) const SizedBox(width: 2),
+            option(options[i].$1, options[i].$2),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 /// The tile shown when a list is empty.
 class EmptyHint extends StatelessWidget {
   const EmptyHint({super.key, required this.title, required this.text});

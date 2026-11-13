@@ -11,6 +11,7 @@ enum AppPage {
   tasks('Tasks', Icons.check_circle_outline),
   projects('Projects', Icons.folder_outlined),
   goals('Goals', Icons.flag_outlined),
+  habits('Habits', Icons.repeat),
   areas('Life areas', Icons.blur_circular_outlined);
 
   const AppPage(this.label, this.icon);
@@ -104,6 +105,15 @@ class _SideMenu extends ConsumerWidget {
                   AppPage.projects,
                   AppPage.goals,
                 ])
+                  _MenuItem(
+                    key: Key('menu-${item.name}'),
+                    label: item.label,
+                    leading: Icon(item.icon, size: 16),
+                    selected: page == item,
+                    onTap: () => open(item),
+                  ),
+                const _GroupLabel('Daily'),
+                for (final item in [AppPage.habits])
                   _MenuItem(
                     key: Key('menu-${item.name}'),
                     label: item.label,

@@ -19,6 +19,32 @@ const monthNames = [
 
 const weekdayShort = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
+const weekdayNames = [
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
+];
+
+/// `Friday, 13 November`.
+String formatLongDay(String key) {
+  final date = parseDayKey(key);
+  if (date == null) return key;
+  return '${weekdayNames[date.weekday - 1]}, ${date.day} '
+      '${monthNames[date.month - 1]}';
+}
+
+/// `Fri 13 Nov`.
+String formatWeekDay(String key) {
+  final date = parseDayKey(key);
+  if (date == null) return key;
+  return '${weekdayShort[date.weekday - 1]} ${date.day} '
+      '${monthNames[date.month - 1].substring(0, 3)}';
+}
+
 String _two(int value) => value.toString().padLeft(2, '0');
 
 /// The day key of a moment, read in the device's time zone.
