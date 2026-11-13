@@ -216,6 +216,34 @@ class FocusTimers extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// A line from the Quick Launcher that was not sorted yet, or a note.
+@DataClassName('InboxItem')
+class InboxItems extends Table with SyncColumns {
+  @override
+  String get tableName => 'inbox_items';
+
+  TextColumn get body => text().named('text')();
+
+  /// One of `InboxKind`: `inbox` or `note`.
+  TextColumn get kind => text()();
+}
+
+/// The user's preferences: one row per user, synced to every device.
+@DataClassName('Preference')
+class Preferences extends Table with SyncColumns {
+  @override
+  String get tableName => 'preferences';
+
+  /// The Today sections that are on, in order, comma separated.
+  TextColumn get todaySections => text()();
+}
+
+/// The values the `kind` column of an inbox item may hold.
+abstract final class InboxKind {
+  static const inbox = 'inbox';
+  static const note = 'note';
+}
+
 /// The values the `status` column of a habit mark may hold.
 abstract final class HabitMark {
   static const done = 'done';
@@ -253,6 +281,8 @@ abstract final class TaskStatus {
     FocusSessions,
     SleepLogs,
     FocusTimers,
+    InboxItems,
+    Preferences,
   ],
 )
 class AppDatabase extends _$AppDatabase {

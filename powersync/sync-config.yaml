@@ -28,3 +28,9 @@ streams:
   sleep_logs:
     auto_subscribe: true
     query: SELECT * FROM sleep_logs WHERE user_id = auth.user_id()
+  inbox_items:
+    auto_subscribe: true
+    query: SELECT * FROM inbox_items WHERE user_id = auth.user_id()
+  preferences:
+    auto_subscribe: true
+    query: SELECT * FROM preferences WHERE user_id = auth.user_id()

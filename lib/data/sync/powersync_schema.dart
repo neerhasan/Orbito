@@ -98,6 +98,21 @@ const powerSyncSchema = Schema([
     Column.text('updated_at'),
     Column.text('deleted_at'),
   ]),
+  Table('inbox_items', [
+    Column.text('user_id'),
+    Column.text('text'),
+    Column.text('kind'),
+    Column.text('created_at'),
+    Column.text('updated_at'),
+    Column.text('deleted_at'),
+  ]),
+  Table('preferences', [
+    Column.text('user_id'),
+    Column.text('today_sections'),
+    Column.text('created_at'),
+    Column.text('updated_at'),
+    Column.text('deleted_at'),
+  ]),
   // Kept on this device only: the focus timer that is running now.
   Table.localOnly('focus_timer', [
     Column.text('user_id'),
