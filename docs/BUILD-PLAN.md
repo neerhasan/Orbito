@@ -41,8 +41,9 @@ Prompt:
 
 Done when: F-06 and F-07 acceptance criteria pass.
 
-## M4: guidance (F-08, F-09, F-10)
-Prompt:
+## M4: guidance (F-08, F-09, F-10): MOVED TO V2 (founder decision, 2026-11-13)
+Do not build this in v1. The milestones M5 and M6 keep their names. The list of held features is in `docs/V2-FEATURES.md`.
+Original prompt, kept for v2:
 > Read CLAUDE.md. Task M4: energy modes (low, medium, high, each with its own saved routine; one tap to switch; low mode shows only what matters now), the basic life score (area scores and an overall Life line, always showing the real position; use the placeholder formula in CLAUDE.md, kept in one place; say clearly when there is too little data), and the fail-day next step (after a missed day, one small suggested step and a summary of progress so far, encouraging and factual, never shaming).
 
 Done when: F-08, F-09 and F-10 acceptance criteria pass. The founder reviews the wording of the fail-day messages.

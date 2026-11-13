@@ -12,6 +12,7 @@ Decided by the founder:
 - 2026-11-12 (after the founder's first M1 test): A task serves a project only, and the project serves the goal. A task has no goal of its own. The tasks that count for a goal are the tasks of its projects. The `goal_id` column of `tasks` is no longer written or read by the app; it stays in the database for now.
 - 2026-11-12: A life area name can be used only once per user. Capital letters and spaces around the name do not make a name different.
 - 2026-11-12: A project has an icon, picked from a fixed list of 16 (Claude chose the list; say if icons are missing).
+- 2026-11-13: Milestone M4 (energy modes F-08, basic life score F-09, fail-day next step F-10) moves from v1 to v2, the second build. v1 is now F-01 to F-07, F-11 and F-14. The full list of held features is in `docs/V2-FEATURES.md`.
 
 Defaults used until the founder changes them:
 - Sign-in: email and password, verification off during the test.

@@ -7,7 +7,7 @@ Revision note (2026-11-11): the founder moved accounts, server and sync across d
 ## 1. User journey
 1. The user opens the app for the first time and picks a few life areas.
 2. The user adds goals, projects, tasks and habits, or uses the Quick Launcher.
-3. Each day the user opens Today, picks an energy mode, works through tasks and habits, and runs focus sessions.
+3. Each day the user opens Today, works through tasks and habits, and runs focus sessions. (Picking an energy mode is a v2 step.)
 4. The user logs sleep.
 5. After enough days, the user sees the Life score and (in P1) insights.
 6. After a missed day, the user sees a next step and their progress so far.

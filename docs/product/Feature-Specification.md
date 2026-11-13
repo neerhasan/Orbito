@@ -14,9 +14,9 @@ Revision notes (2026-11-11): version 0.2 (approved) moved accounts, server and s
 | F-05 | Life areas, goals and projects | P0 | Yes | F-11 |
 | F-06 | Customisable Today dashboard | P0 | Yes | F-01 to F-05 |
 | F-07 | Quick Launcher and Inbox | P0 | Yes | F-01, F-02, F-04 |
-| F-08 | Energy modes | P0 | Yes | F-01, F-02, F-06 |
-| F-09 | Basic life score | P0 | Yes | F-02, F-05 |
-| F-10 | Fail-day next step | P0 | Yes | F-02, F-09 |
+| F-08 | Energy modes | V2 (moved from P0 on 2026-11-13) | No | F-01, F-02, F-06 |
+| F-09 | Basic life score | V2 (moved from P0 on 2026-11-13) | No | F-02, F-05 |
+| F-10 | Fail-day next step | V2 (moved from P0 on 2026-11-13) | No | F-02, F-09 |
 | F-11 | Offline storage on the device | P0 | Yes | None |
 | F-12 | Insights and 14-day tests | P1 | No | F-02, F-03, F-04 |
 | F-13 | Notes | P1 | No | F-05 |
@@ -86,7 +86,7 @@ Revision notes (2026-11-11): version 0.2 (approved) moved accounts, server and s
 - Acceptance criteria: the full chain can be built and navigated; deleting or moving an item never leaves orphaned tasks without a warning.
 
 ### F-06 Customisable Today dashboard
-- Description: a home screen with the user's chosen sections, for example schedule, habits, tasks, reminders, sleep and life line.
+- Description: a home screen with the user's chosen sections, for example schedule, habits, tasks, reminders and sleep. (The life line section arrives with F-09 in v2.)
 - User permissions: single user.
 - Inputs: a settings list where each section is switched on or off and ordered.
 - Outputs: the Today screen.
@@ -168,10 +168,10 @@ Short descriptions only. Full details: TBD - pending later iteration; each featu
 - F-24 Post-beta additions: a place for any feature the founder adds after the beta launch.
 
 ## 3. MVP scope (P0 list)
-F-01 to F-11 and F-14.
+F-01 to F-07, F-11 and F-14. (F-08, F-09 and F-10 moved to v2 on 2026-11-13; see `docs/V2-FEATURES.md`. In v1 the Today dashboard has no energy-mode switcher and no Life line section.)
 
-## 4. Future features (P1, P2)
-P1: F-12, F-13 and F-15 to F-18. P2: F-19 to F-25. New ideas are added here as new IDs and go through Phase 02 before they are built.
+## 4. Future features (V2, P1, P2)
+V2 (second build, held by the founder): F-08, F-09 and F-10. P1: F-12, F-13 and F-15 to F-18. P2: F-19 to F-25. New ideas are added here as new IDs and go through Phase 02 before they are built.
 
 ## 5. Feature dependency map
 Everything depends on F-11 (storage), and all user data syncs through F-14. Tasks, habits and focus depend on F-05 (life areas, goals, projects). The dashboard, Quick Launcher, energy modes, score and fail-day step depend on the core features. Insights depend on habits, focus and sleep data. Billing and calendar sync depend on accounts (F-14).

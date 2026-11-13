@@ -22,7 +22,8 @@ Primary expected customers are people with ADHD, as stated by the founder. Marke
 TBD - pending user research. Persona 1 is the founder, who uses the app personally before any sales. Further personas will be written only from real user feedback, not assumed.
 
 ## 6. Core features (summary)
-P0 (first release): tasks, habits, focus timer, sleep log, life areas with goals and projects, customisable Today dashboard, Quick Launcher, energy modes, basic life score, fail-day next step, offline use on the device, and accounts with a server and sync across devices.
+P0 (first release): tasks, habits, focus timer, sleep log, life areas with goals and projects, customisable Today dashboard, Quick Launcher, offline use on the device, and accounts with a server and sync across devices.
+V2 (second build, moved from the first release by the founder on 2026-11-13): energy modes, basic life score, fail-day next step. See `docs/V2-FEATURES.md`.
 P1 (before selling): insights with 14-day tests, notes, calendar sync, trial and subscription billing, analytics, free and premium split.
 P2 (future): web version, Apple Watch, AI helpers, more integrations, sharing and any feature added after beta.
 Details are in Feature-Specification.md.

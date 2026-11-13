@@ -2,6 +2,12 @@
 
 Claude Code adds a new entry on top at the end of every session.
 
+### 2026-11-13 Scope change: M4 moved to v2
+- Done: the founder moved energy modes (F-08), the basic life score (F-09) and the fail-day next step (F-10) to v2, the second build. Documents updated: new `docs/V2-FEATURES.md` (the list of held features), `docs/BUILD-PLAN.md` (M4 marked as moved), `docs/DECISIONS.md`, `docs/product/Feature-Specification.md`, `docs/product/PRD.md`, `docs/technical/System-Architecture.md`, `docs/status/Project-Status.md`, `CLAUDE.md`.
+- v1 is now: M1 (done, waiting for the founder's approval), M2 daily tracking, M3 home and capture, M5 accounts and hardening, M6 closed test. M5 and M6 keep their names.
+- No code changed. The `Today` dashboard in M3 will have no energy-mode switcher and no Life line section.
+- Next step: the founder approves M1, then the plan for M2.
+
 ### 2026-11-12 M1 fixes after the founder's first test
 - Done:
   - PowerSync could not read the four new tables ("permission denied"): the read access in `003_core_tables.sql` went to the wrong login. Fixed on the server and recorded in `supabase/004_powersync_read.sql`. The founder then deployed the sync config.

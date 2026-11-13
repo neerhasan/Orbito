@@ -139,7 +139,7 @@ orbito-app/
 2. **M1 Core data:** life areas, goals, projects, tasks.
 3. **M2 Daily tracking:** habits, sleep, focus timer.
 4. **M3 Home and capture:** customisable Today dashboard, Quick Launcher and Inbox.
-5. **M4 Guidance:** energy modes, life score, fail-day next step.
+5. **M4 Guidance:** energy modes, life score, fail-day next step. MOVED TO V2 on 2026-11-13 (not built in v1). The tables ENERGY_ROUTINE, ROUTINE_ITEM and SCORE_SNAPSHOT are created in v2.
 6. **M5 Accounts and hardening:** sign-up and sign-in, access rules tested, export, account deletion, error handling.
 7. **M6 Closed test:** Windows and Android builds shared with friends, feedback collected.
 Each milestone ends with a demo and your approval before the next one (Phase 07 rule).

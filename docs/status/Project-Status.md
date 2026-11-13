@@ -73,6 +73,7 @@ Approved 2026-11-11 (Technology-Stack.md 0.5):
 11. **Closest existing apps found (light research, sources partly biased):** Xenith, Discy, Evident (iPhone only), Exist, Gyroscope, Bearable, LifeWheel. None confirmed to combine planning, tracking and cause-finding insights in one app.
 12. **Success criteria (first year):** (a) the app works for the founder daily for 90 days; (d) first paying subscribers. Targets (what counts as "daily", how many subscribers, by when) are TBD.
 13. **Not yet decided:** web version; which features are free and which are premium; subscription price; lifetime option.
+14. **Scope change (2026-11-13):** the founder moved energy modes (F-08), the basic life score (F-09) and the fail-day next step (F-10), the old milestone M4, from the first release to v2, the second build. v1 is F-01 to F-07, F-11 and F-14. The held features are listed in `docs/V2-FEATURES.md`. This changes the approved first-release scope in Feature-Specification.md, PRD.md and System-Architecture.md; those files were updated and need the founder's re-approval of the changed parts.
 
 ## Known issues
 1. **Life line score mismatch:** the proposed score formula gives 58 with the sample area scores, while the dashboard sample shows 62. To be resolved when the formula is approved.
