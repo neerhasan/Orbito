@@ -58,10 +58,18 @@ class Panel extends StatelessWidget {
 /// A page: the main panel and, on the right, a narrower panel for details
 /// or a form.
 class PageLayout extends StatelessWidget {
-  const PageLayout({super.key, required this.main, this.rail});
+  const PageLayout({
+    super.key,
+    required this.main,
+    this.rail,
+    this.railWidth = 340,
+  });
 
   final List<Widget> main;
   final List<Widget>? rail;
+
+  /// 340 by default; 400 for a wide detail panel (the design's `.rail.wide`).
+  final double railWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -72,7 +80,7 @@ class PageLayout extends StatelessWidget {
         if (rail != null) ...[
           const SizedBox(width: 8),
           SizedBox(
-            width: 340,
+            width: railWidth,
             child: Panel(
               padding: const EdgeInsets.fromLTRB(20, 22, 20, 24),
               children: [
@@ -188,6 +196,88 @@ class _TileState extends State<Tile> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// A small soft button (the design's `.add` and `.btn.soft`): grey, an
+/// optional icon, and it gives softly when pressed.
+class SoftButton extends StatelessWidget {
+  const SoftButton({
+    super.key,
+    required this.label,
+    required this.onPressed,
+    this.icon,
+    this.active = false,
+    this.background,
+  });
+
+  final String label;
+  final VoidCallback? onPressed;
+  final IconData? icon;
+
+  /// Shown as pressed in (for example while the filters are open).
+  final bool active;
+  final Color? background;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = active ? Ember.ink : Ember.ink2;
+    return Pressable(
+      child: AnimatedContainer(
+        duration: Motion.of(context, Motion.base),
+        curve: Motion.soft,
+        decoration: BoxDecoration(
+          color: active ? Ember.neutral : (background ?? Ember.tile),
+          borderRadius: BorderRadius.circular(7),
+        ),
+        child: Material(
+          type: MaterialType.transparency,
+          borderRadius: BorderRadius.circular(7),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onPressed,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(icon == null ? 10 : 8, 6, 10, 6),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (icon != null) ...[
+                    Icon(icon, size: 14, color: color),
+                    const SizedBox(width: 4),
+                  ],
+                  Text(label, style: Ember.text(12, 15, color: color)),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A keyboard key hint such as "Enter" or "Ctrl K" (the design's `.kbd`).
+class Kbd extends StatelessWidget {
+  const Kbd(this.label, {super.key, this.dark = false});
+
+  final String label;
+
+  /// On the dark shell instead of a paper panel.
+  final bool dark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: dark ? Ember.active : Ember.neutral,
+        borderRadius: BorderRadius.circular(5),
+      ),
+      child: Text(
+        label,
+        style: Ember.text(11, 13, color: dark ? Ember.onShell2 : Ember.ink2),
       ),
     );
   }
@@ -564,11 +654,15 @@ class TaskRing extends StatelessWidget {
     required this.priority,
     required this.onTap,
     required this.label,
+    this.size = 18,
   });
 
   final bool done;
   final String priority;
   final VoidCallback onTap;
+
+  /// 18 in lists, 22 for the large ring in the task details.
+  final double size;
 
   /// Read by screen readers, for example "Complete Buy shoes".
   final String label;
@@ -595,8 +689,8 @@ class TaskRing extends StatelessWidget {
           child: AnimatedContainer(
             duration: Motion.of(context, Motion.base),
             curve: Motion.soft,
-            width: 18,
-            height: 18,
+            width: size,
+            height: size,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: done ? Ember.ink : Colors.transparent,
@@ -606,7 +700,7 @@ class TaskRing extends StatelessWidget {
               scale: done ? 1 : 0,
               duration: Motion.of(context, Motion.base),
               curve: Motion.settle,
-              child: const Icon(Icons.check, size: 12, color: Ember.white),
+              child: Icon(Icons.check, size: size * 0.66, color: Ember.white),
             ),
           ),
         ),

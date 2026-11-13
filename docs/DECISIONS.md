@@ -27,6 +27,9 @@ Decided by the founder:
   - Focus sessions under one minute are not saved. Planned lengths offered: none, 25, 45, 60, 90 minutes.
   - While a timer runs, the Focus page is the full-window focus mode from the design; "Back to Orbito" (or Esc) leaves it and the timer stays in the side menu.
   - A night is filed under the morning the user woke up. One night per morning; saving again replaces it. A night of 0 hours or more than 16 hours asks the user to check the times. "How rested" (poor, okay, good, great) is optional, as in the design.
+- 2026-11-13: The founder supplied a new design "Tasks · list + detail" (now in `docs/design/source/`: Tasks, Sidebar, Titlebar, Icon). The app follows it: a title bar (logo, search, New, account), the side menu with an orange icon on the open page, tasks as soft two-line tiles grouped by date, and a wide detail panel. This replaces the one-line task rows asked for in M1.
+- 2026-11-13: Founder's choice A: the completion chart and the grouping, sorting and filter menus stay, tucked away: the filters open from a "Filters" button and the chart sits in a "Completed" section at the bottom.
+- 2026-11-13: In the task details, project, due date and priority save as soon as they change; the title saves on Enter or when the cursor leaves it; notes have a Save button. Parts of the design that need features not built yet (Board view, subtasks, tags, reminders, estimates, scheduled time, Reminders card, Folders, Notes, Upcoming, Inbox, Calendar, Time, Analytics, Insights, Settings) are left out until those exist. The search box shows a note until the Quick Launcher (M3).
 - 2026-11-13: Widgets for Windows, Android and iOS are wanted in a future version (new feature F-26, P2). Nothing is built in v1; v1 keeps the data and rules separate from the screens so widgets can be added later. Details are in `docs/V2-FEATURES.md`.
 
 Defaults used until the founder changes them:

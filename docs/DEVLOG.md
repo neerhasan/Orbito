@@ -2,6 +2,16 @@
 
 Claude Code adds a new entry on top at the end of every session.
 
+### 2026-11-13 Redesign after "Tasks · list + detail"
+- Done:
+  - The founder's new design files are in `docs/design/source/` (Tasks, Sidebar, Titlebar, Icon).
+  - App frame (`lib/app/shell.dart`): title bar with logo, search (shows a note until M3), the running focus timer, a New menu and the account button (email, Sign out); side menu with Plan, Daily and Life areas, counts, an orange icon on the open page; sync status at the bottom.
+  - Tasks page (`lib/features/tasks/tasks_page.dart`): header with open, overdue and on-time numbers; List and Calendar; Filters button that folds out grouping, sorting and filters; the add box; tasks as two-line tiles grouped by date; "Done today" and "Completed" (the chart) fold-outs; a wide detail panel with focus, project, goal, life area, due, priority, time, focus sessions, notes, Reschedule, Postpone to tomorrow and Delete.
+  - The Projects page uses the same tiles and panel.
+  - New shared parts: `SoftButton`, `Kbd`, a wider rail option, a larger task ring. New rules in `lib/domain/task_view.dart`: overdue count, on-time share this month, done today.
+- Test results: `flutter analyze`: no issues. `flutter test --concurrency=2`: 128 passed. Windows release built and started; a screenshot matched the design layout.
+- Next step: the founder looks at the new design, then the M2 test.
+
 ### 2026-11-13 Soft motion and M2 (habits, sleep, focus timer), Windows
 - Done:
   - Motion: `lib/ui/motion.dart` holds one soft curve and the timings. Pages and the right panel cross-fade, tiles fade in and give when pressed, rings fill, bars and charts rise, panels resize smoothly. No motion when Windows has animation effects off.

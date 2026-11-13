@@ -136,6 +136,7 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
         .where((task) => task.id == _taskId)
         .firstOrNull;
     return PageLayout(
+      railWidth: 400,
       main: [
         _ProjectHeader(
           project: open,
@@ -156,18 +157,20 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              for (final task in ordered)
+              for (var i = 0; i < ordered.length; i++) ...[
+                if (i > 0) const SizedBox(height: 6),
                 TaskRow(
-                  task: task,
+                  task: ordered[i],
                   project: null,
                   today: today,
-                  selected: task.id == _taskId,
-                  showNote: true,
+                  focusSeconds: byTask[ordered[i].id] ?? 0,
+                  selected: ordered[i].id == _taskId,
                   onTap: () => setState(() {
-                    _taskId = task.id == _taskId ? null : task.id;
+                    _taskId = ordered[i].id == _taskId ? null : ordered[i].id;
                   }),
-                  onToggle: () => _toggle(task),
+                  onToggle: () => _toggle(ordered[i]),
                 ),
+              ],
             ],
           ),
         const SizedBox(height: 10),

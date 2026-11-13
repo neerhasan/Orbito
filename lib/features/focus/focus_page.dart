@@ -846,8 +846,8 @@ class _QuickNoteState extends ConsumerState<_QuickNote> {
   }
 }
 
-/// The small running timer in the side menu, shown while the user is away
-/// from focus mode. Tapping it opens focus mode again.
+/// The running timer in the title bar, shown while the user is away from
+/// focus mode. Tapping it opens focus mode again.
 class FocusPill extends ConsumerStatefulWidget {
   const FocusPill({super.key, required this.timer, required this.onOpen});
 
@@ -866,6 +866,7 @@ class _FocusPillState extends ConsumerState<FocusPill> with _EverySecond {
     final task = tasks.where((t) => t.id == timer.taskId).firstOrNull;
     final running = isRunning(timer);
     final worked = workedMs(timer, ref.watch(clockProvider)());
+    // The title bar's timer (design: Titlebar.dc.html).
     return Appear(
       child: Material(
         color: Ember.raised,
@@ -874,46 +875,60 @@ class _FocusPillState extends ConsumerState<FocusPill> with _EverySecond {
         child: InkWell(
           key: const Key('focus-pill'),
           onTap: widget.onOpen,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(10, 8, 6, 8),
-            child: Row(
-              children: [
-                AnimatedContainer(
-                  duration: Motion.of(context, Motion.base),
-                  width: 7,
-                  height: 7,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: running ? Ember.now : Ember.onShell3,
+          child: SizedBox(
+            height: 34,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 4, 0),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AnimatedContainer(
+                    duration: Motion.of(context, Motion.base),
+                    width: 7,
+                    height: 7,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: running ? Ember.now : Ember.onShell3,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    task?.title ?? 'Focus',
-                    overflow: TextOverflow.ellipsis,
-                    style: Ember.text(12, 15, color: Ember.onShell),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 160),
+                      child: Text(
+                        task?.title ?? 'Focus',
+                        overflow: TextOverflow.ellipsis,
+                        style: Ember.text(13, 16, color: Ember.onShell),
+                      ),
+                    ),
                   ),
-                ),
-                Text(
-                  formatClock(worked),
-                  style: Ember.text(12, 15, color: Ember.onShell2).copyWith(
-                    fontFeatures: const [FontFeature.tabularFigures()],
+                  const SizedBox(width: 8),
+                  Text(
+                    formatClock(worked),
+                    style:
+                        Ember.text(
+                          13,
+                          16,
+                          weight: 600,
+                          color: running ? Ember.now : Ember.onShell2,
+                        ).copyWith(
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
                   ),
-                ),
-                IconButton(
-                  key: const Key('focus-pill-pause'),
-                  tooltip: running ? 'Pause' : 'Resume',
-                  iconSize: 16,
-                  visualDensity: VisualDensity.compact,
-                  color: Ember.onShell,
-                  onPressed: () =>
-                      ref.read(focusRepositoryProvider).togglePause(),
-                  icon: Icon(
-                    running ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                  IconButton(
+                    key: const Key('focus-pill-pause'),
+                    tooltip: running ? 'Pause' : 'Resume',
+                    iconSize: 16,
+                    visualDensity: VisualDensity.compact,
+                    color: Ember.onShell,
+                    onPressed: () =>
+                        ref.read(focusRepositoryProvider).togglePause(),
+                    icon: Icon(
+                      running ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

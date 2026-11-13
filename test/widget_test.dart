@@ -32,6 +32,11 @@ Future<void> _pumpShell(
       overrides: [
         lifeAreasProvider.overrideWith((ref) => Stream.value(areas)),
         focusTimerProvider.overrideWith((ref) => Stream.value(null)),
+        tasksProvider.overrideWith((ref) => Stream.value(const <Task>[])),
+        habitsProvider.overrideWith((ref) => Stream.value(const <Habit>[])),
+        habitLogsProvider.overrideWith(
+          (ref) => Stream.value(const <HabitLog>[]),
+        ),
         syncStatusTextProvider.overrideWithValue(status),
       ],
       child: MaterialApp(
@@ -73,9 +78,16 @@ void main() {
       expect(find.text('Tasks'), findsOneWidget);
       expect(find.text('Projects'), findsOneWidget);
       expect(find.text('Goals'), findsOneWidget);
-      expect(find.text('a@example.com'), findsOneWidget);
+      expect(find.text('Orbito'), findsOneWidget);
+      expect(find.text('A'), findsOneWidget);
       expect(find.text('Sync: Offline'), findsOneWidget);
       expect(find.text('1 change waiting to upload'), findsOneWidget);
+      expect(find.byKey(const Key('search')), findsOneWidget);
+
+      // The account button shows the email and signs out.
+      await tester.tap(find.byKey(const Key('account-menu')));
+      await tester.pumpAndSettle();
+      expect(find.text('a@example.com'), findsOneWidget);
       expect(find.byKey(const Key('sign-out')), findsOneWidget);
     });
 
@@ -115,7 +127,6 @@ void main() {
     testWidgets('life areas are listed in the menu', (tester) async {
       await _pumpShell(tester, areas: const [_area]);
       expect(find.text('Health'), findsOneWidget);
-      expect(find.text('All areas'), findsOneWidget);
     });
   });
 }

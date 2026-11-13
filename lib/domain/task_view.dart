@@ -324,3 +324,44 @@ List<String?> monthCells(int year, int month) {
   }
   return cells;
 }
+
+/// Open tasks due before [today].
+int countOverdue(List<Task> tasks, {required String today}) => tasks
+    .where(
+      (task) =>
+          task.status != TaskStatus.done &&
+          task.dueDate != null &&
+          task.dueDate!.compareTo(today) < 0,
+    )
+    .length;
+
+/// Of the tasks with a due date that were completed this month, the share
+/// completed on or before their due date, 0 to 100. Null when there are
+/// none yet.
+int? onTimeThisMonth(List<Task> tasks, {required String today}) {
+  final month = today.substring(0, 7);
+  var counted = 0;
+  var onTime = 0;
+  for (final task in tasks) {
+    final due = task.dueDate;
+    final done = dayKeyOfStoredTime(task.completedAt);
+    if (task.status != TaskStatus.done || due == null || done == null) {
+      continue;
+    }
+    if (!done.startsWith(month)) continue;
+    counted++;
+    if (done.compareTo(due) <= 0) onTime++;
+  }
+  return counted == 0 ? null : (onTime * 100 / counted).round();
+}
+
+/// Tasks completed on [today], newest first.
+List<Task> doneOn(List<Task> tasks, {required String today}) =>
+    tasks
+        .where(
+          (task) =>
+              task.status == TaskStatus.done &&
+              dayKeyOfStoredTime(task.completedAt) == today,
+        )
+        .toList()
+      ..sort((a, b) => (b.completedAt ?? '').compareTo(a.completedAt ?? ''));

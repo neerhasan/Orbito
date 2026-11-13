@@ -1,16 +1,19 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
-import '../../app/shell.dart' show AppPage, currentPageProvider;
+import '../../app/shell.dart' show addTaskRequestProvider;
 import '../../data/local/app_database.dart';
 import '../../domain/dates.dart';
-import '../../domain/focus.dart' show formatWorked, secondsByTask;
-import '../focus/focus_page.dart' show startFocus;
+import '../../domain/focus.dart';
+import '../../domain/sleep.dart' show formatTime, timeOf;
 import '../../domain/task_view.dart';
 import '../../ui/ember.dart';
 import '../../ui/motion.dart';
 import '../../ui/widgets.dart';
+import '../focus/focus_page.dart' show startFocus;
 import 'completion_chart.dart';
 
 enum _TasksView { list, month }
@@ -21,9 +24,13 @@ const _priorityLabels = <(String, String)>[
   (TaskPriority.high, 'High'),
 ];
 
-/// The Tasks page: the completion chart, a box to add a task, the list or
-/// month view with grouping, sorting and filters, and on the right the
-/// details of the selected task.
+/// The Tasks page (design: `docs/design/source/Tasks.dc.html`, "Tasks ·
+/// list + detail"): a box to add a task, the tasks as soft tiles grouped
+/// by date, and on the right the details of the selected task.
+///
+/// The filters, grouping and sorting sit behind the "Filters" button, and
+/// the completion chart in the "Completed" section at the bottom (the
+/// founder's choice A, 2026-11-13).
 class TasksPage extends ConsumerStatefulWidget {
   const TasksPage({super.key});
 
@@ -33,6 +40,7 @@ class TasksPage extends ConsumerStatefulWidget {
 
 class _TasksPageState extends ConsumerState<TasksPage> {
   final _newTask = TextEditingController();
+  final _newTaskFocus = FocusNode();
   var _range = ChartRange.twoWeeks;
   var _view = _TasksView.list;
   var _grouping = TaskGrouping.dueDate;
@@ -42,6 +50,9 @@ class _TasksPageState extends ConsumerState<TasksPage> {
   String? _goalId;
   String? _priority;
   String? _selectedId;
+  var _showFilters = false;
+  var _showDoneToday = false;
+  var _showCompleted = false;
 
   /// The month the month view shows. Null means the current month.
   DateTime? _month;
@@ -49,6 +60,7 @@ class _TasksPageState extends ConsumerState<TasksPage> {
   @override
   void dispose() {
     _newTask.dispose();
+    _newTaskFocus.dispose();
     super.dispose();
   }
 
@@ -84,13 +96,33 @@ class _TasksPageState extends ConsumerState<TasksPage> {
     }
   }
 
+  void _resetFilters() => setState(() {
+    _grouping = TaskGrouping.dueDate;
+    _sorting = TaskSorting.dueDate;
+    _status = StatusFilter.open;
+    _projectId = null;
+    _goalId = null;
+    _priority = null;
+  });
+
   @override
   Widget build(BuildContext context) {
+    // "New" in the title bar: put the cursor in the add box.
+    if (ref.watch(addTaskRequestProvider)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _newTaskFocus.requestFocus();
+        ref.read(addTaskRequestProvider.notifier).handled();
+      });
+    }
     final tasks = ref.watch(tasksProvider).value ?? const <Task>[];
     final projects = ref.watch(projectsProvider).value ?? const <Project>[];
     final goals = ref.watch(goalsProvider).value ?? const <Goal>[];
+    final sessions =
+        ref.watch(focusSessionsProvider).value ?? const <FocusSession>[];
     final now = ref.watch(clockProvider)();
     final today = dayKey(now);
+    final byTask = secondsByTask(sessions);
 
     // A filter may point at a project or goal that was deleted meanwhile.
     final projectId = projects.any((p) => p.id == _projectId)
@@ -112,151 +144,174 @@ class _TasksPageState extends ConsumerState<TasksPage> {
       _sorting,
     );
     final open = tasks.where((task) => task.status != TaskStatus.done).length;
+    final overdue = countOverdue(tasks, today: today);
+    final onTime = onTimeThisMonth(tasks, today: today);
+    final doneToday = doneOn(tasks, today: today);
     final selected = tasks.where((task) => task.id == _selectedId).firstOrNull;
     final points = completionSeries(tasks, _range, today: today);
     final summary = chartSummary(_range, points);
     final month = _month ?? DateTime(now.year, now.month);
+    final filtered =
+        _grouping != TaskGrouping.dueDate ||
+        _sorting != TaskSorting.dueDate ||
+        _status != StatusFilter.open ||
+        projectId != null ||
+        goalId != null ||
+        _priority != null;
     Project? projectOf(Task task) =>
         projects.where((p) => p.id == task.projectId).firstOrNull;
     void select(Task task) => setState(() {
       _selectedId = task.id == _selectedId ? null : task.id;
     });
+    TaskRow row(Task task) => TaskRow(
+      key: ValueKey('row-${task.id}'),
+      task: task,
+      project: projectOf(task),
+      today: today,
+      focusSeconds: byTask[task.id] ?? 0,
+      selected: task.id == _selectedId,
+      onTap: () => select(task),
+      onToggle: () => _toggle(task),
+    );
 
     return PageLayout(
+      railWidth: 400,
       main: [
-        PageHeader(title: 'Tasks', subtitle: '$open open'),
-        Tile(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Tasks completed', style: Ember.h3),
-                        const SizedBox(height: 3),
-                        Text(
-                          summary,
-                          key: const Key('chart-summary'),
-                          style: Ember.meta,
-                        ),
-                      ],
-                    ),
-                  ),
-                  _Segments<ChartRange>(
-                    keyPrefix: 'chart',
-                    value: _range,
-                    options: [
-                      for (final range in ChartRange.values)
-                        (range, range.label, null),
-                    ],
-                    onChanged: (range) => setState(() => _range = range),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              CompletionChart(points: points, summary: summary),
-            ],
-          ),
-        ),
-        Row(
-          children: [
-            Expanded(
-              child: TextField(
-                key: const Key('task-new'),
-                controller: _newTask,
-                onSubmitted: (_) => _add(),
-                decoration: const InputDecoration(hintText: 'Add a task'),
-              ),
-            ),
-            const SizedBox(width: 8),
-            FilledButton(
-              key: const Key('task-add'),
-              onPressed: _add,
-              child: const Text('Add'),
-            ),
-          ],
-        ),
         Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          crossAxisAlignment: WrapCrossAlignment.center,
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.start,
+          spacing: 12,
+          runSpacing: 12,
           children: [
-            _Segments<_TasksView>(
-              keyPrefix: 'view',
-              value: _view,
-              options: const [
-                (_TasksView.list, 'List', Icons.view_list_outlined),
-                (_TasksView.month, 'Month', Icons.calendar_month_outlined),
-              ],
-              onChanged: (view) => setState(() => _view = view),
+            PageHeader(
+              title: 'Tasks',
+              subtitle: [
+                '$open open',
+                if (overdue > 0) '$overdue overdue',
+                if (onTime != null) '$onTime% done on time this month',
+              ].join(' · '),
             ),
-            if (_view == _TasksView.list) ...[
-              _Pick<TaskGrouping>(
-                key: const Key('group'),
-                prefix: 'Group',
-                value: _grouping,
-                options: [
-                  for (final grouping in TaskGrouping.values)
-                    (grouping, grouping.label),
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _Segments<_TasksView>(
+                    keyPrefix: 'view',
+                    value: _view,
+                    options: const [
+                      (_TasksView.list, 'List', Icons.view_list_outlined),
+                      (
+                        _TasksView.month,
+                        'Calendar',
+                        Icons.calendar_month_outlined,
+                      ),
+                    ],
+                    onChanged: (view) => setState(() => _view = view),
+                  ),
+                  const SizedBox(width: 8),
+                  SoftButton(
+                    key: const Key('task-filters'),
+                    icon: Icons.filter_list,
+                    label: filtered ? 'Filters on' : 'Filters',
+                    active: _showFilters,
+                    onPressed: () =>
+                        setState(() => _showFilters = !_showFilters),
+                  ),
+                  const SizedBox(width: 8),
+                  FilledButton.icon(
+                    key: const Key('task-new-button'),
+                    onPressed: _newTaskFocus.requestFocus,
+                    icon: const Icon(Icons.add, size: 16),
+                    label: const Text('New task'),
+                  ),
                 ],
-                onChanged: (value) => setState(() => _grouping = value),
               ),
-              _Pick<TaskSorting>(
-                key: const Key('sort'),
-                prefix: 'Sort',
-                value: _sorting,
-                options: [
-                  for (final sorting in TaskSorting.values)
-                    (sorting, sorting.label),
-                ],
-                onChanged: (value) => setState(() => _sorting = value),
-              ),
-            ],
-            _Pick<StatusFilter>(
-              key: const Key('filter-status'),
-              value: _status,
-              options: [
-                for (final status in StatusFilter.values)
-                  (status, status.label),
-              ],
-              onChanged: (value) => setState(() => _status = value),
-            ),
-            _Pick<String?>(
-              key: const Key('filter-project'),
-              value: projectId,
-              options: [
-                (null, 'All projects'),
-                for (final project in projects) (project.id, project.name),
-              ],
-              onChanged: (value) => setState(() => _projectId = value),
-            ),
-            _Pick<String?>(
-              key: const Key('filter-goal'),
-              value: goalId,
-              options: [
-                (null, 'All goals'),
-                for (final goal in goals) (goal.id, goal.title),
-              ],
-              onChanged: (value) => setState(() => _goalId = value),
-            ),
-            _Pick<String?>(
-              key: const Key('filter-priority'),
-              value: _priority,
-              options: const [
-                (null, 'Any priority'),
-                (TaskPriority.high, 'High'),
-                (TaskPriority.medium, 'Medium'),
-                (TaskPriority.none, 'No priority'),
-              ],
-              onChanged: (value) => setState(() => _priority = value),
             ),
           ],
         ),
+        // The filters fold out under the header.
+        if (_showFilters)
+          Appear(
+            child: Tile(
+              padding: const EdgeInsets.all(12),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  if (_view == _TasksView.list) ...[
+                    _Pick<TaskGrouping>(
+                      key: const Key('group'),
+                      prefix: 'Group',
+                      value: _grouping,
+                      options: [
+                        for (final grouping in TaskGrouping.values)
+                          (grouping, grouping.label),
+                      ],
+                      onChanged: (value) => setState(() => _grouping = value),
+                    ),
+                    _Pick<TaskSorting>(
+                      key: const Key('sort'),
+                      prefix: 'Sort',
+                      value: _sorting,
+                      options: [
+                        for (final sorting in TaskSorting.values)
+                          (sorting, sorting.label),
+                      ],
+                      onChanged: (value) => setState(() => _sorting = value),
+                    ),
+                  ],
+                  _Pick<StatusFilter>(
+                    key: const Key('filter-status'),
+                    value: _status,
+                    options: [
+                      for (final status in StatusFilter.values)
+                        (status, status.label),
+                    ],
+                    onChanged: (value) => setState(() => _status = value),
+                  ),
+                  _Pick<String?>(
+                    key: const Key('filter-project'),
+                    value: projectId,
+                    options: [
+                      (null, 'All projects'),
+                      for (final project in projects)
+                        (project.id, project.name),
+                    ],
+                    onChanged: (value) => setState(() => _projectId = value),
+                  ),
+                  _Pick<String?>(
+                    key: const Key('filter-goal'),
+                    value: goalId,
+                    options: [
+                      (null, 'All goals'),
+                      for (final goal in goals) (goal.id, goal.title),
+                    ],
+                    onChanged: (value) => setState(() => _goalId = value),
+                  ),
+                  _Pick<String?>(
+                    key: const Key('filter-priority'),
+                    value: _priority,
+                    options: const [
+                      (null, 'Any priority'),
+                      (TaskPriority.high, 'High'),
+                      (TaskPriority.medium, 'Medium'),
+                      (TaskPriority.none, 'No priority'),
+                    ],
+                    onChanged: (value) => setState(() => _priority = value),
+                  ),
+                  if (filtered)
+                    TextButton(
+                      key: const Key('filter-reset'),
+                      onPressed: _resetFilters,
+                      child: const Text('Reset'),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        _AddBox(controller: _newTask, focusNode: _newTaskFocus, onAdd: _add),
         if (_view == _TasksView.month)
           _MonthView(
             month: month,
@@ -281,41 +336,120 @@ class _TasksPageState extends ConsumerState<TasksPage> {
                 : 'Change the filters to see more.',
           )
         else
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              for (final group in groupTasks(
-                shown,
-                _grouping,
-                today: today,
-                projects: projects,
-                goals: goals,
-              )) ...[
+          for (final group in groupTasks(
+            shown,
+            _grouping,
+            today: today,
+            projects: projects,
+            goals: goals,
+          ))
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
                 if (group.label.isNotEmpty)
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(4, 10, 4, 6),
-                    child: Text(
-                      '${group.label} · ${group.tasks.length}',
-                      style: Ember.text(
-                        12,
-                        15,
-                        weight: 600,
-                        color: group.now ? Ember.nowInk : Ember.ink2,
-                      ),
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      children: [
+                        Text(
+                          group.label,
+                          style: Ember.caption.copyWith(
+                            color: group.label == 'Overdue'
+                                ? Ember.nowInk
+                                : Ember.ink3,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '${group.tasks.length}',
+                          key: Key('group-${group.label}'),
+                          style: Ember.caption,
+                        ),
+                      ],
                     ),
                   ),
-                for (final task in group.tasks)
-                  TaskRow(
-                    task: task,
-                    project: projectOf(task),
-                    today: today,
-                    selected: task.id == _selectedId,
-                    onTap: () => select(task),
-                    onToggle: () => _toggle(task),
-                  ),
+                for (var i = 0; i < group.tasks.length; i++) ...[
+                  if (i > 0) const SizedBox(height: 6),
+                  row(group.tasks[i]),
+                ],
               ],
+            ),
+        if (_view == _TasksView.list &&
+            _status == StatusFilter.open &&
+            doneToday.isNotEmpty)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SoftButton(
+                key: const Key('done-today'),
+                icon: _showDoneToday ? Icons.expand_less : Icons.expand_more,
+                label: 'Done today · ${doneToday.length}',
+                onPressed: () =>
+                    setState(() => _showDoneToday = !_showDoneToday),
+              ),
+              if (_showDoneToday)
+                for (final task in doneToday) ...[
+                  const SizedBox(height: 6),
+                  SizedBox(width: double.infinity, child: row(task)),
+                ],
             ],
           ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: SoftButton(
+                key: const Key('show-chart'),
+                icon: _showCompleted ? Icons.expand_less : Icons.show_chart,
+                label: 'Completed',
+                onPressed: () =>
+                    setState(() => _showCompleted = !_showCompleted),
+              ),
+            ),
+            if (_showCompleted) ...[
+              const SizedBox(height: 10),
+              Tile(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Tasks completed', style: Ember.h3),
+                              const SizedBox(height: 3),
+                              Text(
+                                summary,
+                                key: const Key('chart-summary'),
+                                style: Ember.meta,
+                              ),
+                            ],
+                          ),
+                        ),
+                        _Segments<ChartRange>(
+                          keyPrefix: 'chart',
+                          value: _range,
+                          options: [
+                            for (final range in ChartRange.values)
+                              (range, range.label, null),
+                          ],
+                          onChanged: (range) => setState(() => _range = range),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    CompletionChart(points: points, summary: summary),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
       ],
       rail: [
         if (selected == null)
@@ -343,6 +477,63 @@ class _TasksPageState extends ConsumerState<TasksPage> {
             onClose: () => setState(() => _selectedId = null),
           ),
       ],
+    );
+  }
+}
+
+/// The box to add a task (the design's `.input` with a plus and "Enter").
+class _AddBox extends StatelessWidget {
+  const _AddBox({
+    required this.controller,
+    required this.focusNode,
+    required this.onAdd,
+  });
+
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final VoidCallback onAdd;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 40,
+      padding: const EdgeInsets.only(left: 12, right: 6),
+      decoration: BoxDecoration(
+        color: Ember.tile,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.add, size: 16, color: Ember.ink2),
+          const SizedBox(width: 8),
+          Expanded(
+            child: TextField(
+              key: const Key('task-new'),
+              controller: controller,
+              focusNode: focusNode,
+              onSubmitted: (_) => onAdd(),
+              style: Ember.text(13, 16, weight: 400, color: Ember.ink),
+              decoration: const InputDecoration(
+                hintText: 'Add a task',
+                filled: false,
+                border: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+          ),
+          InkWell(
+            key: const Key('task-add'),
+            borderRadius: BorderRadius.circular(6),
+            onTap: onAdd,
+            child: const Padding(
+              padding: EdgeInsets.all(4),
+              child: Kbd('Enter'),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -506,6 +697,10 @@ class PriorityTag extends StatelessWidget {
 /// One task on one line: complete button, title, priority, due date and,
 /// on the right, the project in its colour. With [showNote], the first
 /// line of the task's notes sits under the title.
+
+/// One task as a soft tile (the design's list row): the complete ring, the
+/// title, and under it when it is due (orange when overdue), the project
+/// tag and the first line of the notes. Focus time sits on the right.
 class TaskRow extends StatelessWidget {
   const TaskRow({
     super.key,
@@ -515,161 +710,840 @@ class TaskRow extends StatelessWidget {
     required this.selected,
     required this.onTap,
     required this.onToggle,
-    this.showNote = false,
+    this.focusSeconds = 0,
+    this.showNote = true,
   });
 
   final Task task;
+
+  /// Null hides the project tag (for example on the project's own page).
   final Project? project;
   final String today;
   final bool selected;
   final VoidCallback onTap;
   final VoidCallback onToggle;
+  final int focusSeconds;
   final bool showNote;
 
   @override
   Widget build(BuildContext context) {
     final done = task.status == TaskStatus.done;
     final due = task.dueDate;
+    final late = !done && due != null && due.compareTo(today) < 0;
     final note = showNote ? firstLine(task.notes) : null;
-    return Appear(child: _row(context, done, due, note));
-  }
-
-  Widget _row(BuildContext context, bool done, String? due, String? note) {
-    return Material(
-      color: selected ? Ember.tile : Colors.transparent,
-      borderRadius: BorderRadius.circular(8),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        key: Key('task-${task.id}'),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _line(context, done, due),
-              if (note != null)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(34, 0, 8, 4),
-                  child: Row(
+    final project = this.project;
+    return Tile(
+      key: Key('task-${task.id}'),
+      selected: selected,
+      color: selected ? Ember.white : Ember.tile,
+      onTap: onTap,
+      padding: const EdgeInsets.fromLTRB(9, 7, 14, 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TaskRing(
+            done: done,
+            priority: task.priority,
+            label: '${done ? 'Undo' : 'Complete'} ${task.title}',
+            onTap: onToggle,
+          ),
+          const SizedBox(width: 7),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 5),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AnimatedDefaultTextStyle(
+                    duration: Motion.of(context, Motion.base),
+                    curve: Motion.soft,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: done
+                        ? Ember.item.copyWith(
+                            color: Ember.ink3,
+                            decoration: TextDecoration.lineThrough,
+                          )
+                        : Ember.item.copyWith(color: Ember.ink),
+                    child: Text(task.title),
+                  ),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
-                      const Icon(Icons.notes, size: 13, color: Ember.ink3),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          note,
-                          key: Key('task-note-${task.id}'),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Ember.meta,
+                      Text(
+                        due == null
+                            ? 'No date'
+                            : formatRelativeDay(due, today: today),
+                        key: Key('task-when-${task.id}'),
+                        style: Ember.meta.copyWith(
+                          color: late ? Ember.nowInk : Ember.ink2,
                         ),
                       ),
+                      if (task.priority != TaskPriority.none)
+                        PriorityTag(task.priority),
+                      if (project != null)
+                        Tag(
+                          project.name,
+                          background: ProjectColors.of(project.color).soft,
+                          foreground: ProjectColors.of(project.color).text,
+                        ),
+                      if (note != null)
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 320),
+                          child: Text(
+                            '· $note',
+                            key: Key('task-note-${task.id}'),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Ember.meta,
+                          ),
+                        ),
                     ],
                   ),
+                ],
+              ),
+            ),
+          ),
+          if (focusSeconds > 0)
+            Padding(
+              padding: const EdgeInsets.only(top: 5, left: 10),
+              child: Text(
+                formatWorked(focusSeconds),
+                style: Ember.meta.copyWith(
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The details of one task (the design's right panel): change it in place,
+/// focus on it, write notes, reschedule or delete it. Project, due date and
+/// priority save as soon as they change; the title and the notes save when
+/// the cursor leaves them or with their Save button.
+class TaskForm extends ConsumerStatefulWidget {
+  const TaskForm({
+    super.key,
+    required this.task,
+    required this.projects,
+    required this.goals,
+    required this.today,
+    required this.onClose,
+  });
+
+  final Task task;
+  final List<Project> projects;
+  final List<Goal> goals;
+  final String today;
+  final VoidCallback onClose;
+
+  @override
+  ConsumerState<TaskForm> createState() => TaskFormState();
+}
+
+class TaskFormState extends ConsumerState<TaskForm> {
+  late final _title = TextEditingController(text: widget.task.title);
+  late final _notes = TextEditingController(text: widget.task.notes ?? '');
+  final _titleFocus = FocusNode();
+  final _notesFocus = FocusNode();
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _titleFocus.addListener(() {
+      if (!_titleFocus.hasFocus) _saveTitle();
+    });
+    _notesFocus.addListener(() {
+      if (!_notesFocus.hasFocus) _saveNotes();
+    });
+    _notes.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _title.dispose();
+    _notes.dispose();
+    _titleFocus.dispose();
+    _notesFocus.dispose();
+    super.dispose();
+  }
+
+  /// Saves the task with the given changes; everything else stays.
+  Future<void> _update({
+    String? title,
+    String? Function()? projectId,
+    String? Function()? dueDate,
+    String? priority,
+    String? notes,
+    String done = 'Saved.',
+    bool quiet = true,
+  }) async {
+    final task = widget.task;
+    try {
+      await ref
+          .read(taskRepositoryProvider)
+          .updateTask(
+            task.id,
+            title: title ?? task.title,
+            projectId: projectId == null ? task.projectId : projectId(),
+            dueDate: dueDate == null ? task.dueDate : dueDate(),
+            priority: priority ?? task.priority,
+            notes: notes,
+          );
+      if (!quiet && mounted) showMessage(context, done);
+    } catch (error) {
+      // The typed text stays in the boxes, so nothing is lost.
+      if (mounted) showMessage(context, 'Could not save. Try again. ($error)');
+    }
+  }
+
+  Future<void> _saveTitle() async {
+    final title = _title.text.trim();
+    if (title.isEmpty) {
+      setState(() => _error = 'Give the task a title.');
+      return;
+    }
+    if (_error != null) setState(() => _error = null);
+    if (title == widget.task.title) return;
+    await _update(title: title);
+  }
+
+  Future<void> _saveNotes() async {
+    if (_notes.text.trim() == (widget.task.notes ?? '')) return;
+    await _update(notes: _notes.text, quiet: false, done: 'Notes saved.');
+  }
+
+  Future<void> _pickDate() async {
+    final now = ref.read(clockProvider)();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: parseDayKey(widget.task.dueDate) ?? now,
+      firstDate: DateTime(now.year - 5),
+      lastDate: DateTime(now.year + 30),
+      helpText: 'Due date',
+    );
+    if (picked != null && mounted) {
+      await _update(dueDate: () => dayKey(picked));
+    }
+  }
+
+  Future<void> _delete() async {
+    final confirmed = await confirmDialog(
+      context,
+      title: 'Delete ${widget.task.title}?',
+      message: 'The task is removed from all your devices.',
+      confirmLabel: 'Delete',
+    );
+    if (!confirmed) return;
+    try {
+      await ref.read(taskRepositoryProvider).deleteTask(widget.task.id);
+      widget.onClose();
+    } catch (error) {
+      if (mounted) showMessage(context, 'Could not delete. ($error)');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final task = widget.task;
+    final done = task.status == TaskStatus.done;
+    final areas = ref.watch(lifeAreasProvider).value ?? const <LifeArea>[];
+    final sessions =
+        (ref.watch(focusSessionsProvider).value ?? const <FocusSession>[])
+            .where((session) => session.taskId == task.id)
+            .toList();
+    final totalSeconds = sessions.fold<int>(
+      0,
+      (sum, session) => sum + session.focusSeconds,
+    );
+    final projectIds = {for (final project in widget.projects) project.id};
+    // A task serves its project; the project serves the goal.
+    final project = widget.projects
+        .where((p) => p.id == task.projectId)
+        .firstOrNull;
+    final goal = widget.goals
+        .where((goal) => goal.id == project?.goalId)
+        .firstOrNull;
+    final area = areas.where((a) => a.id == goal?.lifeAreaId).firstOrNull;
+    final due = task.dueDate;
+    final late = !done && due != null && due.compareTo(widget.today) < 0;
+    final created = dayKeyOfStoredTime(task.createdAt);
+    final finished = dayKeyOfStoredTime(task.completedAt);
+    final notesChanged = _notes.text.trim() != (task.notes ?? '');
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                '${project?.name ?? 'No project'}  /  Task',
+                overflow: TextOverflow.ellipsis,
+                style: Ember.caption.copyWith(color: Ember.ink2),
+              ),
+            ),
+            IconButton(
+              key: const Key('task-close'),
+              tooltip: 'Close',
+              iconSize: 16,
+              visualDensity: VisualDensity.compact,
+              color: Ember.ink2,
+              onPressed: widget.onClose,
+              icon: const Icon(Icons.close),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TaskRing(
+              done: done,
+              priority: task.priority,
+              size: 22,
+              label: '${done ? 'Undo' : 'Complete'} ${task.title}',
+              onTap: () => ref
+                  .read(taskRepositoryProvider)
+                  .setDone(task.id, done: !done),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TextField(
+                    key: const Key('task-title'),
+                    controller: _title,
+                    focusNode: _titleFocus,
+                    maxLines: null,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => _saveTitle(),
+                    style: Ember.text(
+                      22,
+                      28,
+                      weight: 700,
+                      color: Ember.ink,
+                      letterSpacing: -0.015,
+                    ),
+                    decoration: InputDecoration(
+                      filled: false,
+                      isDense: true,
+                      contentPadding: const EdgeInsets.only(top: 3),
+                      border: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      errorBorder: InputBorder.none,
+                      focusedErrorBorder: InputBorder.none,
+                      errorText: _error,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    done
+                        ? 'Done${finished == null ? '' : ' · ${formatRelativeDay(finished, today: widget.today)}'}'
+                        : 'Open${created == null ? '' : ' · added ${formatShortDay(created, today: widget.today)}'}',
+                    style: Ember.meta,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 18),
+        _FocusBox(task: task, totalSeconds: totalSeconds),
+        const SizedBox(height: 20),
+        _Field(
+          label: 'Project',
+          child: _Pick<String?>(
+            key: const Key('task-project'),
+            value: projectIds.contains(task.projectId) ? task.projectId : null,
+            options: [
+              (null, 'No project'),
+              for (final project in widget.projects) (project.id, project.name),
+            ],
+            onChanged: (value) => _update(projectId: () => value),
+          ),
+        ),
+        _Field(
+          label: 'Goal',
+          child: goal == null
+              ? Text('Set by the project', style: Ember.meta)
+              : Align(
+                  alignment: Alignment.centerLeft,
+                  child: NameChip(
+                    key: const Key('task-served-goal'),
+                    label: goal.title,
+                    swatch: GoalColors.of(goal.color),
+                    icon: ItemIcons.of(
+                      goal.icon,
+                      orElse: ItemIcons.goalFallback,
+                    ),
+                  ),
+                ),
+        ),
+        _Field(
+          label: 'Life area',
+          child: area == null
+              ? Text('—', style: Ember.meta)
+              : Row(
+                  children: [
+                    AreaMark(color: area.color, icon: area.icon, size: 14),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        area.name,
+                        overflow: TextOverflow.ellipsis,
+                        style: Ember.item.copyWith(color: Ember.ink),
+                      ),
+                    ),
+                  ],
+                ),
+        ),
+        _Field(
+          label: 'Due',
+          child: Row(
+            children: [
+              Flexible(
+                child: InkWell(
+                  key: const Key('task-date'),
+                  borderRadius: BorderRadius.circular(6),
+                  onTap: _pickDate,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Text(
+                      due == null
+                          ? 'Pick a date'
+                          : formatRelativeDay(due, today: widget.today),
+                      style: Ember.item.copyWith(
+                        color: late
+                            ? Ember.nowInk
+                            : due == null
+                            ? Ember.ink2
+                            : Ember.ink,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              if (due != widget.today)
+                SoftButton(
+                  key: const Key('task-date-today'),
+                  label: 'Today',
+                  onPressed: () => _update(dueDate: () => widget.today),
+                ),
+              if (due != null)
+                IconButton(
+                  key: const Key('task-date-clear'),
+                  tooltip: 'Remove the date',
+                  iconSize: 14,
+                  visualDensity: VisualDensity.compact,
+                  color: Ember.ink2,
+                  onPressed: () => _update(dueDate: () => null),
+                  icon: const Icon(Icons.close),
                 ),
             ],
+          ),
+        ),
+        _Field(
+          label: 'Priority',
+          child: Wrap(
+            spacing: 6,
+            children: [
+              for (final (value, label) in _priorityLabels)
+                _PriorityChoice(
+                  key: Key('priority-$value'),
+                  priority: value,
+                  label: label,
+                  chosen: task.priority == value,
+                  onTap: () => _update(priority: value),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(child: Text('Time', style: Ember.h3)),
+            Text(
+              totalSeconds == 0
+                  ? 'No focus time yet'
+                  : '${formatWorked(totalSeconds)} focused',
+              key: const Key('task-focus-time'),
+              style: Ember.meta,
+            ),
+          ],
+        ),
+        const SizedBox(height: 18),
+        Text('Focus sessions', style: Ember.h3),
+        const SizedBox(height: 10),
+        if (sessions.isEmpty)
+          Text('None yet. Start one above.', style: Ember.meta)
+        else
+          for (final session in sessions.take(6))
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(_sessionWhen(session), style: Ember.meta),
+                  ),
+                  Text(formatWorked(session.focusSeconds), style: Ember.meta),
+                ],
+              ),
+            ),
+        const SizedBox(height: 18),
+        Text('Notes', style: Ember.h3),
+        const SizedBox(height: 8),
+        TextField(
+          key: const Key('task-notes'),
+          controller: _notes,
+          focusNode: _notesFocus,
+          minLines: 4,
+          maxLines: 12,
+          keyboardType: TextInputType.multiline,
+          decoration: const InputDecoration(
+            hintText: 'Anything to remember about this task',
+          ),
+        ),
+        if (notesChanged) ...[
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerRight,
+            child: FilledButton(
+              key: const Key('task-save'),
+              onPressed: () {
+                _notesFocus.unfocus();
+                _saveNotes();
+              },
+              child: const Text('Save notes'),
+            ),
+          ),
+        ],
+        const SizedBox(height: 20),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            SoftButton(
+              key: const Key('task-reschedule'),
+              icon: Icons.calendar_today_outlined,
+              label: 'Reschedule',
+              onPressed: _pickDate,
+            ),
+            SoftButton(
+              key: const Key('task-postpone'),
+              label: 'Postpone to tomorrow',
+              onPressed: () => _update(
+                dueDate: () => addDays(widget.today, 1),
+                quiet: false,
+                done: 'Moved to tomorrow.',
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            key: const Key('task-delete'),
+            onPressed: _delete,
+            icon: const Icon(Icons.delete_outline, size: 16),
+            label: const Text('Delete task'),
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _sessionWhen(FocusSession session) {
+    final start = parseStoredTime(session.startedAt);
+    if (start == null) return '';
+    final day = formatRelativeDay(dayKey(start), today: widget.today);
+    return '$day · ${formatTime(timeOf(start.hour * 60 + start.minute))}';
+  }
+}
+
+/// One line of the details list: a grey label and its value.
+class _Field extends StatelessWidget {
+  const _Field({required this.label, required this.child});
+
+  final String label;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        children: [
+          SizedBox(width: 110, child: Text(label, style: Ember.meta)),
+          Expanded(
+            child: Align(alignment: Alignment.centerLeft, child: child),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A priority button with the ring colour it gives the task.
+class _PriorityChoice extends StatelessWidget {
+  const _PriorityChoice({
+    super.key,
+    required this.priority,
+    required this.label,
+    required this.chosen,
+    required this.onTap,
+  });
+
+  final String priority;
+  final String label;
+  final bool chosen;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final ring = switch (priority) {
+      TaskPriority.high => Ember.now,
+      TaskPriority.medium => Ember.amber,
+      _ => Ember.ring,
+    };
+    return Semantics(
+      button: true,
+      selected: chosen,
+      child: AnimatedContainer(
+        duration: Motion.of(context, Motion.base),
+        curve: Motion.soft,
+        decoration: BoxDecoration(
+          color: chosen ? Ember.ink : Ember.tile,
+          borderRadius: BorderRadius.circular(7),
+        ),
+        child: Material(
+          type: MaterialType.transparency,
+          borderRadius: BorderRadius.circular(7),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(8, 5, 10, 5),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 11,
+                    height: 11,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: ring, width: 1.6),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    label,
+                    style: Ember.text(
+                      12,
+                      15,
+                      color: chosen ? Ember.white : Ember.ink,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),
     );
   }
+}
 
-  Widget _line(BuildContext context, bool done, String? due) {
-    return Row(
-      children: [
-        TaskRing(
-          done: done,
-          priority: task.priority,
-          label: '${done ? 'Undo' : 'Complete'} ${task.title}',
-          onTap: onToggle,
+/// Focus on this task from its details (the design's orange "Focus running"
+/// tile). While its timer runs the clock moves and it can be paused or
+/// stopped here; otherwise it starts a session.
+class _FocusBox extends ConsumerStatefulWidget {
+  const _FocusBox({required this.task, required this.totalSeconds});
+
+  final Task task;
+  final int totalSeconds;
+
+  @override
+  ConsumerState<_FocusBox> createState() => _FocusBoxState();
+}
+
+class _FocusBoxState extends ConsumerState<_FocusBox> {
+  Timer? _tick;
+
+  @override
+  void dispose() {
+    _tick?.cancel();
+    super.dispose();
+  }
+
+  /// Ticks once a second only while this task's timer runs.
+  void _ticking(bool on) {
+    if (on && _tick == null) {
+      _tick = Timer.periodic(const Duration(seconds: 1), (_) {
+        if (mounted) setState(() {});
+      });
+    } else if (!on && _tick != null) {
+      _tick!.cancel();
+      _tick = null;
+    }
+  }
+
+  Future<void> _stop() async {
+    try {
+      final saved = await ref.read(focusRepositoryProvider).stop();
+      if (!mounted) return;
+      showMessage(
+        context,
+        saved == null
+            ? 'Under a minute, so it was not saved as a session.'
+            : 'Saved ${formatWorked(saved)} of focus.',
+      );
+    } catch (error) {
+      if (mounted) showMessage(context, 'Could not stop. ($error)');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final timer = ref.watch(focusTimerProvider).value;
+    final mine = timer != null && timer.taskId == widget.task.id;
+    final running = mine && isRunning(timer);
+    _ticking(running);
+    final worked = mine ? workedMs(timer, ref.watch(clockProvider)()) : 0;
+    final total = widget.totalSeconds + worked ~/ 1000;
+
+    if (mine) {
+      return AnimatedContainer(
+        duration: Motion.of(context, Motion.base),
+        curve: Motion.soft,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: Ember.nowTint,
+          borderRadius: BorderRadius.circular(12),
         ),
-        const SizedBox(width: 6),
-        Expanded(
-          child: Row(
-            children: [
-              Flexible(
-                // A completed title fades to grey.
-                child: AnimatedDefaultTextStyle(
-                  duration: Motion.of(context, Motion.base),
-                  curve: Motion.soft,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: done
-                      ? Ember.item.copyWith(
-                          color: Ember.ink3,
-                          decoration: TextDecoration.lineThrough,
-                        )
-                      : Ember.item.copyWith(color: Ember.ink),
-                  child: Text(task.title),
-                ),
+        child: Row(
+          children: [
+            _RoundButton(
+              key: const Key('task-focus-pause'),
+              icon: running ? Icons.pause_rounded : Icons.play_arrow_rounded,
+              color: Ember.now,
+              label: running ? 'Pause focus' : 'Resume focus',
+              onTap: () => ref.read(focusRepositoryProvider).togglePause(),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    running ? 'Focus running' : 'Focus paused',
+                    style: Ember.item.copyWith(color: Ember.ink),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    '${formatClock(worked)} now · ${formatWorked(total)} total',
+                    style: Ember.meta.copyWith(
+                      color: Ember.nowInk,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ],
               ),
-              if (task.priority != TaskPriority.none) ...[
-                const SizedBox(width: 8),
-                PriorityTag(task.priority),
-              ],
-            ],
-          ),
+            ),
+            SoftButton(
+              key: const Key('task-focus-stop'),
+              label: 'Stop and save',
+              background: Ember.white,
+              onPressed: _stop,
+            ),
+          ],
         ),
-        if (due != null) ...[
-          const SizedBox(width: 10),
-          Text(
-            formatRelativeDay(due, today: today),
-            style: Ember.text(
-              12,
-              15,
-              weight: isDueNow(task, today) ? 600 : 400,
-              color: isDueNow(task, today) ? Ember.nowInk : Ember.ink2,
+      );
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: Ember.tile,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          _RoundButton(
+            key: const Key('task-start-focus'),
+            icon: Icons.play_arrow_rounded,
+            color: Ember.ink,
+            label: 'Start focus',
+            onTap: widget.task.status == TaskStatus.done
+                ? null
+                : () => startFocus(context, ref, taskId: widget.task.id),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Focus', style: Ember.item.copyWith(color: Ember.ink)),
+                const SizedBox(height: 3),
+                Text(
+                  total == 0
+                      ? 'Start a session on this task'
+                      : '${formatWorked(total)} so far',
+                  style: Ember.meta,
+                ),
+              ],
             ),
           ),
         ],
-        if (project != null) ...[
-          const SizedBox(width: 10),
-          NameChip(
-            label: project!.name,
-            swatch: ProjectColors.of(project!.color),
-          ),
-        ],
-        const SizedBox(width: 4),
-      ],
+      ),
     );
   }
 }
 
-/// The focus time saved to a task, and a button to start a session on it.
-class _FocusLine extends ConsumerWidget {
-  const _FocusLine({required this.task});
+class _RoundButton extends StatelessWidget {
+  const _RoundButton({
+    super.key,
+    required this.icon,
+    required this.color,
+    required this.label,
+    required this.onTap,
+  });
 
-  final Task task;
+  final IconData icon;
+  final Color color;
+  final String label;
+  final VoidCallback? onTap;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final sessions =
-        ref.watch(focusSessionsProvider).value ?? const <FocusSession>[];
-    final seconds = secondsByTask(sessions)[task.id] ?? 0;
-    return Row(
-      children: [
-        Icon(Icons.timer_outlined, size: 16, color: Ember.ink2),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            seconds == 0
-                ? 'No focus time yet'
-                : 'Focus time: ${formatWorked(seconds)}',
-            key: const Key('task-focus-time'),
-            style: Ember.meta,
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: label,
+      child: Pressable(
+        child: Material(
+          color: onTap == null ? Ember.ring : color,
+          shape: const CircleBorder(),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: SizedBox(
+              width: 30,
+              height: 30,
+              child: Icon(icon, size: 16, color: Ember.white),
+            ),
           ),
         ),
-        if (task.status != TaskStatus.done)
-          OutlinedButton.icon(
-            key: const Key('task-start-focus'),
-            onPressed: () async {
-              await startFocus(context, ref, taskId: task.id);
-              ref.read(currentPageProvider.notifier).open(AppPage.focus);
-            },
-            icon: const Icon(Icons.play_arrow_rounded, size: 16),
-            label: const Text('Start focus'),
-          ),
-      ],
+      ),
     );
   }
 }
@@ -869,241 +1743,3 @@ class _MonthView extends StatelessWidget {
 }
 
 /// The details of one task, to change or delete it.
-class TaskForm extends ConsumerStatefulWidget {
-  const TaskForm({
-    super.key,
-    required this.task,
-    required this.projects,
-    required this.goals,
-    required this.today,
-    required this.onClose,
-  });
-
-  final Task task;
-  final List<Project> projects;
-  final List<Goal> goals;
-  final String today;
-  final VoidCallback onClose;
-
-  @override
-  ConsumerState<TaskForm> createState() => TaskFormState();
-}
-
-class TaskFormState extends ConsumerState<TaskForm> {
-  late final _title = TextEditingController(text: widget.task.title);
-  late final _notes = TextEditingController(text: widget.task.notes ?? '');
-  late String? _projectId = widget.task.projectId;
-  late String? _dueDate = widget.task.dueDate;
-  late String _priority = widget.task.priority;
-  String? _error;
-
-  @override
-  void dispose() {
-    _title.dispose();
-    _notes.dispose();
-    super.dispose();
-  }
-
-  Future<void> _pickDate() async {
-    final now = ref.read(clockProvider)();
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: parseDayKey(_dueDate) ?? now,
-      firstDate: DateTime(now.year - 5),
-      lastDate: DateTime(now.year + 30),
-      helpText: 'Due date',
-    );
-    if (picked != null && mounted) {
-      setState(() => _dueDate = dayKey(picked));
-    }
-  }
-
-  Future<void> _save() async {
-    if (_title.text.trim().isEmpty) {
-      setState(() => _error = 'Give the task a title.');
-      return;
-    }
-    try {
-      await ref
-          .read(taskRepositoryProvider)
-          .updateTask(
-            widget.task.id,
-            title: _title.text,
-            projectId: _projectId,
-            dueDate: _dueDate,
-            priority: _priority,
-            notes: _notes.text,
-          );
-      if (!mounted) return;
-      setState(() => _error = null);
-      showMessage(context, 'Saved.');
-    } catch (error) {
-      // The typed text stays in the boxes, so nothing is lost.
-      if (mounted) showMessage(context, 'Could not save. Try again. ($error)');
-    }
-  }
-
-  Future<void> _delete() async {
-    final confirmed = await confirmDialog(
-      context,
-      title: 'Delete ${widget.task.title}?',
-      message: 'The task is removed from all your devices.',
-      confirmLabel: 'Delete',
-    );
-    if (!confirmed) return;
-    try {
-      await ref.read(taskRepositoryProvider).deleteTask(widget.task.id);
-      widget.onClose();
-    } catch (error) {
-      if (mounted) showMessage(context, 'Could not delete. ($error)');
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final projectIds = {for (final project in widget.projects) project.id};
-    // A task serves its project; the project serves the goal.
-    final project = widget.projects
-        .where((p) => p.id == _projectId)
-        .firstOrNull;
-    final servedGoal = widget.goals
-        .where((goal) => goal.id == project?.goalId)
-        .firstOrNull;
-    final dueDate = _dueDate;
-    final fieldStyle = Ember.text(13, 16, weight: 400, color: Ember.ink);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            Expanded(child: Text('Task', style: Ember.h2)),
-            IconButton(
-              tooltip: 'Close',
-              iconSize: 16,
-              visualDensity: VisualDensity.compact,
-              onPressed: widget.onClose,
-              icon: const Icon(Icons.close),
-            ),
-          ],
-        ),
-        const SizedBox(height: 14),
-        const FieldLabel('Title'),
-        TextField(
-          key: const Key('task-title'),
-          controller: _title,
-          onSubmitted: (_) => _save(),
-          decoration: InputDecoration(errorText: _error),
-        ),
-        const SizedBox(height: 14),
-        const FieldLabel('Project'),
-        DropdownButtonFormField<String?>(
-          key: const Key('task-project'),
-          initialValue: projectIds.contains(_projectId) ? _projectId : null,
-          isExpanded: true,
-          style: fieldStyle,
-          items: [
-            const DropdownMenuItem(value: null, child: Text('None')),
-            for (final project in widget.projects)
-              DropdownMenuItem(
-                value: project.id,
-                child: Text(project.name, overflow: TextOverflow.ellipsis),
-              ),
-          ],
-          onChanged: (value) => setState(() => _projectId = value),
-        ),
-        if (servedGoal != null) ...[
-          const SizedBox(height: 6),
-          Text(
-            'Serves the goal: ${servedGoal.title}',
-            key: const Key('task-served-goal'),
-            style: Ember.meta,
-          ),
-        ],
-        const SizedBox(height: 14),
-        const FieldLabel('Due date'),
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                key: const Key('task-date'),
-                onPressed: _pickDate,
-                icon: const Icon(Icons.event_outlined, size: 16),
-                label: Text(
-                  dueDate == null
-                      ? 'Pick a date'
-                      : formatRelativeDay(dueDate, today: widget.today),
-                ),
-              ),
-            ),
-            const SizedBox(width: 6),
-            OutlinedButton(
-              key: const Key('task-date-today'),
-              onPressed: () => setState(() => _dueDate = widget.today),
-              child: const Text('Today'),
-            ),
-            if (dueDate != null)
-              IconButton(
-                key: const Key('task-date-clear'),
-                tooltip: 'Remove the date',
-                iconSize: 16,
-                visualDensity: VisualDensity.compact,
-                onPressed: () => setState(() => _dueDate = null),
-                icon: const Icon(Icons.close),
-              ),
-          ],
-        ),
-        const SizedBox(height: 14),
-        const FieldLabel('Priority'),
-        Wrap(
-          spacing: 6,
-          children: [
-            for (final (value, label) in _priorityLabels)
-              ChoiceChip(
-                key: Key('priority-$value'),
-                label: Text(label),
-                selected: _priority == value,
-                showCheckmark: false,
-                labelStyle: Ember.text(
-                  12,
-                  15,
-                  color: _priority == value ? Ember.white : Ember.ink,
-                ),
-                selectedColor: Ember.ink,
-                backgroundColor: Ember.tile,
-                side: BorderSide.none,
-                visualDensity: VisualDensity.compact,
-                onSelected: (_) => setState(() => _priority = value),
-              ),
-          ],
-        ),
-        const SizedBox(height: 14),
-        const FieldLabel('Notes'),
-        TextField(
-          key: const Key('task-notes'),
-          controller: _notes,
-          minLines: 4,
-          maxLines: 12,
-          keyboardType: TextInputType.multiline,
-          decoration: const InputDecoration(
-            hintText: 'Anything to remember about this task',
-          ),
-        ),
-        const SizedBox(height: 14),
-        _FocusLine(task: widget.task),
-        const SizedBox(height: 18),
-        FilledButton(
-          key: const Key('task-save'),
-          onPressed: _save,
-          child: const Text('Save'),
-        ),
-        const SizedBox(height: 8),
-        TextButton.icon(
-          key: const Key('task-delete'),
-          onPressed: _delete,
-          icon: const Icon(Icons.delete_outline, size: 16),
-          label: const Text('Delete task'),
-        ),
-      ],
-    );
-  }
-}
