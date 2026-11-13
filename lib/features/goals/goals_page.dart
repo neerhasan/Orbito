@@ -74,9 +74,35 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
               ? const []
               : projects.where((p) => p.goalId == selected.id).toList(),
           today: today,
+          nextColor: GoalColors.firstUnused(goals.map((g) => g.color)),
           onClose: () => setState(() => _selectedId = null),
         ),
       ],
+    );
+  }
+}
+
+/// The square with the goal's icon in the goal's colour.
+class _GoalIcon extends StatelessWidget {
+  const _GoalIcon(this.goal);
+
+  final Goal goal;
+
+  @override
+  Widget build(BuildContext context) {
+    final swatch = GoalColors.of(goal.color);
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: swatch.soft,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Icon(
+        ItemIcons.of(goal.icon, orElse: ItemIcons.goalFallback),
+        size: 20,
+        color: swatch.text,
+      ),
     );
   }
 }
@@ -109,6 +135,8 @@ class _GoalTile extends StatelessWidget {
       onTap: onTap,
       child: Row(
         children: [
+          _GoalIcon(goal),
+          const SizedBox(width: 18),
           Expanded(
             flex: 5,
             child: Column(
@@ -179,6 +207,7 @@ class _GoalForm extends ConsumerStatefulWidget {
     required this.areas,
     required this.projects,
     required this.today,
+    required this.nextColor,
     required this.onClose,
   });
 
@@ -189,6 +218,9 @@ class _GoalForm extends ConsumerStatefulWidget {
   /// The projects that serve this goal.
   final List<Project> projects;
   final String today;
+
+  /// The colour a new goal starts with.
+  final String nextColor;
   final VoidCallback onClose;
 
   @override
@@ -202,6 +234,12 @@ class _GoalFormState extends ConsumerState<_GoalForm> {
   );
   late String? _areaId = widget.goal?.lifeAreaId;
   late String? _targetDate = widget.goal?.targetDate;
+  late String _color = GoalColors.all.containsKey(widget.goal?.color)
+      ? widget.goal!.color!
+      : (widget.goal == null ? widget.nextColor : GoalColors.fallback);
+  late String _icon = ItemIcons.all.containsKey(widget.goal?.icon)
+      ? widget.goal!.icon!
+      : ItemIcons.goalFallback;
   String? _error;
 
   @override
@@ -245,6 +283,8 @@ class _GoalFormState extends ConsumerState<_GoalForm> {
           lifeAreaId: _areaId,
           targetDate: _targetDate,
           doneWhen: doneWhen,
+          color: _color,
+          icon: _icon,
         );
         if (!mounted) return;
         _title.clear();
@@ -252,6 +292,7 @@ class _GoalFormState extends ConsumerState<_GoalForm> {
         setState(() {
           _error = null;
           _targetDate = null;
+          _icon = ItemIcons.goalFallback;
         });
       } else {
         await plan.updateGoal(
@@ -260,6 +301,8 @@ class _GoalFormState extends ConsumerState<_GoalForm> {
           lifeAreaId: _areaId,
           targetDate: _targetDate,
           doneWhen: doneWhen,
+          color: _color,
+          icon: _icon,
         );
         if (!mounted) return;
         setState(() => _error = null);
@@ -392,6 +435,21 @@ class _GoalFormState extends ConsumerState<_GoalForm> {
             hintText: 'How you will know the goal is reached',
           ),
         ),
+        const SizedBox(height: 14),
+        const FieldLabel('Colour'),
+        SwatchPicker(
+          colors: GoalColors.all,
+          selected: _color,
+          onChanged: (name) => setState(() => _color = name),
+        ),
+        const SizedBox(height: 14),
+        const FieldLabel('Icon'),
+        IconPicker(
+          icons: ItemIcons.all,
+          selected: _icon,
+          swatch: GoalColors.of(_color),
+          onChanged: (name) => setState(() => _icon = name),
+        ),
         const SizedBox(height: 18),
         FilledButton(
           key: const Key('goal-save'),
@@ -417,6 +475,7 @@ class _GoalFormState extends ConsumerState<_GoalForm> {
                   NameChip(
                     label: project.name,
                     swatch: ProjectColors.of(project.color),
+                    icon: ItemIcons.of(project.icon),
                   ),
               ],
             ),

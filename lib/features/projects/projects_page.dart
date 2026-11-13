@@ -4,12 +4,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/providers.dart';
 import '../../data/local/app_database.dart';
 import '../../data/repositories/plan_repository.dart';
+import '../../domain/dates.dart';
 import '../../domain/progress.dart';
 import '../../ui/ember.dart';
 import '../../ui/widgets.dart';
+import '../tasks/tasks_page.dart' show TaskForm, TaskRow;
 
-/// The Projects page: the list on the left, and on the right a form to add
-/// a project or the details of the selected one.
+/// The Projects page. It has two views:
+/// - the list of projects, with a form on the right to add one;
+/// - one open project with all its tasks and their notes. On the right is
+///   the selected task, or the form to change the project.
 class ProjectsPage extends ConsumerStatefulWidget {
   const ProjectsPage({super.key});
 
@@ -18,61 +22,231 @@ class ProjectsPage extends ConsumerStatefulWidget {
 }
 
 class _ProjectsPageState extends ConsumerState<ProjectsPage> {
-  String? _selectedId;
+  /// The project that is open, or null for the list.
+  String? _openId;
+
+  /// The task selected inside the open project.
+  String? _taskId;
+
+  final _newTask = TextEditingController();
+
+  @override
+  void dispose() {
+    _newTask.dispose();
+    super.dispose();
+  }
+
+  void _open(String? projectId) => setState(() {
+    _openId = projectId;
+    _taskId = null;
+    _newTask.clear();
+  });
+
+  Future<void> _addTask(Project project) async {
+    final userId = ref.read(userIdProvider);
+    final title = _newTask.text.trim();
+    if (userId == null || title.isEmpty) return;
+    try {
+      await ref
+          .read(taskRepositoryProvider)
+          .addTask(userId: userId, title: title, projectId: project.id);
+      _newTask.clear();
+    } catch (error) {
+      if (mounted) showMessage(context, 'Could not add the task. ($error)');
+    }
+  }
+
+  Future<void> _toggle(Task task) async {
+    try {
+      await ref
+          .read(taskRepositoryProvider)
+          .setDone(task.id, done: task.status != TaskStatus.done);
+    } catch (error) {
+      if (mounted) showMessage(context, 'Could not save. Try again. ($error)');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final projects = ref.watch(projectsProvider).value ?? const <Project>[];
     final goals = ref.watch(goalsProvider).value ?? const <Goal>[];
     final tasks = ref.watch(tasksProvider).value ?? const <Task>[];
-    final selected = projects.where((p) => p.id == _selectedId).firstOrNull;
+    final today = dayKey(ref.watch(clockProvider)());
     List<Task> tasksOf(Project project) =>
         tasks.where((task) => task.projectId == project.id).toList();
+    Goal? goalOf(Project project) =>
+        goals.where((goal) => goal.id == project.goalId).firstOrNull;
 
+    final open = projects.where((p) => p.id == _openId).firstOrNull;
+    if (open == null) {
+      return PageLayout(
+        main: [
+          const PageHeader(
+            title: 'Projects',
+            subtitle: 'Percent comes from tasks done.',
+          ),
+          if (projects.isEmpty)
+            const EmptyHint(
+              title: 'No projects yet',
+              text: 'A project groups tasks that serve one goal.',
+            )
+          else
+            Column(
+              children: [
+                for (final project in projects)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: _ProjectTile(
+                      project: project,
+                      goal: goalOf(project),
+                      tasks: tasksOf(project),
+                      onTap: () => _open(project.id),
+                    ),
+                  ),
+              ],
+            ),
+        ],
+        rail: [
+          _ProjectForm(
+            key: const ValueKey('new'),
+            project: null,
+            goals: goals,
+            tasks: const [],
+            nextColor: ProjectColors.firstUnused(projects.map((p) => p.color)),
+            onClose: () {},
+          ),
+        ],
+      );
+    }
+
+    final openTasks = tasksOf(open);
+    // Open tasks first, then the completed ones.
+    final ordered = [
+      ...openTasks.where((task) => task.status != TaskStatus.done),
+      ...openTasks.where((task) => task.status == TaskStatus.done),
+    ];
+    final selectedTask = openTasks
+        .where((task) => task.id == _taskId)
+        .firstOrNull;
     return PageLayout(
       main: [
-        const PageHeader(
-          title: 'Projects',
-          subtitle: 'Percent comes from tasks done.',
+        _ProjectHeader(
+          project: open,
+          goal: goalOf(open),
+          tasks: openTasks,
+          onBack: () => _open(null),
         ),
-        if (projects.isEmpty)
+        const SizedBox(height: 22),
+        Text('Tasks', style: Ember.h3),
+        const SizedBox(height: 8),
+        if (ordered.isEmpty)
           const EmptyHint(
-            title: 'No projects yet',
-            text: 'A project groups tasks that serve one goal.',
+            title: 'No tasks yet',
+            text: 'Add the first task of this project below.',
           )
         else
           Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              for (final project in projects)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: _ProjectTile(
-                    project: project,
-                    goal: goals
-                        .where((goal) => goal.id == project.goalId)
-                        .firstOrNull,
-                    tasks: tasksOf(project),
-                    selected: project.id == _selectedId,
-                    onTap: () => setState(() {
-                      _selectedId = project.id == _selectedId
-                          ? null
-                          : project.id;
-                    }),
-                  ),
+              for (final task in ordered)
+                TaskRow(
+                  task: task,
+                  project: null,
+                  today: today,
+                  selected: task.id == _taskId,
+                  showNote: true,
+                  onTap: () => setState(() {
+                    _taskId = task.id == _taskId ? null : task.id;
+                  }),
+                  onToggle: () => _toggle(task),
                 ),
             ],
           ),
-      ],
-      rail: [
-        _ProjectForm(
-          key: ValueKey(selected?.id ?? 'new'),
-          project: selected,
-          goals: goals,
-          tasks: selected == null ? const [] : tasksOf(selected),
-          nextColor: ProjectColors.firstUnused(projects.map((p) => p.color)),
-          onClose: () => setState(() => _selectedId = null),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                key: const Key('project-new-task'),
+                controller: _newTask,
+                onSubmitted: (_) => _addTask(open),
+                decoration: const InputDecoration(
+                  hintText: 'Add a task to this project',
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
+            FilledButton(
+              key: const Key('project-add-task'),
+              onPressed: () => _addTask(open),
+              child: const Text('Add'),
+            ),
+          ],
         ),
       ],
+      rail: [
+        if (selectedTask != null)
+          TaskForm(
+            key: ValueKey(selectedTask.id),
+            task: selectedTask,
+            projects: projects,
+            goals: goals,
+            today: today,
+            onClose: () => setState(() => _taskId = null),
+          )
+        else
+          _ProjectForm(
+            key: ValueKey(open.id),
+            project: open,
+            goals: goals,
+            tasks: openTasks,
+            nextColor: open.color,
+            onClose: () => _open(null),
+          ),
+      ],
+    );
+  }
+}
+
+/// The goal a project serves: its icon and title in the goal's colour.
+class _GoalChip extends StatelessWidget {
+  const _GoalChip(this.goal);
+
+  final Goal goal;
+
+  @override
+  Widget build(BuildContext context) {
+    return NameChip(
+      key: Key('goal-chip-${goal.id}'),
+      label: goal.title,
+      swatch: GoalColors.of(goal.color),
+      icon: ItemIcons.of(goal.icon, orElse: ItemIcons.goalFallback),
+    );
+  }
+}
+
+/// The square with the project's icon in the project's colour.
+class _ProjectIcon extends StatelessWidget {
+  const _ProjectIcon(this.project, {this.size = 40});
+
+  final Project project;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final swatch = ProjectColors.of(project.color);
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: swatch.soft,
+        borderRadius: BorderRadius.circular(size / 4),
+      ),
+      child: Icon(
+        ItemIcons.of(project.icon),
+        size: size / 2,
+        color: swatch.text,
+      ),
     );
   }
 }
@@ -82,40 +256,24 @@ class _ProjectTile extends StatelessWidget {
     required this.project,
     required this.goal,
     required this.tasks,
-    required this.selected,
     required this.onTap,
   });
 
   final Project project;
   final Goal? goal;
   final List<Task> tasks;
-  final bool selected;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final swatch = ProjectColors.of(project.color);
     final done = tasks.where((task) => task.status == TaskStatus.done).length;
     final percent = percentDone(tasks);
     return Tile(
       key: Key('project-${project.id}'),
-      selected: selected,
       onTap: onTap,
       child: Row(
         children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: swatch.soft,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              ProjectIcons.of(project.icon),
-              size: 20,
-              color: swatch.text,
-            ),
-          ),
+          _ProjectIcon(project),
           const SizedBox(width: 18),
           Expanded(
             flex: 5,
@@ -127,12 +285,11 @@ class _ProjectTile extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: Ember.text(15, 18, weight: 600),
                 ),
-                const SizedBox(height: 5),
-                Text(
-                  goal == null ? 'No goal linked' : 'Goal: ${goal!.title}',
-                  overflow: TextOverflow.ellipsis,
-                  style: Ember.meta,
-                ),
+                const SizedBox(height: 6),
+                if (goal == null)
+                  Text('No goal linked', style: Ember.meta)
+                else
+                  _GoalChip(goal!),
               ],
             ),
           ),
@@ -163,6 +320,78 @@ class _ProjectTile extends StatelessWidget {
   }
 }
 
+/// The top of an open project: back arrow, icon, name, goal and progress.
+class _ProjectHeader extends StatelessWidget {
+  const _ProjectHeader({
+    required this.project,
+    required this.goal,
+    required this.tasks,
+    required this.onBack,
+  });
+
+  final Project project;
+  final Goal? goal;
+  final List<Task> tasks;
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    final done = tasks.where((task) => task.status == TaskStatus.done).length;
+    final percent = percentDone(tasks);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            key: const Key('project-back'),
+            onPressed: onBack,
+            icon: const Icon(Icons.arrow_back, size: 16),
+            label: const Text('All projects'),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            _ProjectIcon(project, size: 52),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    project.name,
+                    overflow: TextOverflow.ellipsis,
+                    style: Ember.h1Small.copyWith(color: Ember.ink),
+                  ),
+                  const SizedBox(height: 6),
+                  if (goal == null)
+                    Text('No goal linked', style: Ember.meta)
+                  else
+                    _GoalChip(goal!),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              '$done of ${countOf(tasks.length, 'task')}',
+              style: Ember.meta,
+            ),
+            Text('$percent%', style: Ember.item),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ProgressBar(percent),
+      ],
+    );
+  }
+}
+
 class _ProjectForm extends ConsumerStatefulWidget {
   const _ProjectForm({
     super.key,
@@ -176,6 +405,8 @@ class _ProjectForm extends ConsumerStatefulWidget {
   /// The project being changed, or null to add a new one.
   final Project? project;
   final List<Goal> goals;
+
+  /// The project's tasks, so deleting can ask what happens to them.
   final List<Task> tasks;
   final String nextColor;
   final VoidCallback onClose;
@@ -186,18 +417,16 @@ class _ProjectForm extends ConsumerStatefulWidget {
 
 class _ProjectFormState extends ConsumerState<_ProjectForm> {
   late final _name = TextEditingController(text: widget.project?.name ?? '');
-  final _newTask = TextEditingController();
   late String _color = widget.project?.color ?? widget.nextColor;
-  late String _icon = ProjectIcons.all.containsKey(widget.project?.icon)
+  late String _icon = ItemIcons.all.containsKey(widget.project?.icon)
       ? widget.project!.icon!
-      : ProjectIcons.fallback;
+      : ItemIcons.fallback;
   late String? _goalId = widget.project?.goalId;
   String? _error;
 
   @override
   void dispose() {
     _name.dispose();
-    _newTask.dispose();
     super.dispose();
   }
 
@@ -224,7 +453,7 @@ class _ProjectFormState extends ConsumerState<_ProjectForm> {
         setState(() {
           _error = null;
           _goalId = null;
-          _icon = ProjectIcons.fallback;
+          _icon = ItemIcons.fallback;
         });
       } else {
         await plan.updateProject(
@@ -241,20 +470,6 @@ class _ProjectFormState extends ConsumerState<_ProjectForm> {
     } catch (error) {
       // The typed name stays in the box, so nothing is lost.
       if (mounted) showMessage(context, 'Could not save. Try again. ($error)');
-    }
-  }
-
-  Future<void> _addTask() async {
-    final userId = ref.read(userIdProvider);
-    final title = _newTask.text.trim();
-    if (userId == null || title.isEmpty) return;
-    try {
-      await ref
-          .read(taskRepositoryProvider)
-          .addTask(userId: userId, title: title, projectId: widget.project!.id);
-      _newTask.clear();
-    } catch (error) {
-      if (mounted) showMessage(context, 'Could not add the task. ($error)');
     }
   }
 
@@ -298,24 +513,7 @@ class _ProjectFormState extends ConsumerState<_ProjectForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                editing ? 'Edit project' : 'New project',
-                style: Ember.h2,
-              ),
-            ),
-            if (editing)
-              IconButton(
-                tooltip: 'Close',
-                iconSize: 16,
-                visualDensity: VisualDensity.compact,
-                onPressed: widget.onClose,
-                icon: const Icon(Icons.close),
-              ),
-          ],
-        ),
+        Text(editing ? 'Edit project' : 'New project', style: Ember.h2),
         const SizedBox(height: 14),
         const FieldLabel('Name'),
         TextField(
@@ -351,7 +549,7 @@ class _ProjectFormState extends ConsumerState<_ProjectForm> {
         const SizedBox(height: 14),
         const FieldLabel('Icon'),
         IconPicker(
-          icons: ProjectIcons.all,
+          icons: ItemIcons.all,
           selected: _icon,
           swatch: ProjectColors.of(_color),
           onChanged: (name) => setState(() => _icon = name),
@@ -363,58 +561,7 @@ class _ProjectFormState extends ConsumerState<_ProjectForm> {
           child: Text(editing ? 'Save' : 'Add project'),
         ),
         if (editing) ...[
-          const SizedBox(height: 22),
-          Text('Tasks', style: Ember.h3),
           const SizedBox(height: 8),
-          if (widget.tasks.isEmpty)
-            Text('No tasks yet.', style: Ember.meta)
-          else
-            for (final task in widget.tasks)
-              Row(
-                children: [
-                  TaskRing(
-                    done: task.status == TaskStatus.done,
-                    priority: task.priority,
-                    label:
-                        '${task.status == TaskStatus.done ? 'Undo' : 'Complete'} '
-                        '${task.title}',
-                    onTap: () => ref
-                        .read(taskRepositoryProvider)
-                        .setDone(task.id, done: task.status != TaskStatus.done),
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      task.title,
-                      overflow: TextOverflow.ellipsis,
-                      style: task.status == TaskStatus.done
-                          ? Ember.item.copyWith(
-                              color: Ember.ink3,
-                              decoration: TextDecoration.lineThrough,
-                            )
-                          : Ember.item,
-                    ),
-                  ),
-                ],
-              ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  key: const Key('project-new-task'),
-                  controller: _newTask,
-                  onSubmitted: (_) => _addTask(),
-                  decoration: const InputDecoration(
-                    hintText: 'Add a task to this project',
-                  ),
-                ),
-              ),
-              const SizedBox(width: 6),
-              FilledButton(onPressed: _addTask, child: const Text('Add')),
-            ],
-          ),
-          const SizedBox(height: 14),
           TextButton.icon(
             key: const Key('project-delete'),
             onPressed: _delete,

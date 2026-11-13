@@ -222,9 +222,32 @@ abstract final class ProjectColors {
   }
 }
 
-/// The icons a project may have. The name is what is saved.
-abstract final class ProjectIcons {
+/// The colours a goal may have: the project colours, so orange is left out
+/// (orange means "now"). The name is what is saved.
+abstract final class GoalColors {
+  static const fallback = 'blue';
+
+  static const all = ProjectColors.all;
+
+  static Swatch of(String? name) => all[name] ?? all[fallback]!;
+
+  /// The first colour no other goal uses yet, so new goals differ.
+  static String firstUnused(Iterable<String?> used) {
+    final taken = used.toSet();
+    return all.keys.firstWhere(
+      (name) => !taken.contains(name),
+      orElse: () => fallback,
+    );
+  }
+}
+
+/// The icons a project, goal or life area may have. The name is what is
+/// saved.
+abstract final class ItemIcons {
   static const fallback = 'folder';
+
+  /// The icon a goal shows when the user picked none.
+  static const goalFallback = 'flag';
 
   static const all = <String, IconData>{
     'folder': Icons.folder_outlined,
@@ -243,9 +266,12 @@ abstract final class ProjectIcons {
     'music': Icons.music_note_outlined,
     'art': Icons.palette_outlined,
     'star': Icons.star_border,
+    'flag': Icons.flag_outlined,
   };
 
-  static IconData of(String? name) => all[name] ?? all[fallback]!;
+  /// The icon with this name; [orElse] when the name is empty or unknown.
+  static IconData of(String? name, {String orElse = fallback}) =>
+      all[name] ?? all[orElse]!;
 }
 
 /// Makes the first letter a capital: `blue` becomes `Blue`.

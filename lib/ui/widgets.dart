@@ -170,12 +170,52 @@ class ColorDot extends StatelessWidget {
   }
 }
 
-/// A small coloured label with a dot, used for project names.
+/// The mark of a life area: its icon in its colour, or a coloured dot when
+/// the area has no icon.
+class AreaMark extends StatelessWidget {
+  const AreaMark({
+    super.key,
+    required this.color,
+    required this.icon,
+    this.size = 16,
+  });
+
+  /// A colour name from `AreaColors`.
+  final String color;
+
+  /// An icon name from `ItemIcons`, or null for the dot.
+  final String? icon;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final swatch = AreaColors.of(color);
+    final data = ItemIcons.all[icon];
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Center(
+        child: data == null
+            ? ColorDot(swatch.dot, size: size * 0.6)
+            : Icon(data, size: size, color: swatch.dot),
+      ),
+    );
+  }
+}
+
+/// A small coloured label with a dot, used for project and goal names.
+/// With an [icon], the icon replaces the dot.
 class NameChip extends StatelessWidget {
-  const NameChip({super.key, required this.label, required this.swatch});
+  const NameChip({
+    super.key,
+    required this.label,
+    required this.swatch,
+    this.icon,
+  });
 
   final String label;
   final Swatch swatch;
+  final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
@@ -189,7 +229,10 @@ class NameChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          ColorDot(swatch.dot, size: 6),
+          if (icon == null)
+            ColorDot(swatch.dot, size: 6)
+          else
+            Icon(icon, size: 13, color: swatch.text),
           const SizedBox(width: 5),
           Flexible(
             child: Text(
@@ -372,6 +415,9 @@ class SwatchPicker extends StatelessWidget {
 
 /// A grid of icon buttons. One is selected. [swatch] colours the selected
 /// one, so the user sees the icon as it will look.
+///
+/// With [allowNone], the first button is a plain dot meaning "no icon"; it
+/// is selected, and reported, as an empty name.
 class IconPicker extends StatelessWidget {
   const IconPicker({
     super.key,
@@ -379,12 +425,14 @@ class IconPicker extends StatelessWidget {
     required this.selected,
     required this.swatch,
     required this.onChanged,
+    this.allowNone = false,
   });
 
   final Map<String, IconData> icons;
   final String selected;
   final Swatch swatch;
   final ValueChanged<String> onChanged;
+  final bool allowNone;
 
   @override
   Widget build(BuildContext context) {
@@ -392,6 +440,34 @@ class IconPicker extends StatelessWidget {
       spacing: 6,
       runSpacing: 6,
       children: [
+        if (allowNone)
+          Semantics(
+            button: true,
+            selected: selected.isEmpty,
+            label: 'No icon',
+            child: Tooltip(
+              message: 'No icon',
+              child: Material(
+                color: selected.isEmpty ? swatch.soft : Ember.tile,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  side: selected.isEmpty
+                      ? const BorderSide(color: Ember.ink, width: 1.5)
+                      : BorderSide.none,
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                  key: const Key('icon-none'),
+                  onTap: () => onChanged(''),
+                  child: SizedBox(
+                    width: 32,
+                    height: 32,
+                    child: Center(child: ColorDot(swatch.dot, size: 8)),
+                  ),
+                ),
+              ),
+            ),
+          ),
         for (final MapEntry(key: name, value: icon) in icons.entries)
           Semantics(
             button: true,

@@ -113,6 +113,53 @@ void main() {
       expect(await plan.watchProjects(user).first, isEmpty);
     });
 
+    test('icons and a goal colour are saved, kept and removed', () async {
+      final area = await plan.addArea(
+        userId: user,
+        name: 'Health',
+        color: 'green',
+        icon: 'heart',
+      );
+      final goal = await plan.addGoal(
+        userId: user,
+        title: 'Run',
+        color: 'teal',
+        icon: 'fitness',
+      );
+
+      // Null keeps the saved value.
+      await plan.updateArea(area, name: 'Body', color: 'pink');
+      await plan.updateGoal(
+        goal,
+        title: 'Run far',
+        lifeAreaId: null,
+        targetDate: null,
+        doneWhen: null,
+      );
+      var areas = await plan.watchAreas(user).first;
+      var goals = await plan.watchGoals(user).first;
+      expect(areas.single.icon, 'heart');
+      expect(goals.single.color, 'teal');
+      expect(goals.single.icon, 'fitness');
+
+      // An empty text removes the icon.
+      await plan.updateArea(area, name: 'Body', color: 'pink', icon: '');
+      await plan.updateGoal(
+        goal,
+        title: 'Run far',
+        lifeAreaId: null,
+        targetDate: null,
+        doneWhen: null,
+        color: 'violet',
+        icon: 'star',
+      );
+      areas = await plan.watchAreas(user).first;
+      goals = await plan.watchGoals(user).first;
+      expect(areas.single.icon, isNull);
+      expect(goals.single.color, 'violet');
+      expect(goals.single.icon, 'star');
+    });
+
     test('an area, a goal and a project can be edited', () async {
       final ids = await buildChain();
       final otherArea = await plan.addArea(

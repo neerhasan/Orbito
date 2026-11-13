@@ -80,6 +80,32 @@ void main() {
     expect(task.priority, TaskPriority.medium);
   });
 
+  test(
+    'notes are saved, kept when not given, and removed when empty',
+    () async {
+      final id = await tasks.addTask(userId: 'user-a', title: 'Sort files');
+      Future<String?> notes() async =>
+          (await tasks.watchTasks('user-a').first).single.notes;
+      Future<void> save({String? notes}) => tasks.updateTask(
+        id,
+        title: 'Sort files',
+        projectId: null,
+        dueDate: null,
+        priority: TaskPriority.none,
+        notes: notes,
+      );
+
+      await save(notes: '  Scan first\nThen copy  ');
+      expect(await notes(), 'Scan first\nThen copy');
+
+      await save();
+      expect(await notes(), 'Scan first\nThen copy');
+
+      await save(notes: '   ');
+      expect(await notes(), isNull);
+    },
+  );
+
   test('editing to an empty title is refused and keeps the old one', () async {
     final id = await tasks.addTask(userId: 'user-a', title: 'Keep me');
 

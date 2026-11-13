@@ -118,10 +118,7 @@ class _SideMenu extends ConsumerWidget {
                 for (final area in areas)
                   _MenuItem(
                     label: area.name,
-                    leading: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: ColorDot(AreaColors.of(area.color).dot),
-                    ),
+                    leading: AreaMark(color: area.color, icon: area.icon),
                     selected: false,
                     onTap: () => open(AppPage.areas),
                   ),

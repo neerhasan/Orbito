@@ -57,7 +57,7 @@ class _AreasPageState extends ConsumerState<AreasPage> {
                     }),
                     child: Row(
                       children: [
-                        ColorDot(AreaColors.of(area.color).dot, size: 12),
+                        AreaMark(color: area.color, icon: area.icon, size: 20),
                         const SizedBox(width: 14),
                         Expanded(
                           child: Text(
@@ -121,6 +121,11 @@ class _AreaForm extends ConsumerStatefulWidget {
 class _AreaFormState extends ConsumerState<_AreaForm> {
   late final _name = TextEditingController(text: widget.area?.name ?? '');
   late String _color = widget.area?.color ?? widget.nextColor;
+
+  /// An icon name, or empty for the plain dot.
+  late String _icon = ItemIcons.all.containsKey(widget.area?.icon)
+      ? widget.area!.icon!
+      : '';
   String? _error;
 
   @override
@@ -148,12 +153,25 @@ class _AreaFormState extends ConsumerState<_AreaForm> {
     try {
       final area = widget.area;
       if (area == null) {
-        await plan.addArea(userId: userId, name: _name.text, color: _color);
+        await plan.addArea(
+          userId: userId,
+          name: _name.text,
+          color: _color,
+          icon: _icon,
+        );
         if (!mounted) return;
         _name.clear();
-        setState(() => _error = null);
+        setState(() {
+          _error = null;
+          _icon = '';
+        });
       } else {
-        await plan.updateArea(area.id, name: _name.text, color: _color);
+        await plan.updateArea(
+          area.id,
+          name: _name.text,
+          color: _color,
+          icon: _icon,
+        );
         if (!mounted) return;
         setState(() => _error = null);
         showMessage(context, 'Saved.');
@@ -258,6 +276,15 @@ class _AreaFormState extends ConsumerState<_AreaForm> {
           colors: AreaColors.all,
           selected: _color,
           onChanged: (name) => setState(() => _color = name),
+        ),
+        const SizedBox(height: 14),
+        const FieldLabel('Icon'),
+        IconPicker(
+          icons: ItemIcons.all,
+          selected: _icon,
+          swatch: AreaColors.of(_color),
+          allowNone: true,
+          onChanged: (name) => setState(() => _icon = name),
         ),
         const SizedBox(height: 18),
         FilledButton(

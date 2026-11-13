@@ -73,13 +73,19 @@ class TaskRepository {
     required String? projectId,
     required String? dueDate,
     required String priority,
+    String? notes,
   }) {
+    // Notes: null keeps the saved notes, an empty text removes them.
+    final trimmedNotes = notes?.trim();
     return (_db.update(_db.tasks)..where((row) => row.id.equals(id))).write(
       TasksCompanion(
         title: Value(_title(title)),
         projectId: Value(projectId),
         dueDate: Value(dueDate),
         priority: Value(_priority(priority)),
+        notes: trimmedNotes == null
+            ? const Value.absent()
+            : Value(trimmedNotes.isEmpty ? null : trimmedNotes),
         updatedAt: Value(_timestamp()),
       ),
     );

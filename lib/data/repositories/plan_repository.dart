@@ -47,6 +47,11 @@ class PlanRepository {
     return trimmed.isEmpty ? null : trimmed;
   }
 
+  /// For optional settings on update: null keeps the saved value, an empty
+  /// text clears it, anything else replaces it.
+  static Value<String?> _change(String? value) =>
+      value == null ? const Value.absent() : Value(_optional(value));
+
   // ---------------------------------------------------------------- areas
 
   /// The user's life areas, oldest first. Deleted ones are left out.
@@ -83,6 +88,7 @@ class PlanRepository {
     required String userId,
     required String name,
     required String color,
+    String? icon,
   }) async {
     final trimmed = _required(name, 'name');
     return _db.transaction(() async {
@@ -97,6 +103,7 @@ class PlanRepository {
               userId: userId,
               name: trimmed,
               color: color,
+              icon: Value(_optional(icon)),
               createdAt: timestamp,
               updatedAt: timestamp,
             ),
@@ -106,10 +113,12 @@ class PlanRepository {
   }
 
   /// Renaming to the name of another area throws [DuplicateNameException].
+  /// [icon]: null keeps the saved icon, an empty text removes it.
   Future<void> updateArea(
     String id, {
     required String name,
     required String color,
+    String? icon,
   }) async {
     final trimmed = _required(name, 'name');
     return _db.transaction(() async {
@@ -124,6 +133,7 @@ class PlanRepository {
         LifeAreasCompanion(
           name: Value(trimmed),
           color: Value(color),
+          icon: _change(icon),
           updatedAt: Value(_timestamp()),
         ),
       );
@@ -190,6 +200,8 @@ class PlanRepository {
     String? lifeAreaId,
     String? targetDate,
     String? doneWhen,
+    String? color,
+    String? icon,
   }) async {
     final id = _newId();
     final timestamp = _timestamp();
@@ -204,6 +216,8 @@ class PlanRepository {
             targetDate: Value(targetDate),
             doneWhen: Value(_optional(doneWhen)),
             progress: 0,
+            color: Value(_optional(color)),
+            icon: Value(_optional(icon)),
             createdAt: timestamp,
             updatedAt: timestamp,
           ),
@@ -217,6 +231,8 @@ class PlanRepository {
     required String? lifeAreaId,
     required String? targetDate,
     required String? doneWhen,
+    String? color,
+    String? icon,
   }) {
     return (_db.update(_db.goals)..where((row) => row.id.equals(id))).write(
       GoalsCompanion(
@@ -224,6 +240,8 @@ class PlanRepository {
         lifeAreaId: Value(lifeAreaId),
         targetDate: Value(targetDate),
         doneWhen: Value(_optional(doneWhen)),
+        color: _change(color),
+        icon: _change(icon),
         updatedAt: Value(_timestamp()),
       ),
     );

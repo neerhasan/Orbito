@@ -13,6 +13,12 @@ Decided by the founder:
 - 2026-11-12: A life area name can be used only once per user. Capital letters and spaces around the name do not make a name different.
 - 2026-11-12: A project has an icon, picked from a fixed list of 16 (Claude chose the list; say if icons are missing).
 - 2026-11-13: Milestone M4 (energy modes F-08, basic life score F-09, fail-day next step F-10) moves from v1 to v2, the second build. v1 is now F-01 to F-07, F-11 and F-14. The full list of held features is in `docs/V2-FEATURES.md`.
+- 2026-11-13 (after the founder's second M1 test):
+  - Clicking a project opens a project page with all its tasks and the first line of each task's notes.
+  - Every task has a Notes box (free text for that one task). This is not F-13 Notes; the separate Notes page stays in the later list.
+  - Goals and life areas can have an icon from the same list as projects (now 17 icons, `flag` added). A life area may also have no icon; it then shows its dot.
+  - A goal has its own colour, picked like a project colour (founder chose option A). Orange is not offered.
+  - A project shows its goal as the goal's icon and name in the goal's colour, without the word "Goal:".
 - 2026-11-13: Widgets for Windows, Android and iOS are wanted in a future version (new feature F-26, P2). Nothing is built in v1; v1 keeps the data and rules separate from the screens so widgets can be added later. Details are in `docs/V2-FEATURES.md`.
 
 Defaults used until the founder changes them:

@@ -494,6 +494,15 @@ class $LifeAreasTable extends LifeAreas
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _iconMeta = const VerificationMeta('icon');
+  @override
+  late final GeneratedColumn<String> icon = GeneratedColumn<String>(
+    'icon',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -503,6 +512,7 @@ class $LifeAreasTable extends LifeAreas
     deletedAt,
     name,
     color,
+    icon,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -567,6 +577,12 @@ class $LifeAreasTable extends LifeAreas
     } else if (isInserting) {
       context.missing(_colorMeta);
     }
+    if (data.containsKey('icon')) {
+      context.handle(
+        _iconMeta,
+        icon.isAcceptableOrUnknown(data['icon']!, _iconMeta),
+      );
+    }
     return context;
   }
 
@@ -604,6 +620,10 @@ class $LifeAreasTable extends LifeAreas
         DriftSqlType.string,
         data['${effectivePrefix}color'],
       )!,
+      icon: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}icon'],
+      ),
     );
   }
 
@@ -629,6 +649,10 @@ class LifeArea extends DataClass implements Insertable<LifeArea> {
 
   /// A colour name from `AreaColors`, for example `green`.
   final String color;
+
+  /// An icon name from `ItemIcons`. Empty when the user picked none; the
+  /// app then shows a coloured dot.
+  final String? icon;
   const LifeArea({
     required this.id,
     required this.userId,
@@ -637,6 +661,7 @@ class LifeArea extends DataClass implements Insertable<LifeArea> {
     this.deletedAt,
     required this.name,
     required this.color,
+    this.icon,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -650,6 +675,9 @@ class LifeArea extends DataClass implements Insertable<LifeArea> {
     }
     map['name'] = Variable<String>(name);
     map['color'] = Variable<String>(color);
+    if (!nullToAbsent || icon != null) {
+      map['icon'] = Variable<String>(icon);
+    }
     return map;
   }
 
@@ -664,6 +692,7 @@ class LifeArea extends DataClass implements Insertable<LifeArea> {
           : Value(deletedAt),
       name: Value(name),
       color: Value(color),
+      icon: icon == null && nullToAbsent ? const Value.absent() : Value(icon),
     );
   }
 
@@ -680,6 +709,7 @@ class LifeArea extends DataClass implements Insertable<LifeArea> {
       deletedAt: serializer.fromJson<String?>(json['deletedAt']),
       name: serializer.fromJson<String>(json['name']),
       color: serializer.fromJson<String>(json['color']),
+      icon: serializer.fromJson<String?>(json['icon']),
     );
   }
   @override
@@ -693,6 +723,7 @@ class LifeArea extends DataClass implements Insertable<LifeArea> {
       'deletedAt': serializer.toJson<String?>(deletedAt),
       'name': serializer.toJson<String>(name),
       'color': serializer.toJson<String>(color),
+      'icon': serializer.toJson<String?>(icon),
     };
   }
 
@@ -704,6 +735,7 @@ class LifeArea extends DataClass implements Insertable<LifeArea> {
     Value<String?> deletedAt = const Value.absent(),
     String? name,
     String? color,
+    Value<String?> icon = const Value.absent(),
   }) => LifeArea(
     id: id ?? this.id,
     userId: userId ?? this.userId,
@@ -712,6 +744,7 @@ class LifeArea extends DataClass implements Insertable<LifeArea> {
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
     name: name ?? this.name,
     color: color ?? this.color,
+    icon: icon.present ? icon.value : this.icon,
   );
   LifeArea copyWithCompanion(LifeAreasCompanion data) {
     return LifeArea(
@@ -722,6 +755,7 @@ class LifeArea extends DataClass implements Insertable<LifeArea> {
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
       name: data.name.present ? data.name.value : this.name,
       color: data.color.present ? data.color.value : this.color,
+      icon: data.icon.present ? data.icon.value : this.icon,
     );
   }
 
@@ -734,14 +768,23 @@ class LifeArea extends DataClass implements Insertable<LifeArea> {
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
           ..write('name: $name, ')
-          ..write('color: $color')
+          ..write('color: $color, ')
+          ..write('icon: $icon')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, userId, createdAt, updatedAt, deletedAt, name, color);
+  int get hashCode => Object.hash(
+    id,
+    userId,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    name,
+    color,
+    icon,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -752,7 +795,8 @@ class LifeArea extends DataClass implements Insertable<LifeArea> {
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
           other.name == this.name &&
-          other.color == this.color);
+          other.color == this.color &&
+          other.icon == this.icon);
 }
 
 class LifeAreasCompanion extends UpdateCompanion<LifeArea> {
@@ -763,6 +807,7 @@ class LifeAreasCompanion extends UpdateCompanion<LifeArea> {
   final Value<String?> deletedAt;
   final Value<String> name;
   final Value<String> color;
+  final Value<String?> icon;
   final Value<int> rowid;
   const LifeAreasCompanion({
     this.id = const Value.absent(),
@@ -772,6 +817,7 @@ class LifeAreasCompanion extends UpdateCompanion<LifeArea> {
     this.deletedAt = const Value.absent(),
     this.name = const Value.absent(),
     this.color = const Value.absent(),
+    this.icon = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   LifeAreasCompanion.insert({
@@ -782,6 +828,7 @@ class LifeAreasCompanion extends UpdateCompanion<LifeArea> {
     this.deletedAt = const Value.absent(),
     required String name,
     required String color,
+    this.icon = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        userId = Value(userId),
@@ -797,6 +844,7 @@ class LifeAreasCompanion extends UpdateCompanion<LifeArea> {
     Expression<String>? deletedAt,
     Expression<String>? name,
     Expression<String>? color,
+    Expression<String>? icon,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -807,6 +855,7 @@ class LifeAreasCompanion extends UpdateCompanion<LifeArea> {
       if (deletedAt != null) 'deleted_at': deletedAt,
       if (name != null) 'name': name,
       if (color != null) 'color': color,
+      if (icon != null) 'icon': icon,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -819,6 +868,7 @@ class LifeAreasCompanion extends UpdateCompanion<LifeArea> {
     Value<String?>? deletedAt,
     Value<String>? name,
     Value<String>? color,
+    Value<String?>? icon,
     Value<int>? rowid,
   }) {
     return LifeAreasCompanion(
@@ -829,6 +879,7 @@ class LifeAreasCompanion extends UpdateCompanion<LifeArea> {
       deletedAt: deletedAt ?? this.deletedAt,
       name: name ?? this.name,
       color: color ?? this.color,
+      icon: icon ?? this.icon,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -857,6 +908,9 @@ class LifeAreasCompanion extends UpdateCompanion<LifeArea> {
     if (color.present) {
       map['color'] = Variable<String>(color.value);
     }
+    if (icon.present) {
+      map['icon'] = Variable<String>(icon.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -873,6 +927,7 @@ class LifeAreasCompanion extends UpdateCompanion<LifeArea> {
           ..write('deletedAt: $deletedAt, ')
           ..write('name: $name, ')
           ..write('color: $color, ')
+          ..write('icon: $icon, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -988,6 +1043,24 @@ class $GoalsTable extends Goals with TableInfo<$GoalsTable, Goal> {
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _colorMeta = const VerificationMeta('color');
+  @override
+  late final GeneratedColumn<String> color = GeneratedColumn<String>(
+    'color',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _iconMeta = const VerificationMeta('icon');
+  @override
+  late final GeneratedColumn<String> icon = GeneratedColumn<String>(
+    'icon',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1000,6 +1073,8 @@ class $GoalsTable extends Goals with TableInfo<$GoalsTable, Goal> {
     targetDate,
     doneWhen,
     progress,
+    color,
+    icon,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1085,6 +1160,18 @@ class $GoalsTable extends Goals with TableInfo<$GoalsTable, Goal> {
     } else if (isInserting) {
       context.missing(_progressMeta);
     }
+    if (data.containsKey('color')) {
+      context.handle(
+        _colorMeta,
+        color.isAcceptableOrUnknown(data['color']!, _colorMeta),
+      );
+    }
+    if (data.containsKey('icon')) {
+      context.handle(
+        _iconMeta,
+        icon.isAcceptableOrUnknown(data['icon']!, _iconMeta),
+      );
+    }
     return context;
   }
 
@@ -1134,6 +1221,14 @@ class $GoalsTable extends Goals with TableInfo<$GoalsTable, Goal> {
         DriftSqlType.int,
         data['${effectivePrefix}progress'],
       )!,
+      color: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}color'],
+      ),
+      icon: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}icon'],
+      ),
     );
   }
 
@@ -1166,6 +1261,13 @@ class Goal extends DataClass implements Insertable<Goal> {
 
   /// 0 to 100, set by the user.
   final int progress;
+
+  /// A colour name from `GoalColors`. Empty on rows made before goals had
+  /// a colour; the app then uses the fallback colour.
+  final String? color;
+
+  /// An icon name from `ItemIcons`. Empty means the flag icon.
+  final String? icon;
   const Goal({
     required this.id,
     required this.userId,
@@ -1177,6 +1279,8 @@ class Goal extends DataClass implements Insertable<Goal> {
     this.targetDate,
     this.doneWhen,
     required this.progress,
+    this.color,
+    this.icon,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1199,6 +1303,12 @@ class Goal extends DataClass implements Insertable<Goal> {
       map['done_when'] = Variable<String>(doneWhen);
     }
     map['progress'] = Variable<int>(progress);
+    if (!nullToAbsent || color != null) {
+      map['color'] = Variable<String>(color);
+    }
+    if (!nullToAbsent || icon != null) {
+      map['icon'] = Variable<String>(icon);
+    }
     return map;
   }
 
@@ -1222,6 +1332,10 @@ class Goal extends DataClass implements Insertable<Goal> {
           ? const Value.absent()
           : Value(doneWhen),
       progress: Value(progress),
+      color: color == null && nullToAbsent
+          ? const Value.absent()
+          : Value(color),
+      icon: icon == null && nullToAbsent ? const Value.absent() : Value(icon),
     );
   }
 
@@ -1241,6 +1355,8 @@ class Goal extends DataClass implements Insertable<Goal> {
       targetDate: serializer.fromJson<String?>(json['targetDate']),
       doneWhen: serializer.fromJson<String?>(json['doneWhen']),
       progress: serializer.fromJson<int>(json['progress']),
+      color: serializer.fromJson<String?>(json['color']),
+      icon: serializer.fromJson<String?>(json['icon']),
     );
   }
   @override
@@ -1257,6 +1373,8 @@ class Goal extends DataClass implements Insertable<Goal> {
       'targetDate': serializer.toJson<String?>(targetDate),
       'doneWhen': serializer.toJson<String?>(doneWhen),
       'progress': serializer.toJson<int>(progress),
+      'color': serializer.toJson<String?>(color),
+      'icon': serializer.toJson<String?>(icon),
     };
   }
 
@@ -1271,6 +1389,8 @@ class Goal extends DataClass implements Insertable<Goal> {
     Value<String?> targetDate = const Value.absent(),
     Value<String?> doneWhen = const Value.absent(),
     int? progress,
+    Value<String?> color = const Value.absent(),
+    Value<String?> icon = const Value.absent(),
   }) => Goal(
     id: id ?? this.id,
     userId: userId ?? this.userId,
@@ -1282,6 +1402,8 @@ class Goal extends DataClass implements Insertable<Goal> {
     targetDate: targetDate.present ? targetDate.value : this.targetDate,
     doneWhen: doneWhen.present ? doneWhen.value : this.doneWhen,
     progress: progress ?? this.progress,
+    color: color.present ? color.value : this.color,
+    icon: icon.present ? icon.value : this.icon,
   );
   Goal copyWithCompanion(GoalsCompanion data) {
     return Goal(
@@ -1299,6 +1421,8 @@ class Goal extends DataClass implements Insertable<Goal> {
           : this.targetDate,
       doneWhen: data.doneWhen.present ? data.doneWhen.value : this.doneWhen,
       progress: data.progress.present ? data.progress.value : this.progress,
+      color: data.color.present ? data.color.value : this.color,
+      icon: data.icon.present ? data.icon.value : this.icon,
     );
   }
 
@@ -1314,7 +1438,9 @@ class Goal extends DataClass implements Insertable<Goal> {
           ..write('lifeAreaId: $lifeAreaId, ')
           ..write('targetDate: $targetDate, ')
           ..write('doneWhen: $doneWhen, ')
-          ..write('progress: $progress')
+          ..write('progress: $progress, ')
+          ..write('color: $color, ')
+          ..write('icon: $icon')
           ..write(')'))
         .toString();
   }
@@ -1331,6 +1457,8 @@ class Goal extends DataClass implements Insertable<Goal> {
     targetDate,
     doneWhen,
     progress,
+    color,
+    icon,
   );
   @override
   bool operator ==(Object other) =>
@@ -1345,7 +1473,9 @@ class Goal extends DataClass implements Insertable<Goal> {
           other.lifeAreaId == this.lifeAreaId &&
           other.targetDate == this.targetDate &&
           other.doneWhen == this.doneWhen &&
-          other.progress == this.progress);
+          other.progress == this.progress &&
+          other.color == this.color &&
+          other.icon == this.icon);
 }
 
 class GoalsCompanion extends UpdateCompanion<Goal> {
@@ -1359,6 +1489,8 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
   final Value<String?> targetDate;
   final Value<String?> doneWhen;
   final Value<int> progress;
+  final Value<String?> color;
+  final Value<String?> icon;
   final Value<int> rowid;
   const GoalsCompanion({
     this.id = const Value.absent(),
@@ -1371,6 +1503,8 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
     this.targetDate = const Value.absent(),
     this.doneWhen = const Value.absent(),
     this.progress = const Value.absent(),
+    this.color = const Value.absent(),
+    this.icon = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   GoalsCompanion.insert({
@@ -1384,6 +1518,8 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
     this.targetDate = const Value.absent(),
     this.doneWhen = const Value.absent(),
     required int progress,
+    this.color = const Value.absent(),
+    this.icon = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        userId = Value(userId),
@@ -1402,6 +1538,8 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
     Expression<String>? targetDate,
     Expression<String>? doneWhen,
     Expression<int>? progress,
+    Expression<String>? color,
+    Expression<String>? icon,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1415,6 +1553,8 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
       if (targetDate != null) 'target_date': targetDate,
       if (doneWhen != null) 'done_when': doneWhen,
       if (progress != null) 'progress': progress,
+      if (color != null) 'color': color,
+      if (icon != null) 'icon': icon,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1430,6 +1570,8 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
     Value<String?>? targetDate,
     Value<String?>? doneWhen,
     Value<int>? progress,
+    Value<String?>? color,
+    Value<String?>? icon,
     Value<int>? rowid,
   }) {
     return GoalsCompanion(
@@ -1443,6 +1585,8 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
       targetDate: targetDate ?? this.targetDate,
       doneWhen: doneWhen ?? this.doneWhen,
       progress: progress ?? this.progress,
+      color: color ?? this.color,
+      icon: icon ?? this.icon,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1480,6 +1624,12 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
     if (progress.present) {
       map['progress'] = Variable<int>(progress.value);
     }
+    if (color.present) {
+      map['color'] = Variable<String>(color.value);
+    }
+    if (icon.present) {
+      map['icon'] = Variable<String>(icon.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1499,6 +1649,8 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
           ..write('targetDate: $targetDate, ')
           ..write('doneWhen: $doneWhen, ')
           ..write('progress: $progress, ')
+          ..write('color: $color, ')
+          ..write('icon: $icon, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1757,7 +1909,7 @@ class Project extends DataClass implements Insertable<Project> {
   /// orange means "now".
   final String color;
 
-  /// An icon name from `ProjectIcons`, for example `folder`. Empty on rows
+  /// An icon name from `ItemIcons`, for example `folder`. Empty on rows
   /// made before icons existed; the app then shows the folder.
   final String? icon;
   const Project({
@@ -2194,6 +2346,15 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, Task> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2208,6 +2369,7 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, Task> {
     priority,
     status,
     completedAt,
+    notes,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2307,6 +2469,12 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, Task> {
         ),
       );
     }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
     return context;
   }
 
@@ -2364,6 +2532,10 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, Task> {
         DriftSqlType.string,
         data['${effectivePrefix}completed_at'],
       ),
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      ),
     );
   }
 
@@ -2400,6 +2572,9 @@ class Task extends DataClass implements Insertable<Task> {
 
   /// When the task was completed (ISO 8601, UTC). Empty while it is open.
   final String? completedAt;
+
+  /// Free text the user writes about this task. Empty when there is none.
+  final String? notes;
   const Task({
     required this.id,
     required this.userId,
@@ -2413,6 +2588,7 @@ class Task extends DataClass implements Insertable<Task> {
     required this.priority,
     required this.status,
     this.completedAt,
+    this.notes,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2438,6 +2614,9 @@ class Task extends DataClass implements Insertable<Task> {
     map['status'] = Variable<String>(status);
     if (!nullToAbsent || completedAt != null) {
       map['completed_at'] = Variable<String>(completedAt);
+    }
+    if (!nullToAbsent || notes != null) {
+      map['notes'] = Variable<String>(notes);
     }
     return map;
   }
@@ -2466,6 +2645,9 @@ class Task extends DataClass implements Insertable<Task> {
       completedAt: completedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(completedAt),
+      notes: notes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notes),
     );
   }
 
@@ -2487,6 +2669,7 @@ class Task extends DataClass implements Insertable<Task> {
       priority: serializer.fromJson<String>(json['priority']),
       status: serializer.fromJson<String>(json['status']),
       completedAt: serializer.fromJson<String?>(json['completedAt']),
+      notes: serializer.fromJson<String?>(json['notes']),
     );
   }
   @override
@@ -2505,6 +2688,7 @@ class Task extends DataClass implements Insertable<Task> {
       'priority': serializer.toJson<String>(priority),
       'status': serializer.toJson<String>(status),
       'completedAt': serializer.toJson<String?>(completedAt),
+      'notes': serializer.toJson<String?>(notes),
     };
   }
 
@@ -2521,6 +2705,7 @@ class Task extends DataClass implements Insertable<Task> {
     String? priority,
     String? status,
     Value<String?> completedAt = const Value.absent(),
+    Value<String?> notes = const Value.absent(),
   }) => Task(
     id: id ?? this.id,
     userId: userId ?? this.userId,
@@ -2534,6 +2719,7 @@ class Task extends DataClass implements Insertable<Task> {
     priority: priority ?? this.priority,
     status: status ?? this.status,
     completedAt: completedAt.present ? completedAt.value : this.completedAt,
+    notes: notes.present ? notes.value : this.notes,
   );
   Task copyWithCompanion(TasksCompanion data) {
     return Task(
@@ -2551,6 +2737,7 @@ class Task extends DataClass implements Insertable<Task> {
       completedAt: data.completedAt.present
           ? data.completedAt.value
           : this.completedAt,
+      notes: data.notes.present ? data.notes.value : this.notes,
     );
   }
 
@@ -2568,7 +2755,8 @@ class Task extends DataClass implements Insertable<Task> {
           ..write('dueDate: $dueDate, ')
           ..write('priority: $priority, ')
           ..write('status: $status, ')
-          ..write('completedAt: $completedAt')
+          ..write('completedAt: $completedAt, ')
+          ..write('notes: $notes')
           ..write(')'))
         .toString();
   }
@@ -2587,6 +2775,7 @@ class Task extends DataClass implements Insertable<Task> {
     priority,
     status,
     completedAt,
+    notes,
   );
   @override
   bool operator ==(Object other) =>
@@ -2603,7 +2792,8 @@ class Task extends DataClass implements Insertable<Task> {
           other.dueDate == this.dueDate &&
           other.priority == this.priority &&
           other.status == this.status &&
-          other.completedAt == this.completedAt);
+          other.completedAt == this.completedAt &&
+          other.notes == this.notes);
 }
 
 class TasksCompanion extends UpdateCompanion<Task> {
@@ -2619,6 +2809,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
   final Value<String> priority;
   final Value<String> status;
   final Value<String?> completedAt;
+  final Value<String?> notes;
   final Value<int> rowid;
   const TasksCompanion({
     this.id = const Value.absent(),
@@ -2633,6 +2824,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
     this.priority = const Value.absent(),
     this.status = const Value.absent(),
     this.completedAt = const Value.absent(),
+    this.notes = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   TasksCompanion.insert({
@@ -2648,6 +2840,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
     required String priority,
     required String status,
     this.completedAt = const Value.absent(),
+    this.notes = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        userId = Value(userId),
@@ -2669,6 +2862,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
     Expression<String>? priority,
     Expression<String>? status,
     Expression<String>? completedAt,
+    Expression<String>? notes,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2684,6 +2878,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
       if (priority != null) 'priority': priority,
       if (status != null) 'status': status,
       if (completedAt != null) 'completed_at': completedAt,
+      if (notes != null) 'notes': notes,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2701,6 +2896,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
     Value<String>? priority,
     Value<String>? status,
     Value<String?>? completedAt,
+    Value<String?>? notes,
     Value<int>? rowid,
   }) {
     return TasksCompanion(
@@ -2716,6 +2912,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
       priority: priority ?? this.priority,
       status: status ?? this.status,
       completedAt: completedAt ?? this.completedAt,
+      notes: notes ?? this.notes,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2759,6 +2956,9 @@ class TasksCompanion extends UpdateCompanion<Task> {
     if (completedAt.present) {
       map['completed_at'] = Variable<String>(completedAt.value);
     }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2780,6 +2980,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
           ..write('priority: $priority, ')
           ..write('status: $status, ')
           ..write('completedAt: $completedAt, ')
+          ..write('notes: $notes, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -3043,6 +3244,7 @@ typedef $$LifeAreasTableCreateCompanionBuilder = LifeAreasCompanion Function({
   Value<String?> deletedAt,
   required String name,
   required String color,
+  Value<String?> icon,
   Value<int> rowid,
 });
 typedef $$LifeAreasTableUpdateCompanionBuilder = LifeAreasCompanion Function({
@@ -3053,6 +3255,7 @@ typedef $$LifeAreasTableUpdateCompanionBuilder = LifeAreasCompanion Function({
   Value<String?> deletedAt,
   Value<String> name,
   Value<String> color,
+  Value<String?> icon,
   Value<int> rowid,
 });
 
@@ -3097,6 +3300,11 @@ class $$LifeAreasTableFilterComposer
 
   ColumnFilters<String> get color => $composableBuilder(
     column: $table.color,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get icon => $composableBuilder(
+    column: $table.icon,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -3144,6 +3352,11 @@ class $$LifeAreasTableOrderingComposer
     column: $table.color,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get icon => $composableBuilder(
+    column: $table.icon,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$LifeAreasTableAnnotationComposer
@@ -3175,6 +3388,9 @@ class $$LifeAreasTableAnnotationComposer
 
   GeneratedColumn<String> get color =>
       $composableBuilder(column: $table.color, builder: (column) => column);
+
+  GeneratedColumn<String> get icon =>
+      $composableBuilder(column: $table.icon, builder: (column) => column);
 }
 
 class $$LifeAreasTableTableManager
@@ -3212,6 +3428,7 @@ class $$LifeAreasTableTableManager
                 Value<String?> deletedAt = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String> color = const Value.absent(),
+                Value<String?> icon = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => LifeAreasCompanion(
                 id: id,
@@ -3221,6 +3438,7 @@ class $$LifeAreasTableTableManager
                 deletedAt: deletedAt,
                 name: name,
                 color: color,
+                icon: icon,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -3232,6 +3450,7 @@ class $$LifeAreasTableTableManager
                 Value<String?> deletedAt = const Value.absent(),
                 required String name,
                 required String color,
+                Value<String?> icon = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => LifeAreasCompanion.insert(
                 id: id,
@@ -3241,6 +3460,7 @@ class $$LifeAreasTableTableManager
                 deletedAt: deletedAt,
                 name: name,
                 color: color,
+                icon: icon,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -3285,6 +3505,8 @@ typedef $$GoalsTableCreateCompanionBuilder = GoalsCompanion Function({
   Value<String?> targetDate,
   Value<String?> doneWhen,
   required int progress,
+  Value<String?> color,
+  Value<String?> icon,
   Value<int> rowid,
 });
 typedef $$GoalsTableUpdateCompanionBuilder = GoalsCompanion Function({
@@ -3298,6 +3520,8 @@ typedef $$GoalsTableUpdateCompanionBuilder = GoalsCompanion Function({
   Value<String?> targetDate,
   Value<String?> doneWhen,
   Value<int> progress,
+  Value<String?> color,
+  Value<String?> icon,
   Value<int> rowid,
 });
 
@@ -3356,6 +3580,16 @@ class $$GoalsTableFilterComposer extends Composer<_$AppDatabase, $GoalsTable> {
 
   ColumnFilters<int> get progress => $composableBuilder(
     column: $table.progress,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get color => $composableBuilder(
+    column: $table.color,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get icon => $composableBuilder(
+    column: $table.icon,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -3418,6 +3652,16 @@ class $$GoalsTableOrderingComposer
     column: $table.progress,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get color => $composableBuilder(
+    column: $table.color,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get icon => $composableBuilder(
+    column: $table.icon,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$GoalsTableAnnotationComposer
@@ -3462,6 +3706,12 @@ class $$GoalsTableAnnotationComposer
 
   GeneratedColumn<int> get progress =>
       $composableBuilder(column: $table.progress, builder: (column) => column);
+
+  GeneratedColumn<String> get color =>
+      $composableBuilder(column: $table.color, builder: (column) => column);
+
+  GeneratedColumn<String> get icon =>
+      $composableBuilder(column: $table.icon, builder: (column) => column);
 }
 
 class $$GoalsTableTableManager
@@ -3502,6 +3752,8 @@ class $$GoalsTableTableManager
                 Value<String?> targetDate = const Value.absent(),
                 Value<String?> doneWhen = const Value.absent(),
                 Value<int> progress = const Value.absent(),
+                Value<String?> color = const Value.absent(),
+                Value<String?> icon = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => GoalsCompanion(
                 id: id,
@@ -3514,6 +3766,8 @@ class $$GoalsTableTableManager
                 targetDate: targetDate,
                 doneWhen: doneWhen,
                 progress: progress,
+                color: color,
+                icon: icon,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -3528,6 +3782,8 @@ class $$GoalsTableTableManager
                 Value<String?> targetDate = const Value.absent(),
                 Value<String?> doneWhen = const Value.absent(),
                 required int progress,
+                Value<String?> color = const Value.absent(),
+                Value<String?> icon = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => GoalsCompanion.insert(
                 id: id,
@@ -3540,6 +3796,8 @@ class $$GoalsTableTableManager
                 targetDate: targetDate,
                 doneWhen: doneWhen,
                 progress: progress,
+                color: color,
+                icon: icon,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -3863,6 +4121,7 @@ typedef $$TasksTableCreateCompanionBuilder = TasksCompanion Function({
   required String priority,
   required String status,
   Value<String?> completedAt,
+  Value<String?> notes,
   Value<int> rowid,
 });
 typedef $$TasksTableUpdateCompanionBuilder = TasksCompanion Function({
@@ -3878,6 +4137,7 @@ typedef $$TasksTableUpdateCompanionBuilder = TasksCompanion Function({
   Value<String> priority,
   Value<String> status,
   Value<String?> completedAt,
+  Value<String?> notes,
   Value<int> rowid,
 });
 
@@ -3946,6 +4206,11 @@ class $$TasksTableFilterComposer extends Composer<_$AppDatabase, $TasksTable> {
 
   ColumnFilters<String> get completedAt => $composableBuilder(
     column: $table.completedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -4018,6 +4283,11 @@ class $$TasksTableOrderingComposer
     column: $table.completedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$TasksTableAnnotationComposer
@@ -4066,6 +4336,9 @@ class $$TasksTableAnnotationComposer
     column: $table.completedAt,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
 }
 
 class $$TasksTableTableManager
@@ -4108,6 +4381,7 @@ class $$TasksTableTableManager
                 Value<String> priority = const Value.absent(),
                 Value<String> status = const Value.absent(),
                 Value<String?> completedAt = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TasksCompanion(
                 id: id,
@@ -4122,6 +4396,7 @@ class $$TasksTableTableManager
                 priority: priority,
                 status: status,
                 completedAt: completedAt,
+                notes: notes,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -4138,6 +4413,7 @@ class $$TasksTableTableManager
                 required String priority,
                 required String status,
                 Value<String?> completedAt = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TasksCompanion.insert(
                 id: id,
@@ -4152,6 +4428,7 @@ class $$TasksTableTableManager
                 priority: priority,
                 status: status,
                 completedAt: completedAt,
+                notes: notes,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

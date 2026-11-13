@@ -2,6 +2,18 @@
 
 Claude Code adds a new entry on top at the end of every session.
 
+### 2026-11-13 M1 fixes after the founder's second test
+- Done:
+  - Only one project icon showed in the Windows app. Cause: the local release build reused an old, cut-down copy of the icon font (2.6 KB) made before the icons were added. Fix: build with `flutter build windows --release --no-tree-shake-icons`, which keeps the whole icon font (1.6 MB). Use this flag for every Windows build until icons stop changing.
+  - Clicking a project opens a project page (`lib/features/projects/projects_page.dart`): icon, name, the goal as a chip, progress, all its tasks (open first) with the first line of each task's notes, and a box to add tasks. On the right: the selected task, or the project form.
+  - Every task has a Notes box (`tasks.notes`). `TaskRow`, `TaskForm` and `PriorityTag` in `tasks_page.dart` are now public so the project page reuses them.
+  - Goals have a colour (`goals.color`, `GoalColors`) and an icon (`goals.icon`); life areas have an optional icon (`life_areas.icon`, shown by `AreaMark` in the list and the side menu). `ProjectIcons` is now `ItemIcons` with 17 icons (`flag` added).
+  - Server: `supabase/006_icons_colours_notes.sql`, applied through the Supabase connector. The sync config uses `SELECT *`, so no change there.
+- Left to do: the founder runs the quick retest at the top of `docs/M1-TEST.md`.
+- Known problems: none new. Older notes below still apply.
+- Test results: `flutter analyze`: no issues. `flutter test`: 90 passed. `flutter build windows --release --no-tree-shake-icons`: built; the app was restarted.
+- Next step: the founder's retest, then the M2 plan ("go").
+
 ### 2026-11-13 Scope change: M4 moved to v2
 - Done: the founder moved energy modes (F-08), the basic life score (F-09) and the fail-day next step (F-10) to v2, the second build. Documents updated: new `docs/V2-FEATURES.md` (the list of held features), `docs/BUILD-PLAN.md` (M4 marked as moved), `docs/DECISIONS.md`, `docs/product/Feature-Specification.md`, `docs/product/PRD.md`, `docs/technical/System-Architecture.md`, `docs/status/Project-Status.md`, `CLAUDE.md`.
 - v1 is now: M1 (done, waiting for the founder's approval), M2 daily tracking, M3 home and capture, M5 accounts and hardening, M6 closed test. M5 and M6 keep their names.

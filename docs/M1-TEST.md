@@ -10,6 +10,17 @@ The phone is not part of this test. The decision is: PC first.
 2. Start Orbito on the PC: `build\windows\x64\runner\Release\orbito.exe` in the project folder.
 3. Sign in with your test account.
 
+## Quick retest of the fixes from 13 November (about 5 minutes)
+
+Do this first. If all of it works, you can go on with the full guide below or reply "approve M1".
+
+1. **Project page.** Go to **Projects** and click a project, for example "Road to South Korea". Expected: a page opens with the project's icon, its name, the goal it serves and all its tasks. **All projects** at the top takes you back.
+2. **Task notes.** On that project page, click a task (for example "Sort JBNU files"). Expected: on the right, the task opens with a **Notes** box. Write two lines and click **Save**. Expected: the first line of the note shows under the task in the list. The Notes box is also there when you open a task on the **Tasks** page.
+3. **All icons.** Open a project's form (click the project, the form is on the right when no task is selected). Expected: all 17 icons show. Pick one, click **Save**. Expected: the project shows the new icon.
+4. **Goal icon and colour.** Go to **Goals**, click a goal. Expected: **Colour** and **Icon** pickers. Pick both and click **Save**. Expected: the goal shows the icon in that colour.
+5. **Goal in the project.** Go back to **Projects**. Expected: under the project name you see the goal's icon and name in the goal's colour, without the word "Goal:".
+6. **Area icon.** Go to **All areas**, click an area, pick an icon, click **Save**. Expected: the icon shows in the list and in the menu on the left, in the area's colour. The dot button at the start of the icons removes the icon again.
+
 ## Test 1: first-run setup
 
 1. With a new account you see "Which parts of your life do you want to look after?".
@@ -36,7 +47,7 @@ The phone is not part of this test. The decision is: PC first.
 
 1. Click **Projects** in the menu.
 2. Add a project: a name, the goal from test 3 under "Serves goal", a colour and an icon. Click **Add project**. Expected: the project is in the list with the icon you picked, in the colour you picked.
-3. Click the project. Add two tasks on the right. Complete one.
+3. Click the project. The project page opens. Add two tasks with the box under the task list. Complete one.
 4. Expected: the project shows "1 of 2 tasks" and 50%.
 5. Go back to **Goals**. Expected: the goal counts the two tasks of its project and shows "1 of 2 tasks", 50%.
 

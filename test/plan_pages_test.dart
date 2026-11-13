@@ -170,6 +170,30 @@ void main() {
       expect(saved.map((area) => area.name), ['Health', 'Money']);
     });
 
+    _testPage('saves an icon for an area, and can remove it', (tester) async {
+      await _pumpPage(tester, AppPage.areas);
+      await _tap(tester, 'setup-skip');
+      await _settle(tester);
+
+      await tester.enterText(find.byKey(const Key('area-name')), 'Health');
+      await _tap(tester, 'icon-heart');
+      await _tap(tester, 'area-save');
+      await _settle(tester);
+
+      var saved = await _read(tester, () => _plan.watchAreas(_user).first);
+      expect(saved.single.icon, 'heart');
+      // The list tile shows the icon; the form shows it in its picker.
+      expect(find.byIcon(Icons.favorite_border), findsNWidgets(2));
+
+      await _tap(tester, 'area-${saved.single.id}');
+      await _tap(tester, 'icon-none');
+      await _tap(tester, 'area-save');
+      await _settle(tester);
+
+      saved = await _read(tester, () => _plan.watchAreas(_user).first);
+      expect(saved.single.icon, isNull);
+    });
+
     _testPage('deleting an area can keep its goals', (tester) async {
       final ids = await _read(tester, () async {
         final area = await _plan.addArea(
@@ -234,6 +258,26 @@ void main() {
       expect(find.text('Edit goal'), findsOneWidget);
       expect(find.byKey(const Key('goal-new-task')), findsNothing);
       expect(find.textContaining('Tasks belong to projects'), findsOneWidget);
+    });
+
+    _testPage('saves a colour and an icon for a goal', (tester) async {
+      await _read(
+        tester,
+        () => _plan.addArea(userId: _user, name: 'Health', color: 'green'),
+      );
+      await _pumpPage(tester, AppPage.goals);
+
+      await tester.enterText(find.byKey(const Key('goal-title')), 'Run 10 km');
+      await _tap(tester, 'color-teal');
+      await _tap(tester, 'icon-fitness');
+      await _tap(tester, 'goal-save');
+      await _settle(tester);
+
+      final goals = await _read(tester, () => _plan.watchGoals(_user).first);
+      expect(goals.single.color, 'teal');
+      expect(goals.single.icon, 'fitness');
+      // The tile shows the icon; the form shows it in its picker.
+      expect(find.byIcon(Icons.fitness_center), findsNWidgets(2));
     });
 
     _testPage('counts the tasks of a project that serves the goal', (
@@ -424,6 +468,77 @@ void main() {
 
       expect(find.text('Buy shoes'), findsOneWidget);
       expect(find.text('0 of 1 task'), findsOneWidget);
+    });
+
+    _testPage('opens a project: its tasks, their notes and the goal', (
+      tester,
+    ) async {
+      final ids = await _read(tester, () async {
+        await _plan.addArea(userId: _user, name: 'Career', color: 'blue');
+        final goal = await _plan.addGoal(
+          userId: _user,
+          title: 'Study in Korea',
+          color: 'violet',
+          icon: 'school',
+        );
+        final project = await _plan.addProject(
+          userId: _user,
+          name: 'Road to South Korea',
+          color: 'teal',
+          icon: 'travel',
+          goalId: goal,
+        );
+        final task = await _tasks.addTask(
+          userId: _user,
+          title: 'Sort JBNU files',
+          projectId: project,
+        );
+        await _tasks.addTask(userId: _user, title: 'Other task');
+        return (goal: goal, project: project, task: task);
+      });
+      await _pumpPage(tester, AppPage.projects);
+
+      // The list shows the goal as a chip: no "Goal:" word.
+      expect(find.byKey(Key('goal-chip-${ids.goal}')), findsOneWidget);
+      expect(find.textContaining('Goal:'), findsNothing);
+      expect(
+        find.descendant(
+          of: find.byKey(Key('project-${ids.project}')),
+          matching: find.byIcon(Icons.flight_outlined),
+        ),
+        findsOneWidget,
+      );
+
+      await _tap(tester, 'project-${ids.project}');
+      expect(find.text('Sort JBNU files'), findsOneWidget);
+      expect(find.text('Other task'), findsNothing);
+      expect(find.byKey(const Key('project-back')), findsOneWidget);
+
+      // Open the task and write a note.
+      await _tap(tester, 'task-${ids.task}');
+      expect(find.byKey(const Key('task-notes')), findsOneWidget);
+      await tester.enterText(
+        find.byKey(const Key('task-notes')),
+        'Scan the transcript first\nThen the passport',
+      );
+      await _tap(tester, 'task-save');
+      await _settle(tester);
+
+      final saved = await _read(tester, () => _tasks.watchTasks(_user).first);
+      expect(
+        saved.firstWhere((task) => task.id == ids.task).notes,
+        'Scan the transcript first\nThen the passport',
+      );
+      expect(
+        find.byKey(Key('task-note-${ids.task}')),
+        findsOneWidget,
+        reason: 'The first line of the note shows under the task.',
+      );
+      expect(find.text('Scan the transcript first'), findsOneWidget);
+
+      await _tap(tester, 'project-back');
+      expect(find.text('Projects'), findsOneWidget);
+      expect(find.byKey(const Key('project-back')), findsNothing);
     });
   });
 }

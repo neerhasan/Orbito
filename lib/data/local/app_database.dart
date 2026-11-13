@@ -44,6 +44,10 @@ class LifeAreas extends Table with SyncColumns {
 
   /// A colour name from `AreaColors`, for example `green`.
   TextColumn get color => text()();
+
+  /// An icon name from `ItemIcons`. Empty when the user picked none; the
+  /// app then shows a coloured dot.
+  TextColumn get icon => text().nullable()();
 }
 
 /// Something the user wants to reach. It may belong to one life area.
@@ -63,6 +67,13 @@ class Goals extends Table with SyncColumns {
 
   /// 0 to 100, set by the user.
   IntColumn get progress => integer()();
+
+  /// A colour name from `GoalColors`. Empty on rows made before goals had
+  /// a colour; the app then uses the fallback colour.
+  TextColumn get color => text().nullable()();
+
+  /// An icon name from `ItemIcons`. Empty means the flag icon.
+  TextColumn get icon => text().nullable()();
 }
 
 /// A group of tasks. It may serve one goal.
@@ -78,7 +89,7 @@ class Projects extends Table with SyncColumns {
   /// orange means "now".
   TextColumn get color => text()();
 
-  /// An icon name from `ProjectIcons`, for example `folder`. Empty on rows
+  /// An icon name from `ItemIcons`, for example `folder`. Empty on rows
   /// made before icons existed; the app then shows the folder.
   TextColumn get icon => text().nullable()();
 }
@@ -105,6 +116,9 @@ class Tasks extends Table with SyncColumns {
 
   /// When the task was completed (ISO 8601, UTC). Empty while it is open.
   TextColumn get completedAt => text().nullable()();
+
+  /// Free text the user writes about this task. Empty when there is none.
+  TextColumn get notes => text().nullable()();
 }
 
 /// The values the `priority` column of a task may hold.

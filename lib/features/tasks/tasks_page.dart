@@ -301,7 +301,7 @@ class _TasksPageState extends ConsumerState<TasksPage> {
                     ),
                   ),
                 for (final task in group.tasks)
-                  _TaskRow(
+                  TaskRow(
                     task: task,
                     project: projectOf(task),
                     today: today,
@@ -330,7 +330,7 @@ class _TasksPageState extends ConsumerState<TasksPage> {
             ),
           )
         else
-          _TaskForm(
+          TaskForm(
             key: ValueKey(selected.id),
             task: selected,
             projects: projects,
@@ -482,8 +482,8 @@ class _Pick<T> extends StatelessWidget {
 }
 
 /// The label next to a task title that shows its priority.
-class _PriorityTag extends StatelessWidget {
-  const _PriorityTag(this.priority);
+class PriorityTag extends StatelessWidget {
+  const PriorityTag(this.priority, {super.key});
 
   final String priority;
 
@@ -500,15 +500,18 @@ class _PriorityTag extends StatelessWidget {
 }
 
 /// One task on one line: complete button, title, priority, due date and,
-/// on the right, the project in its colour.
-class _TaskRow extends StatelessWidget {
-  const _TaskRow({
+/// on the right, the project in its colour. With [showNote], the first
+/// line of the task's notes sits under the title.
+class TaskRow extends StatelessWidget {
+  const TaskRow({
+    super.key,
     required this.task,
     required this.project,
     required this.today,
     required this.selected,
     required this.onTap,
     required this.onToggle,
+    this.showNote = false,
   });
 
   final Task task;
@@ -517,11 +520,13 @@ class _TaskRow extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
   final VoidCallback onToggle;
+  final bool showNote;
 
   @override
   Widget build(BuildContext context) {
     final done = task.status == TaskStatus.done;
     final due = task.dueDate;
+    final note = showNote ? firstLine(task.notes) : null;
     return Material(
       color: selected ? Ember.tile : Colors.transparent,
       borderRadius: BorderRadius.circular(8),
@@ -531,64 +536,101 @@ class _TaskRow extends StatelessWidget {
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TaskRing(
-                done: done,
-                priority: task.priority,
-                label: '${done ? 'Undo' : 'Complete'} ${task.title}',
-                onTap: onToggle,
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        task.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: done
-                            ? Ember.item.copyWith(
-                                color: Ember.ink3,
-                                decoration: TextDecoration.lineThrough,
-                              )
-                            : Ember.item,
+              _line(done, due),
+              if (note != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(34, 0, 8, 4),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.notes, size: 13, color: Ember.ink3),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          note,
+                          key: Key('task-note-${task.id}'),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Ember.meta,
+                        ),
                       ),
-                    ),
-                    if (task.priority != TaskPriority.none) ...[
-                      const SizedBox(width: 8),
-                      _PriorityTag(task.priority),
                     ],
-                  ],
-                ),
-              ),
-              if (due != null) ...[
-                const SizedBox(width: 10),
-                Text(
-                  formatRelativeDay(due, today: today),
-                  style: Ember.text(
-                    12,
-                    15,
-                    weight: isDueNow(task, today) ? 600 : 400,
-                    color: isDueNow(task, today) ? Ember.nowInk : Ember.ink2,
                   ),
                 ),
-              ],
-              if (project != null) ...[
-                const SizedBox(width: 10),
-                NameChip(
-                  label: project!.name,
-                  swatch: ProjectColors.of(project!.color),
-                ),
-              ],
-              const SizedBox(width: 4),
             ],
           ),
         ),
       ),
     );
   }
+
+  Widget _line(bool done, String? due) {
+    return Row(
+      children: [
+        TaskRing(
+          done: done,
+          priority: task.priority,
+          label: '${done ? 'Undo' : 'Complete'} ${task.title}',
+          onTap: onToggle,
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Row(
+            children: [
+              Flexible(
+                child: Text(
+                  task.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: done
+                      ? Ember.item.copyWith(
+                          color: Ember.ink3,
+                          decoration: TextDecoration.lineThrough,
+                        )
+                      : Ember.item,
+                ),
+              ),
+              if (task.priority != TaskPriority.none) ...[
+                const SizedBox(width: 8),
+                PriorityTag(task.priority),
+              ],
+            ],
+          ),
+        ),
+        if (due != null) ...[
+          const SizedBox(width: 10),
+          Text(
+            formatRelativeDay(due, today: today),
+            style: Ember.text(
+              12,
+              15,
+              weight: isDueNow(task, today) ? 600 : 400,
+              color: isDueNow(task, today) ? Ember.nowInk : Ember.ink2,
+            ),
+          ),
+        ],
+        if (project != null) ...[
+          const SizedBox(width: 10),
+          NameChip(
+            label: project!.name,
+            swatch: ProjectColors.of(project!.color),
+          ),
+        ],
+        const SizedBox(width: 4),
+      ],
+    );
+  }
+}
+
+/// The first line of [text] that is not empty, or null when there is none.
+String? firstLine(String? text) {
+  if (text == null) return null;
+  for (final line in text.split('\n')) {
+    if (line.trim().isNotEmpty) return line.trim();
+  }
+  return null;
 }
 
 /// A calendar of one month. Each day shows the tasks due on it.
@@ -777,8 +819,8 @@ class _MonthView extends StatelessWidget {
 }
 
 /// The details of one task, to change or delete it.
-class _TaskForm extends ConsumerStatefulWidget {
-  const _TaskForm({
+class TaskForm extends ConsumerStatefulWidget {
+  const TaskForm({
     super.key,
     required this.task,
     required this.projects,
@@ -794,11 +836,12 @@ class _TaskForm extends ConsumerStatefulWidget {
   final VoidCallback onClose;
 
   @override
-  ConsumerState<_TaskForm> createState() => _TaskFormState();
+  ConsumerState<TaskForm> createState() => TaskFormState();
 }
 
-class _TaskFormState extends ConsumerState<_TaskForm> {
+class TaskFormState extends ConsumerState<TaskForm> {
   late final _title = TextEditingController(text: widget.task.title);
+  late final _notes = TextEditingController(text: widget.task.notes ?? '');
   late String? _projectId = widget.task.projectId;
   late String? _dueDate = widget.task.dueDate;
   late String _priority = widget.task.priority;
@@ -807,6 +850,7 @@ class _TaskFormState extends ConsumerState<_TaskForm> {
   @override
   void dispose() {
     _title.dispose();
+    _notes.dispose();
     super.dispose();
   }
 
@@ -838,6 +882,7 @@ class _TaskFormState extends ConsumerState<_TaskForm> {
             projectId: _projectId,
             dueDate: _dueDate,
             priority: _priority,
+            notes: _notes.text,
           );
       if (!mounted) return;
       setState(() => _error = null);
@@ -980,6 +1025,18 @@ class _TaskFormState extends ConsumerState<_TaskForm> {
                 onSelected: (_) => setState(() => _priority = value),
               ),
           ],
+        ),
+        const SizedBox(height: 14),
+        const FieldLabel('Notes'),
+        TextField(
+          key: const Key('task-notes'),
+          controller: _notes,
+          minLines: 4,
+          maxLines: 12,
+          keyboardType: TextInputType.multiline,
+          decoration: const InputDecoration(
+            hintText: 'Anything to remember about this task',
+          ),
         ),
         const SizedBox(height: 18),
         FilledButton(

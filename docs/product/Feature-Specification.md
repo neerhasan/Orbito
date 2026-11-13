@@ -39,7 +39,7 @@ Revision notes (2026-11-11): version 0.2 (approved) moved accounts, server and s
 ### F-01 Tasks
 - Description: create, edit, complete and organise tasks. Each task can belong to a project and goal, have a due date, a priority and a project colour. Views: list with grouping and sorting, and a month view. A chart shows tasks completed per day.
 - User permissions: the single user can create, edit, complete and delete their own tasks.
-- Inputs: title, optional project, goal, due date, priority.
+- Inputs: title, optional project, goal, due date, priority, notes (free text for this task; added 2026-11-13).
 - Outputs: task list, month view, completion chart.
 - Expected behavior: tasks show on one compact line with project name and priority. The user can filter and sort. Completing a task updates the chart and the related goal.
 - Error states: empty title is refused with a clear message; a failed save keeps the text the user typed.
@@ -79,8 +79,8 @@ Revision notes (2026-11-11): version 0.2 (approved) moved accounts, server and s
 ### F-05 Life areas, goals and projects
 - Description: the chain Life Area, Goal, Project, Task. Each level can be created and linked.
 - User permissions: single user.
-- Inputs: names, links between levels, optional target date.
-- Outputs: pages for each level with linked items and progress.
+- Inputs: names, links between levels, optional target date, a colour and an icon for each level (added 2026-11-13; a life area's icon is optional).
+- Outputs: pages for each level with linked items and progress. A project opens on its own page with all its tasks.
 - Expected behavior: a new project links to a goal, and a goal to a life area. A soft limit on active life areas (proposed 3 to 8) is TBD - pending founder decision.
 - Error states: deleting an item that has linked items asks what to do with them.
 - Empty states: a first-run setup suggests common life areas the user can accept or change.
