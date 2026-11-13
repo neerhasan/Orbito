@@ -129,6 +129,87 @@ Future<void> _tap(WidgetTester tester, String key) async {
 }
 
 void main() {
+  group('the Sleep page', () {
+    _testPage('logs a night and shows it in the numbers', (tester) async {
+      await _pumpPage(tester, AppPage.sleep);
+      expect(find.text('Not logged yet'), findsOneWidget);
+      expect(find.text('No nights logged yet.'), findsOneWidget);
+
+      // The form starts at 11:00 PM to 7:00 AM.
+      expect(find.text('8h'), findsOneWidget);
+      await _tap(tester, 'sleep-rested-good');
+      await tester.enterText(find.byKey(const Key('sleep-note')), 'Quiet');
+      await _tap(tester, 'sleep-save');
+      await _settle(tester);
+
+      final nights = await _read(tester, () => _sleep.watchNights(_user).first);
+      expect(nights.single.day, '2026-11-13');
+      expect(nights.single.bedTime, '23:00');
+      expect(nights.single.wakeTime, '07:00');
+      expect(nights.single.rested, 'good');
+      expect(nights.single.note, 'Quiet');
+      expect(find.text('11:00 PM to 7:00 AM'), findsOneWidget);
+      expect(find.byKey(const Key('night-2026-11-13')), findsOneWidget);
+    });
+
+    _testPage('a night can be changed, checked and deleted', (tester) async {
+      await _read(
+        tester,
+        () => _sleep.saveNight(
+          userId: _user,
+          day: '2026-11-12',
+          bedTime: '07:00',
+          wakeTime: '23:30',
+        ),
+      );
+      await _pumpPage(tester, AppPage.sleep);
+
+      await _tap(tester, 'night-2026-11-12');
+      expect(find.text('Change a night'), findsOneWidget);
+      expect(find.textContaining('Check the times'), findsOneWidget);
+
+      // Saving an unusual night asks first.
+      await _tap(tester, 'sleep-save');
+      await tester.pump();
+      expect(find.text('Save anyway'), findsOneWidget);
+      await tester.tap(find.text('Go back'));
+      await tester.pump();
+
+      await _tap(tester, 'sleep-delete');
+      await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+      await tester.pump();
+      await _settle(tester);
+      final nights = await _read(tester, () => _sleep.watchNights(_user).first);
+      expect(nights, isEmpty);
+    });
+
+    _testPage('the range switch changes the numbers', (tester) async {
+      await _read(tester, () async {
+        await _sleep.saveNight(
+          userId: _user,
+          day: '2026-11-13',
+          bedTime: '23:00',
+          wakeTime: '07:00',
+        );
+        await _sleep.saveNight(
+          userId: _user,
+          day: '2026-11-01',
+          bedTime: '23:00',
+          wakeTime: '05:00',
+        );
+      });
+      await _pumpPage(tester, AppPage.sleep);
+      expect(find.text('Average, 14 nights'), findsOneWidget);
+      expect(find.text('7h'), findsOneWidget);
+
+      await _tap(tester, 'sleep-range-7');
+      expect(find.text('Average, 7 nights'), findsOneWidget);
+      await _tap(tester, 'sleep-range-30');
+      expect(find.text('Average, 30 nights'), findsOneWidget);
+      expect(find.text('7h'), findsOneWidget, reason: '(8h + 6h) / 2');
+    });
+  });
+
   group('the Habits page', () {
     _testPage('adds a habit, marks it done, skips and unskips', (
       tester,

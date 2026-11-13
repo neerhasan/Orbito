@@ -7,6 +7,7 @@ import '../features/goals/goals_page.dart';
 import '../features/habits/habits_page.dart';
 import '../features/projects/projects_page.dart';
 import '../features/setup/setup_page.dart';
+import '../features/sleep/sleep_page.dart';
 import '../features/tasks/tasks_page.dart';
 import '../ui/ember.dart';
 import '../ui/widgets.dart';
@@ -76,6 +77,7 @@ class PageHost extends ConsumerWidget {
       AppPage.goals => const GoalsPage(),
       AppPage.tasks => const TasksPage(),
       AppPage.habits => const HabitsPage(),
+      AppPage.sleep => const SleepPage(),
     };
   }
 }
