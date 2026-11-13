@@ -31,6 +31,7 @@ Future<void> _pumpShell(
     ProviderScope(
       overrides: [
         lifeAreasProvider.overrideWith((ref) => Stream.value(areas)),
+        focusTimerProvider.overrideWith((ref) => Stream.value(null)),
         syncStatusTextProvider.overrideWithValue(status),
       ],
       child: MaterialApp(

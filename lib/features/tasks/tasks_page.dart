@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
+import '../../app/shell.dart' show AppPage, currentPageProvider;
 import '../../data/local/app_database.dart';
 import '../../domain/dates.dart';
+import '../../domain/focus.dart' show formatWorked, secondsByTask;
+import '../focus/focus_page.dart' show startFocus;
 import '../../domain/task_view.dart';
 import '../../ui/ember.dart';
 import '../../ui/motion.dart';
@@ -632,6 +635,45 @@ class TaskRow extends StatelessWidget {
   }
 }
 
+/// The focus time saved to a task, and a button to start a session on it.
+class _FocusLine extends ConsumerWidget {
+  const _FocusLine({required this.task});
+
+  final Task task;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final sessions =
+        ref.watch(focusSessionsProvider).value ?? const <FocusSession>[];
+    final seconds = secondsByTask(sessions)[task.id] ?? 0;
+    return Row(
+      children: [
+        Icon(Icons.timer_outlined, size: 16, color: Ember.ink2),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            seconds == 0
+                ? 'No focus time yet'
+                : 'Focus time: ${formatWorked(seconds)}',
+            key: const Key('task-focus-time'),
+            style: Ember.meta,
+          ),
+        ),
+        if (task.status != TaskStatus.done)
+          OutlinedButton.icon(
+            key: const Key('task-start-focus'),
+            onPressed: () async {
+              await startFocus(context, ref, taskId: task.id);
+              ref.read(currentPageProvider.notifier).open(AppPage.focus);
+            },
+            icon: const Icon(Icons.play_arrow_rounded, size: 16),
+            label: const Text('Start focus'),
+          ),
+      ],
+    );
+  }
+}
+
 /// The first line of [text] that is not empty, or null when there is none.
 String? firstLine(String? text) {
   if (text == null) return null;
@@ -1046,6 +1088,8 @@ class TaskFormState extends ConsumerState<TaskForm> {
             hintText: 'Anything to remember about this task',
           ),
         ),
+        const SizedBox(height: 14),
+        _FocusLine(task: widget.task),
         const SizedBox(height: 18),
         FilledButton(
           key: const Key('task-save'),

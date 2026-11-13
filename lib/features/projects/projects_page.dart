@@ -5,6 +5,8 @@ import '../../app/providers.dart';
 import '../../data/local/app_database.dart';
 import '../../data/repositories/plan_repository.dart';
 import '../../domain/dates.dart';
+import '../../domain/focus.dart'
+    show formatWorked, secondsByTask, secondsOfProject;
 import '../../domain/progress.dart';
 import '../../ui/ember.dart';
 import '../../ui/widgets.dart';
@@ -72,8 +74,12 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
     final goals = ref.watch(goalsProvider).value ?? const <Goal>[];
     final tasks = ref.watch(tasksProvider).value ?? const <Task>[];
     final today = dayKey(ref.watch(clockProvider)());
+    final byTask = secondsByTask(
+      ref.watch(focusSessionsProvider).value ?? const <FocusSession>[],
+    );
     List<Task> tasksOf(Project project) =>
         tasks.where((task) => task.projectId == project.id).toList();
+    int focusOf(Project project) => secondsOfProject(project.id, tasks, byTask);
     Goal? goalOf(Project project) =>
         goals.where((goal) => goal.id == project.goalId).firstOrNull;
 
@@ -100,6 +106,7 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
                       project: project,
                       goal: goalOf(project),
                       tasks: tasksOf(project),
+                      focusSeconds: focusOf(project),
                       onTap: () => _open(project.id),
                     ),
                   ),
@@ -134,6 +141,7 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
           project: open,
           goal: goalOf(open),
           tasks: openTasks,
+          focusSeconds: focusOf(open),
           onBack: () => _open(null),
         ),
         const SizedBox(height: 22),
@@ -251,17 +259,27 @@ class _ProjectIcon extends StatelessWidget {
   }
 }
 
+/// "2 of 5 tasks", with the focus time when there is some.
+String _progressLine(int done, int total, int focusSeconds) {
+  final tasks = '$done of ${countOf(total, 'task')}';
+  return focusSeconds == 0
+      ? tasks
+      : '$tasks · ${formatWorked(focusSeconds)} focused';
+}
+
 class _ProjectTile extends StatelessWidget {
   const _ProjectTile({
     required this.project,
     required this.goal,
     required this.tasks,
+    required this.focusSeconds,
     required this.onTap,
   });
 
   final Project project;
   final Goal? goal;
   final List<Task> tasks;
+  final int focusSeconds;
   final VoidCallback onTap;
 
   @override
@@ -303,7 +321,7 @@ class _ProjectTile extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      '$done of ${countOf(tasks.length, 'task')}',
+                      _progressLine(done, tasks.length, focusSeconds),
                       style: Ember.meta,
                     ),
                     Text('$percent%', style: Ember.item),
@@ -326,12 +344,14 @@ class _ProjectHeader extends StatelessWidget {
     required this.project,
     required this.goal,
     required this.tasks,
+    required this.focusSeconds,
     required this.onBack,
   });
 
   final Project project;
   final Goal? goal;
   final List<Task> tasks;
+  final int focusSeconds;
   final VoidCallback onBack;
 
   @override
@@ -379,7 +399,7 @@ class _ProjectHeader extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              '$done of ${countOf(tasks.length, 'task')}',
+              _progressLine(done, tasks.length, focusSeconds),
               style: Ember.meta,
             ),
             Text('$percent%', style: Ember.item),

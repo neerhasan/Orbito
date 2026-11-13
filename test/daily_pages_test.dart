@@ -11,6 +11,7 @@ import 'package:orbito/data/repositories/habit_repository.dart';
 import 'package:orbito/data/repositories/plan_repository.dart';
 import 'package:orbito/data/repositories/sleep_repository.dart';
 import 'package:orbito/data/repositories/task_repository.dart';
+import 'package:orbito/data/sync/sync_status_text.dart';
 import 'package:orbito/ui/ember.dart';
 
 const _user = 'user-a';
@@ -128,7 +129,153 @@ Future<void> _tap(WidgetTester tester, String key) async {
   await tester.pump();
 }
 
+/// Shows the whole app frame (side menu and pages), as after sign-in.
+Future<void> _pumpApp(WidgetTester tester) async {
+  tester.view.physicalSize = const Size(1400, 1000);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
+  await _read(
+    tester,
+    () => _plan.addArea(userId: _user, name: 'Health', color: 'green'),
+  );
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        appDatabaseProvider.overrideWithValue(_db),
+        planRepositoryProvider.overrideWithValue(_plan),
+        taskRepositoryProvider.overrideWithValue(_tasks),
+        habitRepositoryProvider.overrideWithValue(_habits),
+        sleepRepositoryProvider.overrideWithValue(_sleep),
+        focusRepositoryProvider.overrideWithValue(_focus),
+        userIdProvider.overrideWithValue(_user),
+        firstSyncDoneProvider.overrideWithValue(true),
+        clockProvider.overrideWithValue(() => _clock),
+        syncStatusTextProvider.overrideWithValue(
+          const SyncStatusText('Synced'),
+        ),
+      ],
+      child: MaterialApp(
+        theme: Ember.theme(),
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(disableAnimations: true),
+          child: child!,
+        ),
+        home: const AppShell(email: 'a@example.com', pageBuilder: buildPage),
+      ),
+    ),
+  );
+  await _settle(tester);
+}
+
+/// Lets [time] pass on the app's clock and redraws the moving clocks.
+Future<void> _wait(WidgetTester tester, Duration time) async {
+  _clock = _clock.add(time);
+  await tester.pump(const Duration(seconds: 1));
+  await _settle(tester);
+}
+
 void main() {
+  group('the focus timer', () {
+    _testPage('start on a task, pause, leave, come back, stop and save', (
+      tester,
+    ) async {
+      final task = await _read(
+        tester,
+        () => _tasks.addTask(userId: _user, title: 'Write the plan'),
+      );
+      await _pumpApp(tester);
+
+      await _tap(tester, 'menu-focus');
+      await _settle(tester);
+      expect(find.text('No sessions yet today.'), findsOneWidget);
+      await _tap(tester, 'focus-length-45');
+      await _tap(tester, 'focus-start-$task');
+      await _settle(tester);
+
+      // Focus mode fills the window.
+      expect(find.byKey(const Key('focus-mode')), findsOneWidget);
+      expect(find.text('Write the plan'), findsOneWidget);
+      expect(find.text('of 45:00'), findsOneWidget);
+
+      await _wait(tester, const Duration(minutes: 5));
+      expect(find.text('05:00'), findsOneWidget);
+
+      // Paused time is not counted.
+      await _tap(tester, 'focus-pause');
+      await _settle(tester);
+      expect(find.textContaining('Paused'), findsOneWidget);
+      await _wait(tester, const Duration(minutes: 10));
+      expect(find.text('05:00'), findsOneWidget);
+      await _tap(tester, 'focus-pause');
+      await _settle(tester);
+
+      // Back to the app: the timer stays in the side menu.
+      await _tap(tester, 'focus-exit');
+      await _settle(tester);
+      expect(find.byKey(const Key('focus-mode')), findsNothing);
+      expect(find.byKey(const Key('focus-pill')), findsOneWidget);
+
+      await _wait(tester, const Duration(minutes: 2));
+      await _tap(tester, 'focus-pill');
+      await _settle(tester);
+      expect(find.text('07:00'), findsOneWidget);
+
+      await _tap(tester, 'focus-stop');
+      await _settle(tester);
+      final sessions = await _read(
+        tester,
+        () => _focus.watchSessions(_user).first,
+      );
+      expect(sessions.single.taskId, task);
+      expect(sessions.single.focusSeconds, 7 * 60);
+      expect(find.byKey(const Key('focus-mode')), findsNothing);
+      expect(find.text('7m focused · 1 session'), findsOneWidget);
+
+      // The task stays open.
+      final tasks = await _read(tester, () => _tasks.watchTasks(_user).first);
+      expect(tasks.single.status, TaskStatus.open);
+    });
+
+    _testPage('task done completes the task; notes save from focus mode', (
+      tester,
+    ) async {
+      final task = await _read(
+        tester,
+        () => _tasks.addTask(userId: _user, title: 'Sort files'),
+      );
+      await _read(tester, () => _focus.start(userId: _user, taskId: task));
+      await _pumpApp(tester);
+
+      // A timer that was running when the app closed is still there.
+      expect(find.byKey(const Key('focus-pill')), findsOneWidget);
+      await _tap(tester, 'focus-pill');
+      await _settle(tester);
+
+      await tester.enterText(
+        find.byKey(const Key('focus-notes')),
+        'Scan first',
+      );
+      await _tap(tester, 'focus-notes-save');
+      await _settle(tester);
+
+      await _wait(tester, const Duration(minutes: 3));
+      await _tap(tester, 'focus-done');
+      await _settle(tester);
+
+      final saved = (await _read(
+        tester,
+        () => _tasks.watchTasks(_user).first,
+      )).single;
+      expect(saved.status, TaskStatus.done);
+      expect(saved.notes, 'Scan first');
+      final sessions = await _read(
+        tester,
+        () => _focus.watchSessions(_user).first,
+      );
+      expect(sessions.single.focusSeconds, 3 * 60);
+    });
+  });
+
   group('the Sleep page', () {
     _testPage('logs a night and shows it in the numbers', (tester) async {
       await _pumpPage(tester, AppPage.sleep);
@@ -211,9 +358,7 @@ void main() {
   });
 
   group('the Habits page', () {
-    _testPage('adds a habit, marks it done, skips and unskips', (
-      tester,
-    ) async {
+    _testPage('adds a habit, marks it done, skips and unskips', (tester) async {
       await _pumpPage(tester, AppPage.habits);
       expect(find.text('No habits yet'), findsOneWidget);
 

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../features/areas/areas_page.dart';
 import '../features/auth/sign_in_screen.dart';
+import '../features/focus/focus_page.dart';
 import '../features/goals/goals_page.dart';
 import '../features/habits/habits_page.dart';
 import '../features/projects/projects_page.dart';
@@ -78,6 +79,7 @@ class PageHost extends ConsumerWidget {
       AppPage.tasks => const TasksPage(),
       AppPage.habits => const HabitsPage(),
       AppPage.sleep => const SleepPage(),
+      AppPage.focus => const FocusPage(),
     };
   }
 }

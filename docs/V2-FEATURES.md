@@ -19,6 +19,16 @@ What this changes in v1:
 - No score, no score history and no fail-day message in v1.
 - The `energy_routine`, `routine_item` and `score_snapshot` tables are not created in v1.
 
+## Shown in the designs but left out of M2 (2026-11-13)
+The M2 designs and the prototype show these. They are not in the first-release spec, so they wait for a later version unless the founder asks for them in v1.
+- Logging distractions during a focus session, and the Time page that sums them up.
+- A habit that fills itself in from the sleep log (for example "Wake by 7:00").
+- A reason for a missed habit ("What got in the way?").
+- The "Patterns" box on Habits and "Connected to" on Sleep (these are insights, F-12).
+- Repeating tasks that count as habits.
+- Sleep from a watch or phone ("Device sync").
+- Subtasks and "Up next" in focus mode.
+
 ## Already planned for later (P1 and P2, from the Feature Specification)
 These were never part of v1.
 - F-12 Insights and 14-day tests

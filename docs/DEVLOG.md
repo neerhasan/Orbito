@@ -2,6 +2,23 @@
 
 Claude Code adds a new entry on top at the end of every session.
 
+### 2026-11-13 Soft motion and M2 (habits, sleep, focus timer), Windows
+- Done:
+  - Motion: `lib/ui/motion.dart` holds one soft curve and the timings. Pages and the right panel cross-fade, tiles fade in and give when pressed, rings fill, bars and charts rise, panels resize smoothly. No motion when Windows has animation effects off.
+  - Server: `supabase/007_daily_tables.sql` (habits, habit_logs, focus_sessions, sleep_logs) with row-level security; applied through the connector. The privacy test (`test/integration/rls_test.dart`) now covers all nine tables and passed against the real project.
+  - Sync config: four new streams in `powersync/sync-config.yaml`. The founder still has to deploy it (see `docs/M2-TEST.md`, "Before you start").
+  - Local: Drift tables, PowerSync schema, and a device-only `focus_timer` table so a running timer survives closing the app.
+  - Rules in `lib/domain/habits.dart`, `sleep.dart`, `focus.dart`; repositories in `lib/data/repositories/`.
+  - Pages after the designs: Habits, Sleep, Focus (with full-window focus mode and a timer pill in the side menu). Tasks show focus time and a "Start focus" button; projects and goals show focus time.
+  - Ids made from text (UUID version 5, `stableId` in `providers.dart`) for one habit mark per day and one night per morning, so two devices write the same row.
+- Left to do: the founder deploys the sync config and runs `docs/M2-TEST.md`.
+- Known problems:
+  - `flutter test` ran out of memory on this PC when all test files ran at once (4 GB free). Run `flutter test --concurrency=2`.
+  - Until the new sync config is deployed, M2 rows can vanish from the app after upload (the same cause as the duplicate areas in M1).
+  - The Supabase security check still warns that leaked-password protection is off (an M5 item).
+- Test results: `flutter analyze`: no issues. `flutter test --concurrency=2`: 128 passed (the 9 privacy tests ran against the real project). `flutter build windows --release --no-tree-shake-icons`: built; the app was restarted.
+- Next step: the founder's M2 test.
+
 ### 2026-11-13 M1 fixes after the founder's second test
 - Done:
   - Only one project icon showed in the Windows app. Cause: the local release build reused an old, cut-down copy of the icon font (2.6 KB) made before the icons were added. Fix: build with `flutter build windows --release --no-tree-shake-icons`, which keeps the whole icon font (1.6 MB). Use this flag for every Windows build until icons stop changing.

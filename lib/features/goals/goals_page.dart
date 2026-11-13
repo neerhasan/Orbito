@@ -5,6 +5,8 @@ import '../../app/providers.dart';
 import '../../data/local/app_database.dart';
 import '../../data/repositories/plan_repository.dart';
 import '../../domain/dates.dart';
+import '../../domain/focus.dart'
+    show formatWorked, secondsByTask, secondsOfGoal;
 import '../../domain/progress.dart';
 import '../../ui/ember.dart';
 import '../../ui/widgets.dart';
@@ -31,6 +33,9 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
     final today = dayKey(DateTime.now());
     List<Task> tasksOf(Goal goal) =>
         tasksOfGoal(goal.id, projects: projects, tasks: tasks);
+    final byTask = secondsByTask(
+      ref.watch(focusSessionsProvider).value ?? const <FocusSession>[],
+    );
 
     return PageLayout(
       main: [
@@ -55,6 +60,12 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
                         .where((area) => area.id == goal.lifeAreaId)
                         .firstOrNull,
                     tasks: tasksOf(goal),
+                    focusSeconds: secondsOfGoal(
+                      goal.id,
+                      projects,
+                      tasks,
+                      byTask,
+                    ),
                     today: today,
                     selected: goal.id == _selectedId,
                     onTap: () => setState(() {
@@ -112,6 +123,7 @@ class _GoalTile extends StatelessWidget {
     required this.goal,
     required this.area,
     required this.tasks,
+    required this.focusSeconds,
     required this.today,
     required this.selected,
     required this.onTap,
@@ -120,6 +132,9 @@ class _GoalTile extends StatelessWidget {
   final Goal goal;
   final LifeArea? area;
   final List<Task> tasks;
+
+  /// Focus time saved to the tasks of the goal's projects.
+  final int focusSeconds;
   final String today;
   final bool selected;
   final VoidCallback onTap;
@@ -183,7 +198,8 @@ class _GoalTile extends StatelessWidget {
                     Text(
                       tasks.isEmpty
                           ? 'No tasks yet'
-                          : '$done of ${countOf(tasks.length, 'task')}',
+                          : '$done of ${countOf(tasks.length, 'task')}'
+                                '${focusSeconds == 0 ? '' : ' · ${formatWorked(focusSeconds)} focused'}',
                       style: Ember.meta,
                     ),
                     Text('$percent%', style: Ember.item),

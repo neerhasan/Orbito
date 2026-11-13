@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../features/focus/focus_page.dart';
 import '../ui/ember.dart';
 import '../ui/motion.dart';
 import '../ui/widgets.dart';
@@ -13,6 +14,7 @@ enum AppPage {
   goals('Goals', Icons.flag_outlined),
   habits('Habits', Icons.repeat),
   sleep('Sleep', Icons.bedtime_outlined),
+  focus('Focus', Icons.timer_outlined),
   areas('Life areas', Icons.blur_circular_outlined);
 
   const AppPage(this.label, this.icon);
@@ -47,7 +49,24 @@ class AppShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final page = ref.watch(currentPageProvider);
+    final timer = ref.watch(focusTimerProvider).value;
+    // While a timer runs, the Focus page is the full-window focus mode.
+    // The app and focus mode flow into each other.
+    return SoftSwitcher(
+      child: page == AppPage.focus && timer != null
+          ? FocusModeView(
+              key: const ValueKey('focus-mode'),
+              timer: timer,
+              onExit: () =>
+                  ref.read(currentPageProvider.notifier).open(AppPage.tasks),
+            )
+          : _frame(page),
+    );
+  }
+
+  Widget _frame(AppPage page) {
     return Scaffold(
+      key: const ValueKey('app-frame'),
       backgroundColor: Ember.shell,
       body: SafeArea(
         child: Row(
@@ -82,6 +101,7 @@ class _SideMenu extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final page = ref.watch(currentPageProvider);
     final areas = ref.watch(lifeAreasProvider).value ?? const [];
+    final timer = ref.watch(focusTimerProvider).value;
     void open(AppPage target) =>
         ref.read(currentPageProvider.notifier).open(target);
 
@@ -97,6 +117,11 @@ class _SideMenu extends ConsumerWidget {
               style: Ember.text(18, 22, weight: 700, color: Ember.onShell),
             ),
           ),
+          // The running timer stays in view on every page.
+          if (timer != null) ...[
+            const SizedBox(height: 10),
+            FocusPill(timer: timer, onOpen: () => open(AppPage.focus)),
+          ],
           Expanded(
             child: ListView(
               children: [
@@ -114,7 +139,11 @@ class _SideMenu extends ConsumerWidget {
                     onTap: () => open(item),
                   ),
                 const _GroupLabel('Daily'),
-                for (final item in [AppPage.habits, AppPage.sleep])
+                for (final item in [
+                  AppPage.habits,
+                  AppPage.sleep,
+                  AppPage.focus,
+                ])
                   _MenuItem(
                     key: Key('menu-${item.name}'),
                     label: item.label,

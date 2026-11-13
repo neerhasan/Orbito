@@ -69,7 +69,7 @@ Revision notes (2026-11-11): version 0.2 (approved) moved accounts, server and s
 ### F-04 Sleep log
 - Description: record sleep time and wake time and see consistency.
 - User permissions: single user.
-- Inputs: sleep time, wake time, optional note.
+- Inputs: sleep time, wake time, optional note, optional "how rested" (poor, okay, good, great; from the design, added 2026-11-13).
 - Outputs: nightly record and consistency summary.
 - Expected behavior: logging takes one short entry. Past entries can be corrected.
 - Error states: a wake time before sleep time asks the user to check.

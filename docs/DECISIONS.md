@@ -21,6 +21,12 @@ Decided by the founder:
   - A project shows its goal as the goal's icon and name in the goal's colour, without the word "Goal:".
 - 2026-11-13: M1 approved by the founder "for now"; design changes to M1 may follow later. M2 may start.
 - 2026-11-13: Soft, fluid ("liquid") animation everywhere. One place holds the timing and curves (`lib/ui/motion.dart`). When Windows has animation effects turned off, the app does not animate. Screens follow the designs in `docs/design/source/`.
+- 2026-11-13 (M2, Claude's choices; the founder can change them):
+  - The Habits design shows streaks ("4-day streak"). The spec says no streak pressure, so habits show "x of 7 days" and a 30-day percent instead. Skip marks a planned rest day that does not count against the habit.
+  - A habit has planned weekdays (every day by default). Days that are not planned do not count.
+  - Focus sessions under one minute are not saved. Planned lengths offered: none, 25, 45, 60, 90 minutes.
+  - While a timer runs, the Focus page is the full-window focus mode from the design; "Back to Orbito" (or Esc) leaves it and the timer stays in the side menu.
+  - A night is filed under the morning the user woke up. One night per morning; saving again replaces it. A night of 0 hours or more than 16 hours asks the user to check the times. "How rested" (poor, okay, good, great) is optional, as in the design.
 - 2026-11-13: Widgets for Windows, Android and iOS are wanted in a future version (new feature F-26, P2). Nothing is built in v1; v1 keeps the data and rules separate from the screens so widgets can be added later. Details are in `docs/V2-FEATURES.md`.
 
 Defaults used until the founder changes them:
