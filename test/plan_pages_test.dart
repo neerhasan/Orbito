@@ -352,9 +352,9 @@ void main() {
       await _tap(tester, 'show-completed');
       expect(find.text('Buy shoes'), findsNothing);
 
-      // The chart sits in the "Completed" section.
-      expect(find.byKey(const Key('chart-summary')), findsNothing);
-      await _tap(tester, 'show-chart');
+      // The chart is always shown, under the title; it cannot be hidden.
+      expect(find.byKey(const Key('tasks-chart')), findsOneWidget);
+      expect(find.byKey(const Key('show-chart')), findsNothing);
       expect(find.text('Last 14 days · 1 done · 0.1 a day'), findsOneWidget);
       await _tap(tester, 'chart-week');
       expect(find.text('Last 7 days · 1 done · 0.1 a day'), findsOneWidget);

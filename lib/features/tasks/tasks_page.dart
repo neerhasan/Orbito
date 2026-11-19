@@ -51,7 +51,6 @@ class _TasksPageState extends ConsumerState<TasksPage> {
   String? _priority;
   String? _selectedId;
   var _showFilters = false;
-  var _showCompleted = false;
 
   /// The month the month view shows. Null means the current month.
   DateTime? _month;
@@ -175,71 +174,95 @@ class _TasksPageState extends ConsumerState<TasksPage> {
     return PageLayout(
       railWidth: 400,
       main: [
-        Wrap(
-          alignment: WrapAlignment.spaceBetween,
-          crossAxisAlignment: WrapCrossAlignment.start,
-          spacing: 12,
-          runSpacing: 12,
-          children: [
-            PageHeader(
-              title: 'Tasks',
-              subtitle: [
-                '$open open',
-                if (overdue > 0) '$overdue overdue',
-                if (onTime != null) '$onTime% done on time this month',
-              ].join(' · '),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                crossAxisAlignment: WrapCrossAlignment.center,
+        PageHeader(
+          title: 'Tasks',
+          subtitle: [
+            '$open open',
+            if (overdue > 0) '$overdue overdue',
+            if (onTime != null) '$onTime% done on time this month',
+          ].join(' · '),
+        ),
+        // The chart is always on, right under the title.
+        Tile(
+          key: const Key('tasks-chart'),
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _Segments<_TasksView>(
-                    keyPrefix: 'view',
-                    value: _view,
-                    options: const [
-                      (_TasksView.list, 'List', Icons.view_list_outlined),
-                      (
-                        _TasksView.month,
-                        'Calendar',
-                        Icons.calendar_month_outlined,
-                      ),
-                    ],
-                    onChanged: (view) => setState(() => _view = view),
-                  ),
-                  SoftButton(
-                    key: const Key('show-completed'),
-                    icon: _status == StatusFilter.open
-                        ? Icons.visibility_outlined
-                        : Icons.visibility_off_outlined,
-                    label: _status == StatusFilter.open
-                        ? 'Show completed'
-                        : 'Hide completed',
-                    active: _status != StatusFilter.open,
-                    onPressed: () => setState(
-                      () => _status = _status == StatusFilter.open
-                          ? StatusFilter.all
-                          : StatusFilter.open,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Tasks completed', style: Ember.h3),
+                        const SizedBox(height: 3),
+                        Text(
+                          summary,
+                          key: const Key('chart-summary'),
+                          style: Ember.meta,
+                        ),
+                      ],
                     ),
                   ),
-                  SoftButton(
-                    key: const Key('task-filters'),
-                    icon: Icons.filter_list,
-                    label: filtered ? 'Filters on' : 'Filters',
-                    active: _showFilters,
-                    onPressed: () =>
-                        setState(() => _showFilters = !_showFilters),
-                  ),
-                  FilledButton.icon(
-                    key: const Key('task-new-button'),
-                    onPressed: _newTaskFocus.requestFocus,
-                    icon: const Icon(Icons.add, size: 16),
-                    label: const Text('New task'),
+                  _Segments<ChartRange>(
+                    keyPrefix: 'chart',
+                    value: _range,
+                    options: [
+                      for (final range in ChartRange.values)
+                        (range, range.label, null),
+                    ],
+                    onChanged: (range) => setState(() => _range = range),
                   ),
                 ],
               ),
+              const SizedBox(height: 10),
+              CompletionChart(points: points, summary: summary),
+            ],
+          ),
+        ),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            _Segments<_TasksView>(
+              keyPrefix: 'view',
+              value: _view,
+              options: const [
+                (_TasksView.list, 'List', Icons.view_list_outlined),
+                (_TasksView.month, 'Calendar', Icons.calendar_month_outlined),
+              ],
+              onChanged: (view) => setState(() => _view = view),
+            ),
+            SoftButton(
+              key: const Key('show-completed'),
+              icon: _status == StatusFilter.open
+                  ? Icons.visibility_outlined
+                  : Icons.visibility_off_outlined,
+              label: _status == StatusFilter.open
+                  ? 'Show completed'
+                  : 'Hide completed',
+              active: _status != StatusFilter.open,
+              onPressed: () => setState(
+                () => _status = _status == StatusFilter.open
+                    ? StatusFilter.all
+                    : StatusFilter.open,
+              ),
+            ),
+            SoftButton(
+              key: const Key('task-filters'),
+              icon: Icons.filter_list,
+              label: filtered ? 'Filters on' : 'Filters',
+              active: _showFilters,
+              onPressed: () => setState(() => _showFilters = !_showFilters),
+            ),
+            FilledButton.icon(
+              key: const Key('task-new-button'),
+              onPressed: _newTaskFocus.requestFocus,
+              icon: const Icon(Icons.add, size: 16),
+              label: const Text('New task'),
             ),
           ],
         ),
@@ -387,62 +410,6 @@ class _TasksPageState extends ConsumerState<TasksPage> {
                 ],
               ],
             ),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Align(
-              alignment: Alignment.centerLeft,
-              child: SoftButton(
-                key: const Key('show-chart'),
-                icon: _showCompleted ? Icons.expand_less : Icons.show_chart,
-                label: 'Completed chart',
-                onPressed: () =>
-                    setState(() => _showCompleted = !_showCompleted),
-              ),
-            ),
-            if (_showCompleted) ...[
-              const SizedBox(height: 10),
-              Tile(
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Tasks completed', style: Ember.h3),
-                              const SizedBox(height: 3),
-                              Text(
-                                summary,
-                                key: const Key('chart-summary'),
-                                style: Ember.meta,
-                              ),
-                            ],
-                          ),
-                        ),
-                        _Segments<ChartRange>(
-                          keyPrefix: 'chart',
-                          value: _range,
-                          options: [
-                            for (final range in ChartRange.values)
-                              (range, range.label, null),
-                          ],
-                          onChanged: (range) => setState(() => _range = range),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    CompletionChart(points: points, summary: summary),
-                  ],
-                ),
-              ),
-            ],
-          ],
-        ),
       ],
       rail: [
         if (selected == null)
