@@ -144,6 +144,20 @@ final inboxProvider = StreamProvider<List<InboxItem>>((ref) {
   return ref.watch(captureRepositoryProvider).watchInbox(userId);
 });
 
+/// The user's notes, newest change first.
+final notesProvider = StreamProvider<List<Note>>((ref) {
+  final userId = ref.watch(userIdProvider);
+  if (userId == null) return Stream.value(const <Note>[]);
+  return ref.watch(captureRepositoryProvider).watchNotes(userId);
+});
+
+/// The usual wake time and bedtime (`HH:MM`), null where the user set none.
+final dayTimesProvider = StreamProvider<({String? wake, String? bed})>((ref) {
+  final userId = ref.watch(userIdProvider);
+  if (userId == null) return Stream.value((wake: null, bed: null));
+  return ref.watch(captureRepositoryProvider).watchDayTimes(userId);
+});
+
 /// The stored choice of Today sections, or null before the user made one.
 final todaySectionsProvider = StreamProvider<String?>((ref) {
   final userId = ref.watch(userIdProvider);

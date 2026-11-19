@@ -34,3 +34,6 @@ streams:
   preferences:
     auto_subscribe: true
     query: SELECT * FROM preferences WHERE user_id = auth.user_id()
+  notes:
+    auto_subscribe: true
+    query: SELECT * FROM notes WHERE user_id = auth.user_id()

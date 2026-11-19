@@ -92,6 +92,9 @@ class Projects extends Table with SyncColumns {
   /// An icon name from `ItemIcons`, for example `folder`. Empty on rows
   /// made before icons existed; the app then shows the folder.
   TextColumn get icon => text().nullable()();
+
+  /// `YYYY-MM-DD`. Optional: the user may set, change or clear it.
+  TextColumn get deadline => text().nullable()();
 }
 
 /// One thing to do. It may belong to a project. The project serves the
@@ -236,6 +239,21 @@ class Preferences extends Table with SyncColumns {
 
   /// The Today sections that are on, in order, comma separated.
   TextColumn get todaySections => text()();
+
+  /// `HH:MM`. The usual wake time and bedtime; null until the user sets them.
+  TextColumn get wakeTime => text().nullable()();
+  TextColumn get bedTime => text().nullable()();
+}
+
+/// A note, optionally linked to one project.
+@DataClassName('Note')
+class Notes extends Table with SyncColumns {
+  @override
+  String get tableName => 'notes';
+
+  TextColumn get title => text()();
+  TextColumn get body => text()();
+  TextColumn get projectId => text().nullable()();
 }
 
 /// The values the `kind` column of an inbox item may hold.
@@ -283,6 +301,7 @@ abstract final class TaskStatus {
     FocusTimers,
     InboxItems,
     Preferences,
+    Notes,
   ],
 )
 class AppDatabase extends _$AppDatabase {

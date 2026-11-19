@@ -328,6 +328,7 @@ class PlanRepository {
     required String color,
     String icon = 'folder',
     String? goalId,
+    String? deadline,
   }) async {
     final id = _newId();
     final timestamp = _timestamp();
@@ -341,6 +342,7 @@ class PlanRepository {
             goalId: Value(goalId),
             color: color,
             icon: Value(icon),
+            deadline: Value(deadline),
             createdAt: timestamp,
             updatedAt: timestamp,
           ),
@@ -354,6 +356,7 @@ class PlanRepository {
     required String color,
     required String icon,
     required String? goalId,
+    String? deadline,
   }) {
     return (_db.update(_db.projects)..where((row) => row.id.equals(id))).write(
       ProjectsCompanion(
@@ -361,6 +364,7 @@ class PlanRepository {
         color: Value(color),
         icon: Value(icon),
         goalId: Value(goalId),
+        deadline: Value(deadline),
         updatedAt: Value(_timestamp()),
       ),
     );
@@ -393,6 +397,15 @@ class PlanRepository {
             ),
           );
     }
+    // Notes of the project stay, but lose the link.
+    await (_db.update(_db.notes)
+          ..where((row) => row.projectId.equals(id) & row.deletedAt.isNull()))
+        .write(
+          NotesCompanion(
+            projectId: const Value(null),
+            updatedAt: Value(timestamp),
+          ),
+        );
     await (_db.update(_db.projects)..where((row) => row.id.equals(id))).write(
       ProjectsCompanion(
         deletedAt: Value(timestamp),
