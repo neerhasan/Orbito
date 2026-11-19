@@ -227,7 +227,7 @@ class _TasksPageState extends ConsumerState<TasksPage> {
                       ],
                     ),
                   ),
-                  _Segments<ChartRange>(
+                  Segments<ChartRange>(
                     keyPrefix: 'chart',
                     value: _range,
                     options: [
@@ -590,8 +590,9 @@ class _AddBox extends StatelessWidget {
 }
 
 /// A row of buttons where one is chosen, such as "List | Month".
-class _Segments<T extends Enum> extends StatelessWidget {
-  const _Segments({
+class Segments<T extends Enum> extends StatelessWidget {
+  const Segments({
+    super.key,
     required this.keyPrefix,
     required this.value,
     required this.options,

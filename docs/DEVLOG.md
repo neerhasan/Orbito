@@ -2,6 +2,12 @@
 
 Claude Code adds a new entry on top at the end of every session.
 
+### 2026-11-19 Calendar page
+- Done: `supabase/010_events.sql` (applied): `events` table with row-level security; sync config has a new `events` stream (the founder deploys it). `lib/domain/calendar.dart` (views, stepping, headings, side-by-side layout of overlapping blocks, focus blocks). Calendar page after `Calendar.dc.html`: Month, Week, 4, 3 and 2 day views; events (add, change, delete; click an empty slot to start one); tasks due and project deadlines in an All day row; past focus sessions as blocks; the picked day listed on the right. Notes stay on the Notes page only; Add habit removed from Today; rows under a date heading no longer repeat the date.
+- Not in this step: Google Calendar (F-15), reminders, habit blocks, tasks with a time.
+- Known problems: notes vanished after saving because the sync config with `notes` was not deployed yet; the founder deploys it.
+- Test results: flutter analyze: no issues. flutter test --concurrency=2: 187 passed (12 new in `test/calendar_test.dart`). Windows release built.
+
 ### 2026-11-19 Founder feedback, round 2: Today tasks by day, inline add, compact rows, Tasks menu
 - Done: clicking a calendar date switches the Today Tasks section to that day (Back to today returns; the picked date has a ring). "Add one" turns into an input in place and adds the task to the shown day. Task rows on the Tasks and project pages are one line: ring and title left; date, priority, project (and focus time) right; rows never wrap: on a narrow panel the project tag, then the priority tag, are left out. The Tasks page view switch, Show completed and Filters moved into a three-dot menu at the top right (New task is not in it; the add box sits under the chart).
 - Test results: flutter analyze: no issues. flutter test --concurrency=2: 174 passed. Windows release built.

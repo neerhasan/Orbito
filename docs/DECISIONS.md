@@ -34,6 +34,7 @@ Decided by the founder:
 - 2026-11-13 (M3): Today opens first. Sections are switched on or off and ordered in Settings; the choice is synced (preferences table). Notes typed in the Quick Launcher are kept in the Inbox until Notes (F-13) exist. Distraction and time-block lines go to the Inbox for now. A task's typed time and unmatched #tags go into its notes (tasks have no time or tags yet).
 - 2026-11-13: Widgets for Windows, Android and iOS are wanted in a future version (new feature F-26, P2). Nothing is built in v1; v1 keeps the data and rules separate from the screens so widgets can be added later. Details are in `docs/V2-FEATURES.md`.
 - 2026-11-19: Notes are their own feature with their own page and table (founder). A note may link to one project. Project deadlines are optional for every project and can be changed any time. The New menu offers only Task and Note. The Today day bar is 24 hours from the wake time set in Settings, with a red dot at the bedtime; it keeps running past bedtime. Wake and bed times live in the preferences row and sync.
+- 2026-11-19: The Calendar page is built now (founder). Google Calendar sync stays F-15 for later. Events are Orbito's own (events table); weeks start on Sunday as in the design.
 
 Defaults used until the founder changes them:
 - Sign-in: email and password, verification off during the test.

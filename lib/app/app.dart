@@ -7,6 +7,7 @@ import '../features/focus/focus_page.dart';
 import '../features/goals/goals_page.dart';
 import '../features/habits/habits_page.dart';
 import '../features/inbox/inbox_page.dart';
+import '../features/calendar/calendar_page.dart';
 import '../features/notes/notes_page.dart';
 import '../features/projects/projects_page.dart';
 import '../features/settings/settings_page.dart';
@@ -84,6 +85,7 @@ class PageHost extends ConsumerWidget {
       AppPage.today => const TodayPage(),
       AppPage.inbox => const InboxPage(),
       AppPage.notes => const NotesPage(),
+      AppPage.calendar => const CalendarPage(),
       AppPage.settings => const SettingsPage(),
       AppPage.habits => const HabitsPage(),
       AppPage.sleep => const SleepPage(),

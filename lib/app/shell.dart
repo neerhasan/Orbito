@@ -19,6 +19,7 @@ enum AppPage {
   tasks('Tasks', Icons.check_circle_outline),
   projects('Projects', Icons.folder_outlined),
   notes('Notes', Icons.sticky_note_2_outlined),
+  calendar('Calendar', Icons.calendar_today_outlined),
   goals('Goals', Icons.flag_outlined),
   habits('Habits', Icons.repeat),
   sleep('Sleep', Icons.bedtime_outlined),
@@ -466,6 +467,7 @@ class _SideMenu extends ConsumerWidget {
                 item(AppPage.tasks, count: openTasks == 0 ? '' : '$openTasks'),
                 item(AppPage.projects),
                 item(AppPage.notes),
+                item(AppPage.calendar),
                 item(AppPage.goals),
                 const _GroupLabel('Daily'),
                 item(
