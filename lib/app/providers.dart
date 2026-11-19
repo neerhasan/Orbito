@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../data/local/app_database.dart';
 import '../data/repositories/capture_repository.dart';
+import '../data/repositories/event_repository.dart';
 import '../data/repositories/focus_repository.dart';
 import '../data/repositories/habit_repository.dart';
 import '../data/repositories/plan_repository.dart';
@@ -145,6 +146,18 @@ final inboxProvider = StreamProvider<List<InboxItem>>((ref) {
 });
 
 /// The user's notes, newest change first.
+final eventRepositoryProvider = Provider<EventRepository>(
+  (ref) =>
+      EventRepository(ref.watch(appDatabaseProvider), newId: () => uuid.v4()),
+);
+
+/// The user's calendar events, by day and start time.
+final eventsProvider = StreamProvider<List<CalendarEvent>>((ref) {
+  final userId = ref.watch(userIdProvider);
+  if (userId == null) return Stream.value(const <CalendarEvent>[]);
+  return ref.watch(eventRepositoryProvider).watchEvents(userId);
+});
+
 final notesProvider = StreamProvider<List<Note>>((ref) {
   final userId = ref.watch(userIdProvider);
   if (userId == null) return Stream.value(const <Note>[]);

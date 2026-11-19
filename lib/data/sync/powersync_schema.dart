@@ -116,6 +116,18 @@ const powerSyncSchema = Schema([
     Column.text('updated_at'),
     Column.text('deleted_at'),
   ]),
+  Table('events', [
+    Column.text('user_id'),
+    Column.text('title'),
+    Column.text('day'),
+    Column.text('start_time'),
+    Column.text('end_time'),
+    Column.text('project_id'),
+    Column.text('note'),
+    Column.text('created_at'),
+    Column.text('updated_at'),
+    Column.text('deleted_at'),
+  ]),
   Table('notes', [
     Column.text('user_id'),
     Column.text('title'),

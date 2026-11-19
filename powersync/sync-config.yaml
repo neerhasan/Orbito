@@ -37,3 +37,6 @@ streams:
   notes:
     auto_subscribe: true
     query: SELECT * FROM notes WHERE user_id = auth.user_id()
+  events:
+    auto_subscribe: true
+    query: SELECT * FROM events WHERE user_id = auth.user_id()

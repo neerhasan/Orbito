@@ -256,6 +256,24 @@ class Notes extends Table with SyncColumns {
   TextColumn get projectId => text().nullable()();
 }
 
+/// An event on the Calendar page: a day, a start and an end time.
+@DataClassName('CalendarEvent')
+class CalendarEvents extends Table with SyncColumns {
+  @override
+  String get tableName => 'events';
+
+  TextColumn get title => text()();
+
+  /// `YYYY-MM-DD`.
+  TextColumn get day => text()();
+
+  /// `HH:MM`, local time. The end is after the start, on the same day.
+  TextColumn get startTime => text()();
+  TextColumn get endTime => text()();
+  TextColumn get projectId => text().nullable()();
+  TextColumn get note => text()();
+}
+
 /// The values the `kind` column of an inbox item may hold.
 abstract final class InboxKind {
   static const inbox = 'inbox';
@@ -302,6 +320,7 @@ abstract final class TaskStatus {
     InboxItems,
     Preferences,
     Notes,
+    CalendarEvents,
   ],
 )
 class AppDatabase extends _$AppDatabase {
