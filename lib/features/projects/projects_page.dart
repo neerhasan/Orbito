@@ -2,6 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
+import '../../app/shell.dart'
+    show
+        AppPage,
+        NoteRequest,
+        currentPageProvider,
+        noteRequestProvider,
+        openProjectRequestProvider;
 import '../../data/local/app_database.dart';
 import '../../data/repositories/plan_repository.dart';
 import '../../domain/dates.dart';
@@ -70,8 +77,18 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Another page asked for one project (for example from Today).
+    final requested = ref.watch(openProjectRequestProvider);
+    if (requested != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _open(requested);
+        ref.read(openProjectRequestProvider.notifier).handled();
+      });
+    }
     final projects = ref.watch(projectsProvider).value ?? const <Project>[];
     final goals = ref.watch(goalsProvider).value ?? const <Goal>[];
+    final notes = ref.watch(notesProvider).value ?? const <Note>[];
     final tasks = ref.watch(tasksProvider).value ?? const <Task>[];
     final today = dayKey(ref.watch(clockProvider)());
     final byTask = secondsByTask(
@@ -107,6 +124,7 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
                       goal: goalOf(project),
                       tasks: tasksOf(project),
                       focusSeconds: focusOf(project),
+                      today: today,
                       onTap: () => _open(project.id),
                     ),
                   ),
@@ -143,11 +161,38 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
           goal: goalOf(open),
           tasks: openTasks,
           focusSeconds: focusOf(open),
+          today: today,
           onBack: () => _open(null),
+        ),
+        const SizedBox(height: 22),
+        _ProjectNotes(
+          project: open,
+          notes: notes.where((n) => n.projectId == open.id).toList(),
         ),
         const SizedBox(height: 22),
         Text('Tasks', style: Ember.h3),
         const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                key: const Key('project-new-task'),
+                controller: _newTask,
+                onSubmitted: (_) => _addTask(open),
+                decoration: const InputDecoration(
+                  hintText: 'Add a task to this project',
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
+            FilledButton(
+              key: const Key('project-add-task'),
+              onPressed: () => _addTask(open),
+              child: const Text('Add'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
         if (ordered.isEmpty)
           const EmptyHint(
             title: 'No tasks yet',
@@ -173,27 +218,6 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
               ],
             ],
           ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            Expanded(
-              child: TextField(
-                key: const Key('project-new-task'),
-                controller: _newTask,
-                onSubmitted: (_) => _addTask(open),
-                decoration: const InputDecoration(
-                  hintText: 'Add a task to this project',
-                ),
-              ),
-            ),
-            const SizedBox(width: 6),
-            FilledButton(
-              key: const Key('project-add-task'),
-              onPressed: () => _addTask(open),
-              child: const Text('Add'),
-            ),
-          ],
-        ),
       ],
       rail: [
         if (selectedTask != null)
@@ -276,8 +300,11 @@ class _ProjectTile extends StatelessWidget {
     required this.goal,
     required this.tasks,
     required this.focusSeconds,
+    required this.today,
     required this.onTap,
   });
+
+  final String today;
 
   final Project project;
   final Goal? goal;
@@ -311,6 +338,15 @@ class _ProjectTile extends StatelessWidget {
                   Text('No goal linked', style: Ember.meta)
                 else
                   _GoalChip(goal!),
+                if (project.deadline != null) ...[
+                  const SizedBox(height: 6),
+                  _Deadline(
+                    deadline: project.deadline!,
+                    today: today,
+                    late:
+                        percent < 100 && project.deadline!.compareTo(today) < 0,
+                  ),
+                ],
               ],
             ),
           ),
@@ -348,8 +384,11 @@ class _ProjectHeader extends StatelessWidget {
     required this.goal,
     required this.tasks,
     required this.focusSeconds,
+    required this.today,
     required this.onBack,
   });
+
+  final String today;
 
   final Project project;
   final Goal? goal;
@@ -392,6 +431,16 @@ class _ProjectHeader extends StatelessWidget {
                     Text('No goal linked', style: Ember.meta)
                   else
                     _GoalChip(goal!),
+                  if (project.deadline != null) ...[
+                    const SizedBox(height: 6),
+                    _Deadline(
+                      deadline: project.deadline!,
+                      today: today,
+                      late:
+                          percent < 100 &&
+                          project.deadline!.compareTo(today) < 0,
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -445,6 +494,7 @@ class _ProjectFormState extends ConsumerState<_ProjectForm> {
       ? widget.project!.icon!
       : ItemIcons.fallback;
   late String? _goalId = widget.project?.goalId;
+  late String? _deadline = widget.project?.deadline;
   String? _error;
 
   @override
@@ -470,12 +520,14 @@ class _ProjectFormState extends ConsumerState<_ProjectForm> {
           color: _color,
           icon: _icon,
           goalId: _goalId,
+          deadline: _deadline,
         );
         if (!mounted) return;
         _name.clear();
         setState(() {
           _error = null;
           _goalId = null;
+          _deadline = null;
           _icon = ItemIcons.fallback;
         });
       } else {
@@ -485,6 +537,7 @@ class _ProjectFormState extends ConsumerState<_ProjectForm> {
           color: _color,
           icon: _icon,
           goalId: _goalId,
+          deadline: _deadline,
         );
         if (!mounted) return;
         setState(() => _error = null);
@@ -493,6 +546,20 @@ class _ProjectFormState extends ConsumerState<_ProjectForm> {
     } catch (error) {
       // The typed name stays in the box, so nothing is lost.
       if (mounted) showMessage(context, 'Could not save. Try again. ($error)');
+    }
+  }
+
+  Future<void> _pickDeadline() async {
+    final now = ref.read(clockProvider)();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: parseDayKey(_deadline) ?? now,
+      firstDate: DateTime(now.year - 5),
+      lastDate: DateTime(now.year + 30),
+      helpText: 'Deadline',
+    );
+    if (picked != null && mounted) {
+      setState(() => _deadline = dayKey(picked));
     }
   }
 
@@ -563,6 +630,40 @@ class _ProjectFormState extends ConsumerState<_ProjectForm> {
           onChanged: (value) => setState(() => _goalId = value),
         ),
         const SizedBox(height: 14),
+        const FieldLabel('Deadline (optional)'),
+        Row(
+          children: [
+            Flexible(
+              child: InkWell(
+                key: const Key('project-deadline-pick'),
+                borderRadius: BorderRadius.circular(6),
+                onTap: _pickDeadline,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Text(
+                    _deadline == null
+                        ? 'Pick a date'
+                        : formatLongDay(_deadline!),
+                    style: Ember.item.copyWith(
+                      color: _deadline == null ? Ember.ink2 : Ember.ink,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            if (_deadline != null)
+              IconButton(
+                key: const Key('project-deadline-clear'),
+                tooltip: 'Remove the deadline',
+                iconSize: 14,
+                visualDensity: VisualDensity.compact,
+                color: Ember.ink2,
+                onPressed: () => setState(() => _deadline = null),
+                icon: const Icon(Icons.close),
+              ),
+          ],
+        ),
+        const SizedBox(height: 14),
         const FieldLabel('Colour'),
         SwatchPicker(
           colors: ProjectColors.all,
@@ -592,6 +693,105 @@ class _ProjectFormState extends ConsumerState<_ProjectForm> {
             label: const Text('Delete project'),
           ),
         ],
+      ],
+    );
+  }
+}
+
+/// "Due Friday" in the project's list row and header. Red-orange when the
+/// deadline passed and the project is not finished.
+class _Deadline extends StatelessWidget {
+  const _Deadline({
+    required this.deadline,
+    required this.today,
+    this.late = false,
+  });
+
+  final String deadline;
+  final String today;
+  final bool late;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          Icons.event_outlined,
+          size: 13,
+          color: late ? Ember.nowInk : Ember.ink2,
+        ),
+        const SizedBox(width: 4),
+        Text(
+          'Due ${formatRelativeDay(deadline, today: today)}',
+          key: const Key('project-deadline'),
+          style: Ember.meta.copyWith(color: late ? Ember.nowInk : Ember.ink2),
+        ),
+      ],
+    );
+  }
+}
+
+/// The notes linked to an open project, with a button to add one.
+class _ProjectNotes extends ConsumerWidget {
+  const _ProjectNotes({required this.project, required this.notes});
+
+  final Project project;
+  final List<Note> notes;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    void go(String what) {
+      ref.read(noteRequestProvider.notifier).ask(what);
+      ref.read(currentPageProvider.notifier).open(AppPage.notes);
+    }
+
+    return Column(
+      key: const Key('project-notes'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Text('Notes', style: Ember.h3),
+            const Spacer(),
+            SoftButton(
+              key: const Key('project-add-note'),
+              icon: Icons.add,
+              label: 'Add note',
+              onPressed: () => go(NoteRequest.newIn(project.id)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        if (notes.isEmpty)
+          Text('No notes linked to this project.', style: Ember.meta)
+        else
+          for (final note in notes) ...[
+            Tile(
+              key: Key('project-note-${note.id}'),
+              onTap: () => go(note.id),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.sticky_note_2_outlined,
+                    size: 16,
+                    color: Ember.ink2,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      note.title.isEmpty ? note.body : note.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Ember.item.copyWith(color: Ember.ink),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 6),
+          ],
       ],
     );
   }

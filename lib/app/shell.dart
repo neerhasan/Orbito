@@ -18,6 +18,7 @@ enum AppPage {
   inbox('Inbox', Icons.inbox_outlined),
   tasks('Tasks', Icons.check_circle_outline),
   projects('Projects', Icons.folder_outlined),
+  notes('Notes', Icons.sticky_note_2_outlined),
   goals('Goals', Icons.flag_outlined),
   habits('Habits', Icons.repeat),
   sleep('Sleep', Icons.bedtime_outlined),
@@ -56,6 +57,38 @@ class AddTaskRequest extends Notifier<bool> {
 
 final addTaskRequestProvider = NotifierProvider<AddTaskRequest, bool>(
   AddTaskRequest.new,
+);
+
+/// A project to open on the Projects page ("open that project, not the
+/// list"). Holds the project's id until the page has opened it.
+class OpenProjectRequest extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void ask(String projectId) => state = projectId;
+
+  void handled() => state = null;
+}
+
+final openProjectRequestProvider =
+    NotifierProvider<OpenProjectRequest, String?>(OpenProjectRequest.new);
+
+/// What the Notes page should open: a note's id, `NoteRequest.newNote`, or
+/// `NoteRequest.newIn(projectId)` for a new note linked to a project.
+class NoteRequest extends Notifier<String?> {
+  static const newNote = 'new';
+  static String newIn(String projectId) => 'new:$projectId';
+
+  @override
+  String? build() => null;
+
+  void ask(String what) => state = what;
+
+  void handled() => state = null;
+}
+
+final noteRequestProvider = NotifierProvider<NoteRequest, String?>(
+  NoteRequest.new,
 );
 
 /// The frame around every page once the user is signed in (design:
@@ -210,6 +243,10 @@ class _TitleBar extends ConsumerWidget {
                     open(target);
                     if (target == AppPage.tasks) {
                       ref.read(addTaskRequestProvider.notifier).ask();
+                    } else if (target == AppPage.notes) {
+                      ref
+                          .read(noteRequestProvider.notifier)
+                          .ask(NoteRequest.newNote);
                     }
                   },
                 ),
@@ -291,11 +328,7 @@ class _NewButton extends StatelessWidget {
       itemBuilder: (context) => [
         for (final (page, label) in const [
           (AppPage.tasks, 'Task'),
-          (AppPage.projects, 'Project'),
-          (AppPage.goals, 'Goal'),
-          (AppPage.habits, 'Habit'),
-          (AppPage.sleep, 'Night of sleep'),
-          (AppPage.areas, 'Life area'),
+          (AppPage.notes, 'Note'),
         ])
           PopupMenuItem(
             key: Key('new-${page.name}'),
@@ -432,6 +465,7 @@ class _SideMenu extends ConsumerWidget {
                 const _GroupLabel('Plan'),
                 item(AppPage.tasks, count: openTasks == 0 ? '' : '$openTasks'),
                 item(AppPage.projects),
+                item(AppPage.notes),
                 item(AppPage.goals),
                 const _GroupLabel('Daily'),
                 item(

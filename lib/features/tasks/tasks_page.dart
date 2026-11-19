@@ -51,7 +51,6 @@ class _TasksPageState extends ConsumerState<TasksPage> {
   String? _priority;
   String? _selectedId;
   var _showFilters = false;
-  var _showDoneToday = false;
   var _showCompleted = false;
 
   /// The month the month view shows. Null means the current month.
@@ -146,7 +145,6 @@ class _TasksPageState extends ConsumerState<TasksPage> {
     final open = tasks.where((task) => task.status != TaskStatus.done).length;
     final overdue = countOverdue(tasks, today: today);
     final onTime = onTimeThisMonth(tasks, today: today);
-    final doneToday = doneOn(tasks, today: today);
     final selected = tasks.where((task) => task.id == _selectedId).firstOrNull;
     final points = completionSeries(tasks, _range, today: today);
     final summary = chartSummary(_range, points);
@@ -208,6 +206,22 @@ class _TasksPageState extends ConsumerState<TasksPage> {
                       ),
                     ],
                     onChanged: (view) => setState(() => _view = view),
+                  ),
+                  const SizedBox(width: 8),
+                  SoftButton(
+                    key: const Key('show-completed'),
+                    icon: _status == StatusFilter.open
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                    label: _status == StatusFilter.open
+                        ? 'Show completed'
+                        : 'Hide completed',
+                    active: _status != StatusFilter.open,
+                    onPressed: () => setState(
+                      () => _status = _status == StatusFilter.open
+                          ? StatusFilter.all
+                          : StatusFilter.open,
+                    ),
                   ),
                   const SizedBox(width: 8),
                   SoftButton(
@@ -374,26 +388,6 @@ class _TasksPageState extends ConsumerState<TasksPage> {
                 ],
               ],
             ),
-        if (_view == _TasksView.list &&
-            _status == StatusFilter.open &&
-            doneToday.isNotEmpty)
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SoftButton(
-                key: const Key('done-today'),
-                icon: _showDoneToday ? Icons.expand_less : Icons.expand_more,
-                label: 'Done today · ${doneToday.length}',
-                onPressed: () =>
-                    setState(() => _showDoneToday = !_showDoneToday),
-              ),
-              if (_showDoneToday)
-                for (final task in doneToday) ...[
-                  const SizedBox(height: 6),
-                  SizedBox(width: double.infinity, child: row(task)),
-                ],
-            ],
-          ),
         Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -402,7 +396,7 @@ class _TasksPageState extends ConsumerState<TasksPage> {
               child: SoftButton(
                 key: const Key('show-chart'),
                 icon: _showCompleted ? Icons.expand_less : Icons.show_chart,
-                label: 'Completed',
+                label: 'Completed chart',
                 onPressed: () =>
                     setState(() => _showCompleted = !_showCompleted),
               ),

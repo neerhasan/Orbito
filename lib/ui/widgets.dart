@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import '../data/repositories/plan_repository.dart' show LinkedItems;
@@ -5,7 +6,7 @@ import 'ember.dart';
 import 'motion.dart';
 
 /// A paper-coloured panel with rounded corners. Its content scrolls.
-class Panel extends StatelessWidget {
+class Panel extends StatefulWidget {
   const Panel({
     super.key,
     required this.children,
@@ -18,12 +19,58 @@ class Panel extends StatelessWidget {
   final double gap;
 
   @override
+  State<Panel> createState() => _PanelState();
+}
+
+class _PanelState extends State<Panel> {
+  final _scroll = ScrollController();
+
+  /// Where the last mouse-wheel scroll is heading, and when it was asked.
+  double _target = 0;
+  DateTime _lastWheel = DateTime.fromMillisecondsSinceEpoch(0);
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  /// The mouse wheel on Windows jumps a fixed step at a time. This glides
+  /// to the new place instead. Touch and trackpad scrolling are untouched.
+  void _onPointerSignal(PointerSignalEvent event) {
+    if (event is! PointerScrollEvent || !_scroll.hasClients) return;
+    if (event.scrollDelta.dy == 0 || event.scrollDelta.dx != 0) return;
+    GestureBinding.instance.pointerSignalResolver.register(event, (signal) {
+      if (!mounted || !_scroll.hasClients) return;
+      final delta = (signal as PointerScrollEvent).scrollDelta.dy;
+      final position = _scroll.position;
+      final now = DateTime.now();
+      final gliding = now.difference(_lastWheel) < Motion.base;
+      _lastWheel = now;
+      _target = ((gliding ? _target : position.pixels) + delta).clamp(
+        position.minScrollExtent,
+        position.maxScrollExtent,
+      );
+      if (Motion.reduced(context)) {
+        _scroll.jumpTo(_target);
+      } else {
+        _scroll.animateTo(
+          _target,
+          duration: Motion.base,
+          curve: Curves.easeOutCubic,
+        );
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final children = widget.children;
     final column = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (var i = 0; i < children.length; i++) ...[
-          if (i > 0) SizedBox(height: gap),
+          if (i > 0) SizedBox(height: widget.gap),
           children[i],
         ],
       ],
@@ -33,22 +80,32 @@ class Panel extends StatelessWidget {
         color: Ember.paper,
         borderRadius: BorderRadius.circular(18),
       ),
-      clipBehavior: Clip.antiAlias,
+      // A hard edge is much cheaper to draw while scrolling than a smoothed
+      // one, and the corners are too small to show the difference.
+      clipBehavior: Clip.hardEdge,
       child: DefaultTextStyle.merge(
         style: Ember.item.copyWith(color: Ember.ink),
         child: SingleChildScrollView(
-          padding: padding,
-          // When content is added or removed, the panel grows or shrinks
-          // softly instead of jumping. AnimatedSize cannot run with a zero
-          // duration, so with less motion the column is used as it is.
-          child: Motion.reduced(context)
-              ? column
-              : AnimatedSize(
-                  duration: Motion.base,
-                  curve: Motion.soft,
-                  alignment: Alignment.topCenter,
-                  child: column,
-                ),
+          controller: _scroll,
+          // The listener sits inside the scroll view, so it hears the wheel
+          // first. The padding is inside it so the whole panel glides.
+          child: Listener(
+            onPointerSignal: _onPointerSignal,
+            child: Padding(
+              padding: widget.padding,
+              // When content is added or removed, the panel grows or shrinks
+              // softly instead of jumping. AnimatedSize cannot run with a zero
+              // duration, so with less motion the column is used as it is.
+              child: Motion.reduced(context)
+                  ? column
+                  : AnimatedSize(
+                      duration: Motion.base,
+                      curve: Motion.soft,
+                      alignment: Alignment.topCenter,
+                      child: column,
+                    ),
+            ),
+          ),
         ),
       ),
     );
