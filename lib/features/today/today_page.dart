@@ -302,13 +302,6 @@ class _HabitsSection extends ConsumerWidget {
                 '${progress.done} of ${progress.planned} today',
                 style: Ember.meta,
               ),
-              const SizedBox(width: 10),
-              SoftButton(
-                key: const Key('today-add-habit'),
-                icon: Icons.add,
-                label: 'Add habit',
-                onPressed: () => open(AppPage.habits),
-              ),
             ],
           ),
         ),
@@ -989,24 +982,31 @@ class _TodayTasksState extends ConsumerState<_TodayTasks> {
                           decoration: done ? TextDecoration.lineThrough : null,
                         ),
                       ),
-                      const SizedBox(height: 5),
-                      Wrap(
-                        spacing: 6,
-                        children: [
-                          Text(
-                            formatRelativeDay(task.dueDate!, today: today),
-                            style: Ember.meta.copyWith(
-                              color: late ? Ember.nowInk : Ember.ink2,
-                            ),
-                          ),
-                          if (project != null)
-                            Tag(
-                              project.name,
-                              background: ProjectColors.of(project.color).soft,
-                              foreground: ProjectColors.of(project.color).text,
-                            ),
-                        ],
-                      ),
+                      // The heading above already says the day; overdue
+                      // tasks still show theirs.
+                      if (task.dueDate != day || project != null) ...[
+                        const SizedBox(height: 5),
+                        Wrap(
+                          spacing: 6,
+                          children: [
+                            if (task.dueDate != day)
+                              Text(
+                                formatRelativeDay(task.dueDate!, today: today),
+                                style: Ember.meta.copyWith(
+                                  color: late ? Ember.nowInk : Ember.ink2,
+                                ),
+                              ),
+                            if (project != null)
+                              Tag(
+                                project.name,
+                                background: ProjectColors.of(project.color)
+                                    .soft,
+                                foreground: ProjectColors.of(project.color)
+                                    .text,
+                              ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ),

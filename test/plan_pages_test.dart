@@ -394,7 +394,8 @@ void main() {
       );
       expect(find.byKey(const Key('group-No date')), findsOneWidget);
       expect(find.text('High'), findsOneWidget);
-      expect(find.byKey(Key('task-when-$ids')), findsOneWidget);
+      // The "Today" heading says the date, so the row does not repeat it.
+      expect(find.byKey(Key('task-when-$ids')), findsNothing);
       expect(find.text('Training plan'), findsOneWidget);
 
       // The filters fold out from the Filters button.

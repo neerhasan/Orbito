@@ -160,9 +160,10 @@ class _TasksPageState extends ConsumerState<TasksPage> {
     void select(Task task) => setState(() {
       _selectedId = task.id == _selectedId ? null : task.id;
     });
-    TaskRow row(Task task) => TaskRow(
+    TaskRow row(Task task, {bool showDate = true}) => TaskRow(
       key: ValueKey('row-${task.id}'),
       task: task,
+      showDate: showDate,
       project: projectOf(task),
       today: today,
       focusSeconds: byTask[task.id] ?? 0,
@@ -382,7 +383,18 @@ class _TasksPageState extends ConsumerState<TasksPage> {
                   ),
                 for (var i = 0; i < group.tasks.length; i++) ...[
                   if (i > 0) const SizedBox(height: 6),
-                  row(group.tasks[i]),
+                  // "Today", "Tomorrow" and "No date" already say the
+                  // date in the group heading.
+                  row(
+                    group.tasks[i],
+                    showDate:
+                        !(_grouping == TaskGrouping.dueDate &&
+                            const {
+                              'Today',
+                              'Tomorrow',
+                              'No date',
+                            }.contains(group.label)),
+                  ),
                 ],
               ],
             ),
@@ -751,6 +763,7 @@ class TaskRow extends StatelessWidget {
     required this.onToggle,
     this.focusSeconds = 0,
     this.showNote = true,
+    this.showDate = true,
   });
 
   final Task task;
@@ -764,6 +777,9 @@ class TaskRow extends StatelessWidget {
   final int focusSeconds;
   final bool showNote;
 
+  /// False when the heading above already says the date.
+  final bool showDate;
+
   @override
   Widget build(BuildContext context) {
     final done = task.status == TaskStatus.done;
@@ -774,11 +790,12 @@ class TaskRow extends StatelessWidget {
     // On a narrow panel the project, then the priority, step aside so the
     // row stays on one line.
     List<Widget> meta(double width) => [
-      Text(
-        due == null ? 'No date' : formatRelativeDay(due, today: today),
-        key: Key('task-when-${task.id}'),
-        style: Ember.meta.copyWith(color: late ? Ember.nowInk : Ember.ink2),
-      ),
+      if (showDate)
+        Text(
+          due == null ? 'No date' : formatRelativeDay(due, today: today),
+          key: Key('task-when-${task.id}'),
+          style: Ember.meta.copyWith(color: late ? Ember.nowInk : Ember.ink2),
+        ),
       if (task.priority != TaskPriority.none && width >= 320)
         PriorityTag(task.priority),
       if (project != null && width >= 440)
