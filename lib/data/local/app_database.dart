@@ -111,6 +111,9 @@ class Tasks extends Table with SyncColumns {
   /// A day as `YYYY-MM-DD`.
   TextColumn get dueDate => text().nullable()();
 
+  /// `HH:MM` on the due day, or null for "any time that day".
+  TextColumn get dueTime => text().nullable()();
+
   /// One of `TaskPriority`: `none`, `medium`, `high`.
   TextColumn get priority => text()();
 

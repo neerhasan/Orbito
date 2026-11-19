@@ -32,3 +32,10 @@ If something is wrong, send me the test number, the step number and what you saw
 
 ## Test 6: Sync
 1. Add an event, close Orbito, open it again. The event is still there.
+
+## Test 7: Drag
+1. Press on an event and drag it up or down. A dark box shows where it will land and at what time. Let go: the event moves (it snaps to quarter hours and keeps its length).
+2. Drag an event sideways onto another day. It moves to that day at the same time.
+3. Move the pointer to the top or bottom edge of an event (the pointer turns into an up-down arrow). Drag it to change the start or the end.
+4. Drag a task from the "All day" row onto the grid. It gets that time and shows as a white block. On the Tasks page it shows the time too.
+5. Drag that task block back up to an "All day" row. The time is removed.

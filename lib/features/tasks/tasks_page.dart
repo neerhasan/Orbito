@@ -793,9 +793,19 @@ class TaskRow extends StatelessWidget {
     List<Widget> meta(double width) => [
       if (showDate)
         Text(
-          due == null ? 'No date' : formatRelativeDay(due, today: today),
+          [
+            due == null ? 'No date' : formatRelativeDay(due, today: today),
+            if (due != null && task.dueTime != null) formatTime(task.dueTime!),
+          ].join(' '),
           key: Key('task-when-${task.id}'),
           style: Ember.meta.copyWith(color: late ? Ember.nowInk : Ember.ink2),
+        )
+      // Under a date heading only the time is new.
+      else if (due != null && task.dueTime != null)
+        Text(
+          formatTime(task.dueTime!),
+          key: Key('task-time-${task.id}'),
+          style: Ember.meta,
         ),
       if (task.priority != TaskPriority.none && width >= 320)
         PriorityTag(task.priority),

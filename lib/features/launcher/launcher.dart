@@ -102,6 +102,7 @@ class _QuickLauncherState extends ConsumerState<_QuickLauncher> {
             title: line.title,
             projectId: line.projectId,
             dueDate: line.dueDate,
+            dueTime: line.time,
             priority: line.priority,
           );
           if (line.notes != null) {

@@ -45,6 +45,7 @@ class TaskRepository {
     required String title,
     String? projectId,
     String? dueDate,
+    String? dueTime,
     String priority = TaskPriority.none,
   }) async {
     final id = _newId();
@@ -58,6 +59,7 @@ class TaskRepository {
             title: _title(title),
             projectId: Value(projectId),
             dueDate: Value(dueDate),
+            dueTime: Value(dueDate == null ? null : dueTime),
             priority: _priority(priority),
             status: TaskStatus.open,
             createdAt: timestamp,
@@ -82,10 +84,28 @@ class TaskRepository {
         title: Value(_title(title)),
         projectId: Value(projectId),
         dueDate: Value(dueDate),
+        // Without a day the time means nothing, so it goes too.
+        dueTime: dueDate == null ? const Value(null) : const Value.absent(),
         priority: Value(_priority(priority)),
         notes: trimmedNotes == null
             ? const Value.absent()
             : Value(trimmedNotes.isEmpty ? null : trimmedNotes),
+        updatedAt: Value(_timestamp()),
+      ),
+    );
+  }
+
+  /// Puts a task on [day], at [time] (`HH:MM`) or at no set time (null).
+  /// The Calendar page uses this when a task is dragged.
+  Future<void> scheduleTask(
+    String id, {
+    required String day,
+    required String? time,
+  }) {
+    return (_db.update(_db.tasks)..where((row) => row.id.equals(id))).write(
+      TasksCompanion(
+        dueDate: Value(day),
+        dueTime: Value(time),
         updatedAt: Value(_timestamp()),
       ),
     );

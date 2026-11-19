@@ -109,6 +109,23 @@ Future<void> _tap(WidgetTester tester, String key) async {
   await tester.pump();
 }
 
+/// Presses on [finder], moves by [offset] in small steps, lets go, and
+/// waits for the database.
+Future<void> _dragBy(WidgetTester tester, Finder finder, Offset offset) async {
+  await tester.ensureVisible(finder);
+  await tester.pump();
+  final gesture = await tester.startGesture(tester.getCenter(finder));
+  await tester.pump();
+  const steps = 8;
+  for (var i = 0; i < steps; i++) {
+    await gesture.moveBy(offset / steps.toDouble());
+    await tester.pump();
+  }
+  await gesture.up();
+  await tester.pump();
+  await _settle(tester);
+}
+
 Future<List<CalendarEvent>> _saved(WidgetTester tester) =>
     _read(tester, () => _events.watchEvents(_user).first);
 
@@ -224,9 +241,7 @@ void main() {
   });
 
   group('the Calendar page', () {
-    _test('adds an event, opens it, changes it and deletes it', (
-      tester,
-    ) async {
+    _test('adds an event, opens it, changes it and deletes it', (tester) async {
       await _pump(tester);
       expect(find.text('November 2026'), findsOneWidget);
       expect(find.text('Week 46 · 8 to 14 November'), findsOneWidget);
@@ -242,10 +257,10 @@ void main() {
       var saved = await _saved(tester);
       expect(saved.single.title, 'Client call');
       expect(saved.single.day, '2026-11-11');
-      expect((saved.single.startTime, saved.single.endTime), (
-        '13:00',
-        '14:00',
-      ));
+      expect(
+        (saved.single.startTime, saved.single.endTime),
+        ('13:00', '14:00'),
+      );
       expect(find.text('Edit event'), findsOneWidget);
       expect(find.byKey(Key('event-${saved.single.id}')), findsOneWidget);
 
@@ -290,9 +305,7 @@ void main() {
       expect(find.text('Thursday, 12 November'), findsWidgets);
     });
 
-    _test('shows tasks due and project deadlines on their day', (
-      tester,
-    ) async {
+    _test('shows tasks due and project deadlines on their day', (tester) async {
       final task = await _read(
         tester,
         () => _tasks.addTask(
@@ -341,9 +354,93 @@ void main() {
       expect(find.byKey(const Key('focus-block-session-1')), findsOneWidget);
     });
 
-    _test('moves between weeks and switches to the month view', (
+    _test('dragging an event moves it; its edges change start and end', (
       tester,
     ) async {
+      final id = await _read(
+        tester,
+        () => _events.addEvent(
+          userId: _user,
+          title: 'Gym',
+          day: '2026-11-11',
+          startTime: '13:00',
+          endTime: '14:00',
+        ),
+      );
+      await _pump(tester);
+
+      // Two hours down.
+      await _dragBy(tester, find.byKey(Key('event-$id')), const Offset(0, 96));
+      var event = (await _saved(tester)).single;
+      expect(
+        (event.day, event.startTime, event.endTime),
+        ('2026-11-11', '15:00', '16:00'),
+      );
+
+      // One column right: the next day, same time.
+      final column = tester
+          .getSize(find.byKey(const Key('calendar-slot-2026-11-11')))
+          .width;
+      await _dragBy(tester, find.byKey(Key('event-$id')), Offset(column, 0));
+      event = (await _saved(tester)).single;
+      expect((event.day, event.startTime), ('2026-11-12', '15:00'));
+
+      // The bottom edge, one hour down: it ends at 17:00.
+      await _dragBy(
+        tester,
+        find.byKey(Key('event-bottom-$id')),
+        const Offset(0, 48),
+      );
+      event = (await _saved(tester)).single;
+      expect((event.startTime, event.endTime), ('15:00', '17:00'));
+
+      // The top edge, half an hour up: it starts at 14:30.
+      await _dragBy(
+        tester,
+        find.byKey(Key('event-top-$id')),
+        const Offset(0, -24),
+      );
+      event = (await _saved(tester)).single;
+      expect((event.startTime, event.endTime), ('14:30', '17:00'));
+    });
+
+    _test('a task dragged from All day gets a time, and back loses it', (
+      tester,
+    ) async {
+      final id = await _read(
+        tester,
+        () => _tasks.addTask(
+          userId: _user,
+          title: 'Pay rent',
+          dueDate: '2026-11-12',
+        ),
+      );
+      await _pump(tester);
+      final chip = find.byKey(Key('calendar-task-$id'));
+      final slot = find.byKey(const Key('calendar-slot-2026-11-12'));
+      // The chip's top lands 3 hours below the grid's top (7 AM): 10:00.
+      final target = tester.getTopLeft(slot) + const Offset(10, 48 * 3);
+      await _dragBy(tester, chip, target - tester.getTopLeft(chip));
+      var task = (await _read(
+        tester,
+        () => _tasks.watchTasks(_user).first,
+      )).single;
+      expect((task.dueDate, task.dueTime), ('2026-11-12', '10:00'));
+      expect(find.byKey(Key('calendar-timed-task-$id')), findsOneWidget);
+
+      // Back to the All day row of the next day: no time.
+      final block = find.byKey(Key('calendar-timed-task-$id'));
+      final allDay = find.byKey(const Key('calendar-allday-2026-11-13'));
+      await _dragBy(
+        tester,
+        block,
+        tester.getCenter(allDay) - tester.getCenter(block),
+      );
+      task = (await _read(tester, () => _tasks.watchTasks(_user).first)).single;
+      expect((task.dueDate, task.dueTime), ('2026-11-13', null));
+    });
+
+    _test('moves between weeks and switches to the month view', (tester) async {
       await _pump(tester);
       await _tap(tester, 'calendar-next');
       expect(find.text('Week 47 · 15 to 21 November'), findsOneWidget);

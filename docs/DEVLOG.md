@@ -2,6 +2,10 @@
 
 Claude Code adds a new entry on top at the end of every session.
 
+### 2026-11-19 Calendar drag and drop
+- Done: `supabase/011_task_time.sql` (applied): tasks get `due_time` (HH:MM). Calendar: drag events to another time or day (snaps to 15 minutes, keeps the length, a dark box shows where it lands); drag the top or bottom edge of an event to change start or end; drag a task from the All day row onto the grid to give it a time, back to All day to remove it. Tasks with a time show as white blocks (design: "Task with a time"). The Tasks page shows the time after the date. The Quick Launcher now saves a typed time as the task's time, not in its notes.
+- Test results: flutter analyze: no issues. flutter test --concurrency=2: 189 passed. Windows release built.
+
 ### 2026-11-19 Calendar page
 - Done: `supabase/010_events.sql` (applied): `events` table with row-level security; sync config has a new `events` stream (the founder deploys it). `lib/domain/calendar.dart` (views, stepping, headings, side-by-side layout of overlapping blocks, focus blocks). Calendar page after `Calendar.dc.html`: Month, Week, 4, 3 and 2 day views; events (add, change, delete; click an empty slot to start one); tasks due and project deadlines in an All day row; past focus sessions as blocks; the picked day listed on the right. Notes stay on the Notes page only; Add habit removed from Today; rows under a date heading no longer repeat the date.
 - Not in this step: Google Calendar (F-15), reminders, habit blocks, tasks with a time.

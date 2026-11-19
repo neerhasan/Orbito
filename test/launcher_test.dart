@@ -62,7 +62,8 @@ void main() {
       expect(task.time, '10:00');
       expect(task.projectId, 'p1');
       expect(task.priority, TaskPriority.high);
-      expect(task.notes, 'At 10:00 AM');
+      // The time is the task's own now, not a note.
+      expect(task.notes, isNull);
     });
 
     test('2: a weekday means the next one, never today', () {

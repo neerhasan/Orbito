@@ -41,7 +41,7 @@ class TaskLine extends ParsedLine {
   /// `YYYY-MM-DD`.
   final String? dueDate;
 
-  /// `HH:MM`. Tasks have no time yet, so it is kept in the task's notes.
+  /// `HH:MM`: the task's time on its due day.
   final String? time;
   final String priority;
   final String? projectId;
@@ -49,11 +49,8 @@ class TaskLine extends ParsedLine {
   /// `#tags` that matched no project. Kept in the task's notes.
   final List<String> tags;
 
-  /// The notes the task starts with: its time and tags, if any.
-  String? get notes {
-    final parts = [if (time != null) 'At ${formatTime(time!)}', ...tags];
-    return parts.isEmpty ? null : parts.join(' · ');
-  }
+  /// The notes the task starts with: its tags, if any.
+  String? get notes => tags.isEmpty ? null : tags.join(' · ');
 }
 
 class HabitLine extends ParsedLine {

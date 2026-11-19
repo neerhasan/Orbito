@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/gestures.dart' show DragStartBehavior;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -23,6 +24,54 @@ const _hourHeight = 48.0;
 
 /// The width of the hour labels on the left of the time grid.
 const _gutter = 56.0;
+
+/// How long a task with a time looks on the grid.
+const _taskMinutes = 30;
+
+/// The last minute of a day (23:59): an event cannot end later.
+const _lastMinute = 23 * 60 + 59;
+
+/// Dragged times snap to a quarter of an hour.
+int _snap(int minutes) => (minutes / 15).round() * 15;
+
+/// What is being dragged on the calendar.
+sealed class _Drag {
+  const _Drag();
+}
+
+class _EventDrag extends _Drag {
+  const _EventDrag(this.event);
+  final CalendarEvent event;
+}
+
+class _TaskDrag extends _Drag {
+  const _TaskDrag(this.task);
+  final Task task;
+}
+
+/// What the time grid can ask the page to do.
+class _GridActions {
+  const _GridActions({
+    required this.onSlot,
+    required this.onEvent,
+    required this.onTask,
+    required this.onProject,
+    required this.onMoveEvent,
+    required this.onResizeEvent,
+    required this.onScheduleTask,
+  });
+
+  final void Function(String day, int minutes) onSlot;
+  final ValueChanged<CalendarEvent> onEvent;
+  final VoidCallback onTask;
+  final ValueChanged<String> onProject;
+  final Future<void> Function(CalendarEvent event, String day, int start)
+  onMoveEvent;
+  final Future<void> Function(CalendarEvent event, int start, int end)
+  onResizeEvent;
+  final Future<void> Function(Task task, String day, int? minutes)
+  onScheduleTask;
+}
 
 /// The Calendar page (design: `Calendar.dc.html`): a month view and a time
 /// grid of 7, 4, 3 or 2 days. It shows the user's events, the tasks due
@@ -76,6 +125,77 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
     _day = event.day;
     _serial++;
   });
+
+  void _report(Object error) {
+    if (mounted) showMessage(context, 'Could not save. Try again. ($error)');
+  }
+
+  /// An event was dragged to [day], starting at [start]; it keeps its length.
+  Future<void> _moveEvent(CalendarEvent event, String day, int start) async {
+    final length = math.max(
+      15,
+      (minutesOf(event.endTime) ?? 0) - (minutesOf(event.startTime) ?? 0),
+    );
+    final from = start.clamp(0, _lastMinute - length);
+    try {
+      await ref
+          .read(eventRepositoryProvider)
+          .updateEvent(
+            event.id,
+            title: event.title,
+            day: day,
+            startTime: timeOf(from),
+            endTime: timeOf(from + length),
+            projectId: event.projectId,
+            note: event.note,
+          );
+      if (!mounted) return;
+      setState(() {
+        if (_eventId == event.id) _day = day;
+        _serial++;
+      });
+    } catch (error) {
+      _report(error);
+    }
+  }
+
+  /// An event's top or bottom edge was dragged.
+  Future<void> _resizeEvent(CalendarEvent event, int start, int end) async {
+    try {
+      await ref
+          .read(eventRepositoryProvider)
+          .updateEvent(
+            event.id,
+            title: event.title,
+            day: event.day,
+            startTime: timeOf(start),
+            endTime: timeOf(end),
+            projectId: event.projectId,
+            note: event.note,
+          );
+      if (mounted) setState(() => _serial++);
+    } catch (error) {
+      _report(error);
+    }
+  }
+
+  /// A task was dragged onto the grid ([minutes] is its new time) or onto
+  /// the All day row ([minutes] is null: no set time).
+  Future<void> _scheduleTask(Task task, String day, int? minutes) async {
+    try {
+      await ref
+          .read(taskRepositoryProvider)
+          .scheduleTask(
+            task.id,
+            day: day,
+            time: minutes == null
+                ? null
+                : timeOf(minutes.clamp(0, _lastMinute - _taskMinutes)),
+          );
+    } catch (error) {
+      _report(error);
+    }
+  }
 
   void _openTask() =>
       ref.read(currentPageProvider.notifier).open(AppPage.tasks);
@@ -187,10 +307,15 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
             now: now,
             items: items,
             selectedEventId: _eventId,
-            onSlot: (day, minutes) => _newAt(day, minutes: minutes),
-            onEvent: _openEvent,
-            onTask: _openTask,
-            onProject: _openProject,
+            actions: _GridActions(
+              onSlot: (day, minutes) => _newAt(day, minutes: minutes),
+              onEvent: _openEvent,
+              onTask: _openTask,
+              onProject: _openProject,
+              onMoveEvent: _moveEvent,
+              onResizeEvent: _resizeEvent,
+              onScheduleTask: _scheduleTask,
+            ),
           ),
       ],
       rail: [
@@ -251,6 +376,20 @@ class _DayItems {
   List<Task> tasksOn(String day) => [
     ...tasks.where((t) => t.dueDate == day && t.status != TaskStatus.done),
     ...tasks.where((t) => t.dueDate == day && t.status == TaskStatus.done),
+  ];
+
+  /// Tasks of [day] without a set time: they sit in the All day row.
+  List<Task> untimedTasksOn(String day) => [
+    for (final task in tasksOn(day))
+      if (task.dueTime == null || minutesOf(task.dueTime!) == null) task,
+  ];
+
+  /// Tasks of [day] with a time, as blocks on the grid.
+  List<TimeBlock> taskBlocksOn(String day) => [
+    for (final task in tasksOn(day))
+      if (task.dueTime != null)
+        if (minutesOf(task.dueTime!) case final int start)
+          TimeBlock(task.id, start, start + _taskMinutes),
   ];
 
   List<Project> deadlinesOn(String day) =>
@@ -428,10 +567,7 @@ class _TimeGrid extends StatelessWidget {
     required this.now,
     required this.items,
     required this.selectedEventId,
-    required this.onSlot,
-    required this.onEvent,
-    required this.onTask,
-    required this.onProject,
+    required this.actions,
   });
 
   final List<String> days;
@@ -439,10 +575,7 @@ class _TimeGrid extends StatelessWidget {
   final DateTime now;
   final _DayItems items;
   final String? selectedEventId;
-  final void Function(String day, int minutes) onSlot;
-  final ValueChanged<CalendarEvent> onEvent;
-  final VoidCallback onTask;
-  final ValueChanged<String> onProject;
+  final _GridActions actions;
 
   @override
   Widget build(BuildContext context) {
@@ -452,6 +585,7 @@ class _TimeGrid extends StatelessWidget {
       for (final block in [
         ...eventBlocksOn(day, items.events),
         ...focusBlocksOn(day, items.sessions),
+        ...items.taskBlocksOn(day),
       ]) {
         firstHour = math.min(firstHour, block.start ~/ 60);
       }
@@ -473,7 +607,8 @@ class _TimeGrid extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 6),
-        // Tasks due and project deadlines: they have a day, not a time.
+        // Tasks without a time and project deadlines. A task dragged here
+        // loses its time.
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -488,12 +623,7 @@ class _TimeGrid extends StatelessWidget {
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 2),
-                  child: _AllDay(
-                    day: day,
-                    items: items,
-                    onTask: onTask,
-                    onProject: onProject,
-                  ),
+                  child: _AllDay(day: day, items: items, actions: actions),
                 ),
               ),
           ],
@@ -523,14 +653,14 @@ class _TimeGrid extends StatelessWidget {
               for (final day in days)
                 Expanded(
                   child: _DayColumn(
+                    key: ValueKey('column-$day'),
                     day: day,
                     today: today,
                     now: now,
                     firstHour: firstHour,
                     items: items,
                     selectedEventId: selectedEventId,
-                    onSlot: onSlot,
-                    onEvent: onEvent,
+                    actions: actions,
                   ),
                 ),
             ],
@@ -582,19 +712,17 @@ class _AllDay extends StatelessWidget {
   const _AllDay({
     required this.day,
     required this.items,
-    required this.onTask,
-    required this.onProject,
+    required this.actions,
   });
 
   final String day;
   final _DayItems items;
-  final VoidCallback onTask;
-  final ValueChanged<String> onProject;
+  final _GridActions actions;
 
   @override
   Widget build(BuildContext context) {
     final deadlines = items.deadlinesOn(day);
-    final tasks = items.tasksOn(day);
+    final tasks = items.untimedTasksOn(day);
     final chips = <Widget>[
       for (final project in deadlines)
         _Chip(
@@ -602,28 +730,62 @@ class _AllDay extends StatelessWidget {
           label: 'Due: ${project.name}',
           background: ProjectColors.of(project.color).soft,
           foreground: ProjectColors.of(project.color).text,
-          onTap: () => onProject(project.id),
+          onTap: () => actions.onProject(project.id),
         ),
       for (final task in tasks)
-        _Chip(
-          key: Key('calendar-task-${task.id}'),
-          label: task.title,
-          background: Ember.white,
-          foreground: task.status == TaskStatus.done ? Ember.ink3 : Ember.ink,
-          border: true,
-          done: task.status == TaskStatus.done,
-          onTap: onTask,
+        Draggable<_Drag>(
+          data: _TaskDrag(task),
+          dragAnchorStrategy: childDragAnchorStrategy,
+          feedback: Material(
+            color: Colors.transparent,
+            child: SizedBox(width: 150, child: _taskChip(task, onTap: () {})),
+          ),
+          childWhenDragging: Opacity(
+            opacity: 0.3,
+            child: _taskChip(task, onTap: () {}),
+          ),
+          child: _taskChip(
+            task,
+            key: Key('calendar-task-${task.id}'),
+            onTap: actions.onTask,
+          ),
         ),
     ];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        ...chips.take(3),
-        if (chips.length > 3)
-          Text('+${chips.length - 3} more', style: Ember.meta),
-      ],
+    return DragTarget<_Drag>(
+      key: Key('calendar-allday-$day'),
+      onWillAcceptWithDetails: (details) => details.data is _TaskDrag,
+      onAcceptWithDetails: (details) {
+        if (details.data case _TaskDrag(:final task)) {
+          actions.onScheduleTask(task, day, null);
+        }
+      },
+      builder: (context, candidates, _) => Container(
+        constraints: const BoxConstraints(minHeight: 24),
+        decoration: BoxDecoration(
+          color: candidates.isEmpty ? null : Ember.tile,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ...chips.take(3),
+            if (chips.length > 3)
+              Text('+${chips.length - 3} more', style: Ember.meta),
+          ],
+        ),
+      ),
     );
   }
+
+  Widget _taskChip(Task task, {Key? key, required VoidCallback onTap}) => _Chip(
+    key: key,
+    label: task.title,
+    background: Ember.white,
+    foreground: task.status == TaskStatus.done ? Ember.ink3 : Ember.ink,
+    border: true,
+    done: task.status == TaskStatus.done,
+    onTap: onTap,
+  );
 }
 
 class _Chip extends StatelessWidget {
@@ -680,18 +842,22 @@ class _Chip extends StatelessWidget {
 }
 
 /// One day on the time grid: hour lines, a tint for today with the orange
-/// line at the time now, events and focus sessions. A click on an empty
-/// place starts a new event there.
-class _DayColumn extends StatelessWidget {
+/// line at the time now, events, tasks with a time and focus sessions.
+///
+/// - A click on an empty place starts a new event there.
+/// - Events and tasks can be dragged to another time or day; a dashed box
+///   shows where they will land.
+/// - The top and bottom edges of an event change its start and end.
+class _DayColumn extends StatefulWidget {
   const _DayColumn({
+    super.key,
     required this.day,
     required this.today,
     required this.now,
     required this.firstHour,
     required this.items,
     required this.selectedEventId,
-    required this.onSlot,
-    required this.onEvent,
+    required this.actions,
   });
 
   final String day;
@@ -700,135 +866,355 @@ class _DayColumn extends StatelessWidget {
   final int firstHour;
   final _DayItems items;
   final String? selectedEventId;
-  final void Function(String day, int minutes) onSlot;
-  final ValueChanged<CalendarEvent> onEvent;
+  final _GridActions actions;
 
-  double _top(int minutes) => (minutes / 60 - firstHour) * _hourHeight;
+  @override
+  State<_DayColumn> createState() => _DayColumnState();
+}
+
+class _DayColumnState extends State<_DayColumn> {
+  /// An event whose edge is being dragged, with its new start and end.
+  ({String id, int start, int end})? _resize;
+  double _resizeDy = 0;
+
+  /// Where a dragged item would land, and how long it is.
+  int? _hoverStart;
+  var _hoverLength = 60;
+
+  double _top(int minutes) => (minutes / 60 - widget.firstHour) * _hourHeight;
+
+  /// The minutes after midnight at [global], a point on the screen.
+  int _minutesAt(Offset global) {
+    final box = context.findRenderObject()! as RenderBox;
+    final local = box.globalToLocal(global);
+    return (local.dy / _hourHeight * 60).round() + widget.firstHour * 60;
+  }
+
+  int _lengthOf(_Drag drag) => switch (drag) {
+    _EventDrag(:final event) => math.max(
+      15,
+      (minutesOf(event.endTime) ?? 0) - (minutesOf(event.startTime) ?? 0),
+    ),
+    _TaskDrag() => _taskMinutes,
+  };
+
+  int _landing(_Drag drag, Offset global) {
+    final length = _lengthOf(drag);
+    return _snap(_minutesAt(global)).clamp(0, _lastMinute - length);
+  }
 
   @override
   Widget build(BuildContext context) {
-    final isToday = day == today;
-    final eventIds = {for (final e in items.eventsOn(day)) e.id};
+    final day = widget.day;
+    final items = widget.items;
+    final isToday = day == widget.today;
+    final events = {for (final e in items.eventsOn(day)) e.id: e};
+    final tasks = {for (final t in items.tasksOn(day)) t.id: t};
+    final resize = _resize;
     final placed = layoutBlocks([
-      ...eventBlocksOn(day, items.events),
+      for (final block in eventBlocksOn(day, items.events))
+        if (resize != null && resize.id == block.id)
+          TimeBlock(block.id, resize.start, resize.end)
+        else
+          block,
       ...focusBlocksOn(day, items.sessions),
+      ...items.taskBlocksOn(day),
     ]);
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
-        return GestureDetector(
-          key: Key('calendar-slot-$day'),
-          behavior: HitTestBehavior.opaque,
-          onTapUp: (details) {
-            final minutes =
-                ((details.localPosition.dy / _hourHeight + firstHour) * 60)
-                    .floor();
-            // Round down to the half hour.
-            onSlot(day, (minutes ~/ 30) * 30);
+        return DragTarget<_Drag>(
+          onMove: (details) => setState(() {
+            _hoverStart = _landing(details.data, details.offset);
+            _hoverLength = _lengthOf(details.data);
+          }),
+          onLeave: (_) => setState(() => _hoverStart = null),
+          onAcceptWithDetails: (details) {
+            final start = _landing(details.data, details.offset);
+            setState(() => _hoverStart = null);
+            switch (details.data) {
+              case _EventDrag(:final event):
+                widget.actions.onMoveEvent(event, day, start);
+              case _TaskDrag(:final task):
+                widget.actions.onScheduleTask(task, day, start);
+            }
           },
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Positioned.fill(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: isToday ? const Color(0xFFFBF6F2) : null,
-                    border: const Border(left: BorderSide(color: Ember.line)),
+          builder: (context, _, _) => GestureDetector(
+            key: Key('calendar-slot-$day'),
+            behavior: HitTestBehavior.opaque,
+            onTapUp: (details) {
+              final minutes =
+                  ((details.localPosition.dy / _hourHeight + widget.firstHour) *
+                          60)
+                      .floor();
+              // Round down to the half hour.
+              widget.actions.onSlot(day, (minutes ~/ 30) * 30);
+            },
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: isToday ? const Color(0xFFFBF6F2) : null,
+                      border: const Border(left: BorderSide(color: Ember.line)),
+                    ),
+                    child: CustomPaint(painter: _HourLines()),
                   ),
-                  child: CustomPaint(painter: _HourLines()),
                 ),
-              ),
-              for (final item in placed)
-                Positioned(
-                  top: _top(item.block.start) + 1,
-                  height: math.max(
-                    22,
-                    (item.block.end - item.block.start) / 60 * _hourHeight - 3,
+                for (final item in placed)
+                  Positioned(
+                    top: _top(item.block.start) + 1,
+                    height: _height(item.block),
+                    left: 2 + item.column * (width - 4) / item.columns,
+                    width: (width - 4) / item.columns - 2,
+                    child: switch ((
+                      events[item.block.id],
+                      tasks[item.block.id],
+                    )) {
+                      (final CalendarEvent event, _) => _draggable(
+                        _EventDrag(event),
+                        Size(
+                          (width - 4) / item.columns - 2,
+                          _height(item.block),
+                        ),
+                        _eventBlock(event, item.block, handles: true),
+                        _eventBlock(event, item.block, handles: false),
+                      ),
+                      (_, final Task task) => _draggable(
+                        _TaskDrag(task),
+                        Size(
+                          (width - 4) / item.columns - 2,
+                          _height(item.block),
+                        ),
+                        _taskBlock(task, tap: true),
+                        _taskBlock(task, tap: false),
+                      ),
+                      _ => _focusBlock(item.block),
+                    },
                   ),
-                  left: 2 + item.column * (width - 4) / item.columns,
-                  width: (width - 4) / item.columns - 2,
-                  child: eventIds.contains(item.block.id)
-                      ? _eventBlock(
-                          items.events.firstWhere((e) => e.id == item.block.id),
-                        )
-                      : _focusBlock(item.block),
-                ),
-              if (isToday)
-                Positioned(
-                  top: _top(now.hour * 60 + now.minute),
-                  left: 0,
-                  right: 0,
-                  child: IgnorePointer(
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 7,
-                          height: 7,
-                          decoration: const BoxDecoration(
-                            color: Ember.now,
-                            shape: BoxShape.circle,
-                          ),
+                if (_hoverStart case final int start)
+                  Positioned(
+                    top: _top(start) + 1,
+                    height: math.max(22, _hoverLength / 60 * _hourHeight - 3),
+                    left: 2,
+                    right: 2,
+                    child: IgnorePointer(
+                      child: Container(
+                        key: const Key('calendar-drop-preview'),
+                        padding: const EdgeInsets.fromLTRB(6, 3, 4, 2),
+                        decoration: BoxDecoration(
+                          color: Ember.ink.withValues(alpha: 0.06),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: Ember.ink, width: 1.5),
                         ),
-                        Expanded(
-                          child: Container(height: 1.5, color: Ember.now),
+                        child: Text(
+                          formatTime(timeOf(start)),
+                          style: Ember.text(11, 13, weight: 600),
                         ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
-            ],
+                if (isToday)
+                  Positioned(
+                    top: _top(widget.now.hour * 60 + widget.now.minute),
+                    left: 0,
+                    right: 0,
+                    child: IgnorePointer(
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 7,
+                            height: 7,
+                            decoration: const BoxDecoration(
+                              color: Ember.now,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          Expanded(
+                            child: Container(height: 1.5, color: Ember.now),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
         );
       },
     );
   }
 
-  Widget _eventBlock(CalendarEvent event) {
-    final (background, foreground) = items.coloursOf(event);
-    final selected = event.id == selectedEventId;
+  double _height(TimeBlock block) =>
+      math.max(22, (block.end - block.start) / 60 * _hourHeight - 3);
+
+  /// A block that can be picked up and dropped on another time or day.
+  Widget _draggable(_Drag data, Size size, Widget child, Widget look) {
+    return Draggable<_Drag>(
+      data: data,
+      dragAnchorStrategy: childDragAnchorStrategy,
+      feedback: Material(
+        color: Colors.transparent,
+        child: Opacity(
+          opacity: 0.9,
+          child: SizedBox.fromSize(size: size, child: look),
+        ),
+      ),
+      childWhenDragging: Opacity(opacity: 0.3, child: look),
+      child: MouseRegion(cursor: SystemMouseCursors.grab, child: child),
+    );
+  }
+
+  Widget _eventBlock(
+    CalendarEvent event,
+    TimeBlock block, {
+    required bool handles,
+  }) {
+    final (background, foreground) = widget.items.coloursOf(event);
+    final selected = event.id == widget.selectedEventId;
+    final content = Container(
+      padding: const EdgeInsets.fromLTRB(6, 3, 4, 2),
+      decoration: selected
+          ? BoxDecoration(
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: Ember.ink, width: 2),
+            )
+          : null,
+      child: ClipRect(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              event.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Ember.text(11.5, 14, weight: 600, color: foreground),
+            ),
+            Text(
+              '${formatTime(timeOf(block.start))} to '
+              '${formatTime(timeOf(block.end))}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Ember.text(10.5, 13, color: foreground),
+            ),
+          ],
+        ),
+      ),
+    );
     return Material(
       color: background,
       borderRadius: BorderRadius.circular(6),
-      child: InkWell(
-        key: Key('event-${event.id}'),
-        borderRadius: BorderRadius.circular(6),
-        onTap: () => onEvent(event),
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(6, 3, 4, 2),
-          decoration: selected
-              ? BoxDecoration(
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: Ember.ink, width: 2),
-                )
-              : null,
-          child: ClipRect(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: !handles
+          ? content
+          : Stack(
               children: [
-                Text(
-                  event.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Ember.text(11.5, 14, weight: 600, color: foreground),
+                Positioned.fill(
+                  child: InkWell(
+                    key: Key('event-${event.id}'),
+                    borderRadius: BorderRadius.circular(6),
+                    onTap: () => widget.actions.onEvent(event),
+                    child: content,
+                  ),
                 ),
-                Text(
-                  '${formatTime(event.startTime)} to '
-                  '${formatTime(event.endTime)}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Ember.text(10.5, 13, color: foreground),
-                ),
+                _edge(event, top: true),
+                _edge(event, top: false),
               ],
             ),
-          ),
+    );
+  }
+
+  /// The top or bottom edge of an event: drag it to change the start or
+  /// the end.
+  Widget _edge(CalendarEvent event, {required bool top}) {
+    final start = minutesOf(event.startTime) ?? 0;
+    final end = minutesOf(event.endTime) ?? start + 60;
+    return Positioned(
+      top: top ? 0 : null,
+      bottom: top ? null : 0,
+      left: 0,
+      right: 0,
+      height: 7,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.resizeUpDown,
+        child: GestureDetector(
+          key: Key('event-${top ? 'top' : 'bottom'}-${event.id}'),
+          behavior: HitTestBehavior.opaque,
+          // Count from where the edge was pressed, so no movement is lost.
+          dragStartBehavior: DragStartBehavior.down,
+          onVerticalDragStart: (_) {
+            _resizeDy = 0;
+            setState(() => _resize = (id: event.id, start: start, end: end));
+          },
+          onVerticalDragUpdate: (details) {
+            _resizeDy += details.delta.dy;
+            final delta = (_resizeDy / _hourHeight * 60).round();
+            setState(() {
+              _resize = top
+                  ? (
+                      id: event.id,
+                      start: _snap(start + delta).clamp(0, end - 15),
+                      end: end,
+                    )
+                  : (
+                      id: event.id,
+                      start: start,
+                      end: _snap(end + delta).clamp(start + 15, _lastMinute),
+                    );
+            });
+          },
+          onVerticalDragEnd: (_) async {
+            final done = _resize;
+            if (done == null) return;
+            if (done.start != start || done.end != end) {
+              await widget.actions.onResizeEvent(event, done.start, done.end);
+            }
+            if (mounted) setState(() => _resize = null);
+          },
         ),
       ),
     );
   }
 
+  Widget _taskBlock(Task task, {required bool tap}) {
+    final done = task.status == TaskStatus.done;
+    final content = Container(
+      padding: const EdgeInsets.fromLTRB(6, 3, 4, 2),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: Ember.ring),
+      ),
+      child: ClipRect(
+        child: Text(
+          '${task.title} · ${formatTime(task.dueTime!)}',
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: Ember.text(
+            11,
+            13,
+            weight: 600,
+            color: done ? Ember.ink3 : Ember.ink,
+          ).copyWith(decoration: done ? TextDecoration.lineThrough : null),
+        ),
+      ),
+    );
+    return Material(
+      color: Ember.white,
+      borderRadius: BorderRadius.circular(6),
+      child: !tap
+          ? content
+          : InkWell(
+              key: Key('calendar-timed-task-${task.id}'),
+              borderRadius: BorderRadius.circular(6),
+              onTap: widget.actions.onTask,
+              child: content,
+            ),
+    );
+  }
+
   Widget _focusBlock(TimeBlock block) {
-    final session = items.sessionOf(block.id);
-    final task = items.taskOf(session?.taskId);
+    final session = widget.items.sessionOf(block.id);
+    final task = widget.items.taskOf(session?.taskId);
     return IgnorePointer(
       child: Container(
         key: Key('focus-block-${block.id}'),
