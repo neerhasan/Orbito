@@ -98,6 +98,14 @@ void _testPage(String description, Future<void> Function(WidgetTester) body) {
   });
 }
 
+/// Picks an item of the three-dot menu on the Tasks page.
+Future<void> _menu(WidgetTester tester, String key) async {
+  await tester.tap(find.byKey(const Key('tasks-more')));
+  await tester.pumpAndSettle();
+  await tester.tap(find.byKey(Key(key)));
+  await tester.pumpAndSettle();
+}
+
 Future<void> _tap(WidgetTester tester, String key) async {
   final finder = find.byKey(Key(key));
   await tester.ensureVisible(finder);
@@ -346,10 +354,9 @@ void main() {
       expect(find.text('0 open'), findsOneWidget);
       // Completed tasks are hidden; one switch shows them, and hides them again.
       expect(find.text('Buy shoes'), findsNothing);
-      await _tap(tester, 'show-completed');
+      await _menu(tester, 'show-completed');
       expect(find.text('Buy shoes'), findsOneWidget);
-      expect(find.text('Hide completed'), findsOneWidget);
-      await _tap(tester, 'show-completed');
+      await _menu(tester, 'show-completed');
       expect(find.text('Buy shoes'), findsNothing);
 
       // The chart is always shown, under the title; it cannot be hidden.
@@ -392,7 +399,7 @@ void main() {
 
       // The filters fold out from the Filters button.
       expect(find.byKey(const Key('filter-project')), findsNothing);
-      await _tap(tester, 'task-filters');
+      await _menu(tester, 'task-filters');
       await tester.tap(find.byKey(const Key('filter-project')));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Training plan').last);
@@ -401,9 +408,9 @@ void main() {
 
       expect(find.text('Run 5 km'), findsOneWidget);
       expect(find.text('Call mum'), findsNothing);
-      expect(find.text('Filters on'), findsOneWidget);
+      expect(find.byKey(const Key('filter-reset')), findsOneWidget);
 
-      await _tap(tester, 'view-month');
+      await _menu(tester, 'view-month');
       expect(find.text('November 2026'), findsOneWidget);
       expect(find.byKey(Key('month-task-$ids')), findsOneWidget);
       expect(find.byKey(const Key('group')), findsNothing);

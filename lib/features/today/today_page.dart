@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
@@ -17,8 +18,20 @@ import '../../domain/today.dart';
 import '../../ui/ember.dart';
 import '../../ui/motion.dart';
 import '../../ui/widgets.dart';
-import '../launcher/launcher.dart';
 import '../settings/settings_page.dart' show saveTodaySections;
+
+/// The day picked in the calendar. Null means today. The Tasks section
+/// shows the tasks of this day.
+class SelectedDay extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void pick(String? day) => state = day;
+}
+
+final selectedDayProvider = NotifierProvider<SelectedDay, String?>(
+  SelectedDay.new,
+);
 
 /// The Today page (design: `Today dashboard · Phase 1`, `Main.dc.html`).
 /// It shows the sections the user switched on in Settings, in their order.
@@ -732,13 +745,11 @@ class _MiniCalendar extends ConsumerStatefulWidget {
 class _MiniCalendarState extends ConsumerState<_MiniCalendar> {
   var _offset = 0;
 
-  /// The day the user clicked; its tasks show under the calendar.
-  String? _selected;
-
   @override
   Widget build(BuildContext context) {
     final now = ref.watch(clockProvider)();
     final today = dayKey(now);
+    final selected = ref.watch(selectedDayProvider);
     final tasks = ref.watch(tasksProvider).value ?? const <Task>[];
     final month = DateTime(now.year, now.month + _offset);
     final days = DateTime(month.year, month.month + 1, 0).day;
@@ -753,11 +764,14 @@ class _MiniCalendarState extends ConsumerState<_MiniCalendar> {
       if (n < 1 || n > days) return const SizedBox(height: 36);
       final key = dayKey(DateTime(month.year, month.month, n));
       final isToday = key == today;
-      final isSelected = key == _selected;
+      final isSelected = key == selected;
       return InkWell(
         key: Key('today-day-$key'),
         borderRadius: BorderRadius.circular(10),
-        onTap: () => setState(() => _selected = isSelected ? null : key),
+        // A second click, or a click on today, goes back to today.
+        onTap: () => ref
+            .read(selectedDayProvider.notifier)
+            .pick(isSelected || isToday ? null : key),
         child: SizedBox(
           height: 36,
           child: Column(
@@ -854,134 +868,96 @@ class _MiniCalendarState extends ConsumerState<_MiniCalendar> {
             ],
           ),
         ),
-        if (_selected != null)
-          Appear(
-            key: ValueKey(_selected),
-            child: _DayTasks(
-              day: _selected!,
-              today: today,
-              tasks: [
-                for (final task in tasks)
-                  if (task.dueDate == _selected) task,
-              ],
-            ),
-          ),
       ],
     );
   }
 }
 
-/// The tasks due on the day clicked in the calendar.
-class _DayTasks extends ConsumerWidget {
-  const _DayTasks({
-    required this.day,
-    required this.today,
-    required this.tasks,
-  });
-
-  final String day;
-  final String today;
-  final List<Task> tasks;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final projects = ref.watch(projectsProvider).value ?? const <Project>[];
-    final ordered = [
-      ...tasks.where((t) => t.status != TaskStatus.done),
-      ...tasks.where((t) => t.status == TaskStatus.done),
-    ];
-    return Padding(
-      key: const Key('today-day-tasks'),
-      padding: const EdgeInsets.only(top: 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            '${formatRelativeDay(day, today: today)} · ${countOf(ordered.length, 'task')}',
-            style: Ember.h3,
-          ),
-          const SizedBox(height: 8),
-          if (ordered.isEmpty)
-            Text('No tasks due this day.', style: Ember.meta)
-          else
-            for (final task in ordered)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: Tile(
-                  key: Key('today-day-task-${task.id}'),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 9,
-                  ),
-                  onTap: () => ref
-                      .read(currentPageProvider.notifier)
-                      .open(AppPage.tasks),
-                  child: Row(
-                    children: [
-                      Icon(
-                        task.status == TaskStatus.done
-                            ? Icons.check_circle
-                            : Icons.radio_button_unchecked,
-                        size: 15,
-                        color: task.status == TaskStatus.done
-                            ? Ember.green
-                            : Ember.ink3,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          task.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Ember.item.copyWith(
-                            color: task.status == TaskStatus.done
-                                ? Ember.ink3
-                                : Ember.ink,
-                            decoration: task.status == TaskStatus.done
-                                ? TextDecoration.lineThrough
-                                : null,
-                          ),
-                        ),
-                      ),
-                      if (projects
-                              .where((p) => p.id == task.projectId)
-                              .firstOrNull
-                          case final project?)
-                        Tag(
-                          project.name,
-                          background: ProjectColors.of(project.color).soft,
-                          foreground: ProjectColors.of(project.color).text,
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Overdue and today's tasks, with a button that opens the Quick Launcher.
-class _TodayTasks extends ConsumerWidget {
+/// The tasks of the day picked in the calendar (today when none is picked:
+/// then overdue tasks show too). "Add one" turns into a box in place.
+class _TodayTasks extends ConsumerStatefulWidget {
   const _TodayTasks({required this.open});
 
   final ValueChanged<AppPage> open;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_TodayTasks> createState() => _TodayTasksState();
+}
+
+class _TodayTasksState extends ConsumerState<_TodayTasks> {
+  final _title = TextEditingController();
+  final _focus = FocusNode();
+  var _adding = false;
+  var _busy = false;
+
+  @override
+  void dispose() {
+    _title.dispose();
+    _focus.dispose();
+    super.dispose();
+  }
+
+  void _startAdding() {
+    setState(() => _adding = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _focus.requestFocus();
+    });
+  }
+
+  void _stopAdding() => setState(() {
+    _adding = false;
+    _title.clear();
+  });
+
+  /// Adds the typed task to [day]. The box closes only when it worked, so
+  /// the typed title is never lost.
+  Future<void> _save(String day) async {
+    final userId = ref.read(userIdProvider);
+    final title = _title.text.trim();
+    if (userId == null || title.isEmpty || _busy) return;
+    setState(() => _busy = true);
+    try {
+      await ref
+          .read(taskRepositoryProvider)
+          .addTask(userId: userId, title: title, dueDate: day);
+      if (mounted) _stopAdding();
+    } catch (error) {
+      if (mounted) showMessage(context, 'Could not add the task. ($error)');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final today = dayKey(ref.watch(clockProvider)());
+    final day = ref.watch(selectedDayProvider) ?? today;
+    final isToday = day == today;
     final tasks = ref.watch(tasksProvider).value ?? const <Task>[];
     final projects = ref.watch(projectsProvider).value ?? const <Project>[];
     final openTasks = tasks.where((t) => t.status != TaskStatus.done);
-    final overdue = openTasks
-        .where((t) => t.dueDate != null && t.dueDate!.compareTo(today) < 0)
-        .toList();
-    final dueToday = openTasks.where((t) => t.dueDate == today).toList();
+    final overdue = isToday
+        ? openTasks
+              .where(
+                (t) => t.dueDate != null && t.dueDate!.compareTo(today) < 0,
+              )
+              .toList()
+        : const <Task>[];
+    // Today shows what is still open; another day shows all its tasks,
+    // open ones first.
+    final dueOnDay = isToday
+        ? openTasks.where((t) => t.dueDate == day).toList()
+        : [
+            ...openTasks.where((t) => t.dueDate == day),
+            ...tasks.where(
+              (t) => t.status == TaskStatus.done && t.dueDate == day,
+            ),
+          ];
 
     Widget row(Task task) {
       final project = projects.where((p) => p.id == task.projectId).firstOrNull;
-      final late = task.dueDate != today;
+      final done = task.status == TaskStatus.done;
+      final late = !done && task.dueDate!.compareTo(today) < 0;
       return Padding(
         padding: const EdgeInsets.only(bottom: 12),
         child: Appear(
@@ -991,24 +967,27 @@ class _TodayTasks extends ConsumerWidget {
               Transform.translate(
                 offset: const Offset(-5, -6),
                 child: TaskRing(
-                  done: false,
+                  done: done,
                   priority: task.priority,
-                  label: 'Complete ${task.title}',
+                  label: '${done ? 'Undo' : 'Complete'} ${task.title}',
                   onTap: () => ref
                       .read(taskRepositoryProvider)
-                      .setDone(task.id, done: true),
+                      .setDone(task.id, done: !done),
                 ),
               ),
               Expanded(
                 child: InkWell(
                   key: Key('today-task-${task.id}'),
-                  onTap: () => open(AppPage.tasks),
+                  onTap: () => widget.open(AppPage.tasks),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         task.title,
-                        style: Ember.item.copyWith(color: Ember.ink),
+                        style: Ember.item.copyWith(
+                          color: done ? Ember.ink3 : Ember.ink,
+                          decoration: done ? TextDecoration.lineThrough : null,
+                        ),
                       ),
                       const SizedBox(height: 5),
                       Wrap(
@@ -1038,10 +1017,70 @@ class _TodayTasks extends ConsumerWidget {
       );
     }
 
+    final adder = _adding
+        ? CallbackShortcuts(
+            key: const ValueKey('adding'),
+            bindings: {
+              const SingleActivator(LogicalKeyboardKey.escape): _stopAdding,
+            },
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    key: const Key('today-add-field'),
+                    controller: _title,
+                    focusNode: _focus,
+                    onSubmitted: (_) => _save(day),
+                    decoration: InputDecoration(
+                      hintText: isToday
+                          ? 'Add a task for today'
+                          : 'Add a task for ${formatRelativeDay(day, today: today).toLowerCase()}',
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                FilledButton(
+                  key: const Key('today-add-save'),
+                  onPressed: _busy ? null : () => _save(day),
+                  child: const Text('Add'),
+                ),
+                IconButton(
+                  key: const Key('today-add-cancel'),
+                  tooltip: 'Cancel',
+                  iconSize: 16,
+                  color: Ember.ink2,
+                  onPressed: _stopAdding,
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+          )
+        : Align(
+            key: const ValueKey('button'),
+            alignment: Alignment.centerLeft,
+            child: SoftButton(
+              key: const Key('today-add-task'),
+              icon: Icons.add,
+              label: 'Add one',
+              onPressed: _startAdding,
+            ),
+          );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SectionHeader(icon: Icons.check_circle_outline, title: 'Tasks'),
+        SectionHeader(
+          icon: Icons.check_circle_outline,
+          title: 'Tasks',
+          trailing: isToday
+              ? null
+              : TextButton(
+                  key: const Key('today-tasks-back'),
+                  onPressed: () =>
+                      ref.read(selectedDayProvider.notifier).pick(null),
+                  child: const Text('Back to today'),
+                ),
+        ),
         if (overdue.isNotEmpty) ...[
           Text(
             'Overdue · ${overdue.length}',
@@ -1050,25 +1089,23 @@ class _TodayTasks extends ConsumerWidget {
           const SizedBox(height: 10),
           for (final task in overdue) row(task),
         ],
-        Text('Today · ${dueToday.length}', style: Ember.caption),
+        Text(
+          '${isToday ? 'Today' : formatLongDay(day)} · ${dueOnDay.length}',
+          key: const Key('today-tasks-day'),
+          style: Ember.caption,
+        ),
         const SizedBox(height: 10),
-        if (dueToday.isEmpty)
+        if (dueOnDay.isEmpty)
           Padding(
             padding: const EdgeInsets.only(bottom: 10),
-            child: Text('Nothing else due today.', style: Ember.meta),
+            child: Text(
+              isToday ? 'Nothing else due today.' : 'No tasks due this day.',
+              style: Ember.meta,
+            ),
           )
         else
-          for (final task in dueToday) row(task),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: SoftButton(
-            key: const Key('today-add-task'),
-            icon: Icons.add,
-            label: 'Add one',
-            onPressed: () =>
-                showQuickLauncher(context, onFocus: () => open(AppPage.focus)),
-          ),
-        ),
+          for (final task in dueOnDay) row(task),
+        SoftSwitcher(child: adder),
       ],
     );
   }

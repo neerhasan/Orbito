@@ -329,17 +329,35 @@ void main() {
         ),
       );
       await _pump(tester, AppPage.today);
-      expect(find.byKey(const Key('today-day-tasks')), findsNothing);
+      expect(find.text('Today · 0'), findsOneWidget);
 
+      // The Tasks section switches to the clicked day.
       await _tap(tester, 'today-day-2026-11-20');
       await _settle(tester);
-      expect(find.byKey(const Key('today-day-tasks')), findsOneWidget);
-      expect(find.text('Pay rent'), findsWidgets);
+      expect(find.byKey(const Key('today-tasks-back')), findsOneWidget);
+      expect(find.text('Pay rent'), findsOneWidget);
       expect(find.text('Other day'), findsNothing);
 
       await _tap(tester, 'today-day-2026-11-22');
       await _settle(tester);
       expect(find.text('No tasks due this day.'), findsOneWidget);
+
+      // "Add one" turns into a box in place; the task gets the picked day.
+      await _tap(tester, 'today-add-task');
+      await tester.enterText(find.byKey(const Key('today-add-field')), 'Gym');
+      await _tap(tester, 'today-add-save');
+      await _settle(tester);
+      final added = await _read(tester, () => _tasks.watchTasks(_user).first);
+      expect(
+        added.singleWhere((task) => task.title == 'Gym').dueDate,
+        '2026-11-22',
+      );
+      expect(find.byKey(const Key('today-add-field')), findsNothing);
+      expect(find.text('Gym'), findsOneWidget);
+
+      await _tap(tester, 'today-tasks-back');
+      await _settle(tester);
+      expect(find.text('Today · 0'), findsOneWidget);
     });
 
     _test('Today: a project opens that project, not the list', (tester) async {

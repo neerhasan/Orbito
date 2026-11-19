@@ -2,6 +2,10 @@
 
 Claude Code adds a new entry on top at the end of every session.
 
+### 2026-11-19 Founder feedback, round 2: Today tasks by day, inline add, compact rows, Tasks menu
+- Done: clicking a calendar date switches the Today Tasks section to that day (Back to today returns; the picked date has a ring). "Add one" turns into an input in place and adds the task to the shown day. Task rows on the Tasks and project pages are one line: ring and title left; date, priority, project (and focus time) right; the right side wraps on narrow panels. The Tasks page view switch, Show completed, Filters and New task moved into a three-dot menu at the top right.
+- Test results: flutter analyze: no issues. flutter test --concurrency=2: 174 passed. Windows release built.
+
 ### 2026-11-19 Founder feedback after testing M3: Notes, deadlines, day bar
 - Done:
   - Server: `supabase/009_notes_deadline_daytimes.sql` (applied): new `notes` table with row-level security, `projects.deadline`, and `preferences.wake_time` and `preferences.bed_time`. Sync config: one new stream, `notes` (the founder deploys it).

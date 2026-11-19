@@ -174,13 +174,34 @@ class _TasksPageState extends ConsumerState<TasksPage> {
     return PageLayout(
       railWidth: 400,
       main: [
-        PageHeader(
-          title: 'Tasks',
-          subtitle: [
-            '$open open',
-            if (overdue > 0) '$overdue overdue',
-            if (onTime != null) '$onTime% done on time this month',
-          ].join(' · '),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: PageHeader(
+                title: 'Tasks',
+                subtitle: [
+                  '$open open',
+                  if (overdue > 0) '$overdue overdue',
+                  if (onTime != null) '$onTime% done on time this month',
+                ].join(' · '),
+              ),
+            ),
+            _MoreMenu(
+              view: _view,
+              showCompleted: _status != StatusFilter.open,
+              filtersOpen: _showFilters,
+              filtered: filtered,
+              onView: (view) => setState(() => _view = view),
+              onShowCompleted: () => setState(
+                () => _status = _status == StatusFilter.open
+                    ? StatusFilter.all
+                    : StatusFilter.open,
+              ),
+              onFilters: () => setState(() => _showFilters = !_showFilters),
+              onNewTask: _newTaskFocus.requestFocus,
+            ),
+          ],
         ),
         // The chart is always on, right under the title.
         Tile(
@@ -221,50 +242,6 @@ class _TasksPageState extends ConsumerState<TasksPage> {
               CompletionChart(points: points, summary: summary),
             ],
           ),
-        ),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            _Segments<_TasksView>(
-              keyPrefix: 'view',
-              value: _view,
-              options: const [
-                (_TasksView.list, 'List', Icons.view_list_outlined),
-                (_TasksView.month, 'Calendar', Icons.calendar_month_outlined),
-              ],
-              onChanged: (view) => setState(() => _view = view),
-            ),
-            SoftButton(
-              key: const Key('show-completed'),
-              icon: _status == StatusFilter.open
-                  ? Icons.visibility_outlined
-                  : Icons.visibility_off_outlined,
-              label: _status == StatusFilter.open
-                  ? 'Show completed'
-                  : 'Hide completed',
-              active: _status != StatusFilter.open,
-              onPressed: () => setState(
-                () => _status = _status == StatusFilter.open
-                    ? StatusFilter.all
-                    : StatusFilter.open,
-              ),
-            ),
-            SoftButton(
-              key: const Key('task-filters'),
-              icon: Icons.filter_list,
-              label: filtered ? 'Filters on' : 'Filters',
-              active: _showFilters,
-              onPressed: () => setState(() => _showFilters = !_showFilters),
-            ),
-            FilledButton.icon(
-              key: const Key('task-new-button'),
-              onPressed: _newTaskFocus.requestFocus,
-              icon: const Icon(Icons.add, size: 16),
-              label: const Text('New task'),
-            ),
-          ],
         ),
         // The filters fold out under the header.
         if (_showFilters)
@@ -437,6 +414,113 @@ class _TasksPageState extends ConsumerState<TasksPage> {
             onClose: () => setState(() => _selectedId = null),
           ),
       ],
+    );
+  }
+}
+
+/// The three-dot menu at the top right of the Tasks page: the view, show
+/// or hide completed tasks, the filters and a new task.
+class _MoreMenu extends StatelessWidget {
+  const _MoreMenu({
+    required this.view,
+    required this.showCompleted,
+    required this.filtersOpen,
+    required this.filtered,
+    required this.onView,
+    required this.onShowCompleted,
+    required this.onFilters,
+    required this.onNewTask,
+  });
+
+  final _TasksView view;
+  final bool showCompleted;
+  final bool filtersOpen;
+  final bool filtered;
+  final ValueChanged<_TasksView> onView;
+  final VoidCallback onShowCompleted;
+  final VoidCallback onFilters;
+  final VoidCallback onNewTask;
+
+  PopupMenuItem<VoidCallback> _item(
+    String key,
+    IconData icon,
+    String label,
+    VoidCallback action, {
+    bool checked = false,
+  }) {
+    return PopupMenuItem(
+      key: Key(key),
+      value: action,
+      height: 38,
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: Ember.ink2),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(label, style: Ember.item.copyWith(color: Ember.ink)),
+          ),
+          if (checked) const Icon(Icons.check, size: 15, color: Ember.ink),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<VoidCallback>(
+      key: const Key('tasks-more'),
+      tooltip: 'More options',
+      position: PopupMenuPosition.under,
+      color: Ember.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      onSelected: (action) => action(),
+      itemBuilder: (context) => [
+        _item(
+          'view-list',
+          Icons.view_list_outlined,
+          'List',
+          () => onView(_TasksView.list),
+          checked: view == _TasksView.list,
+        ),
+        _item(
+          'view-month',
+          Icons.calendar_month_outlined,
+          'Calendar',
+          () => onView(_TasksView.month),
+          checked: view == _TasksView.month,
+        ),
+        const PopupMenuDivider(height: 8),
+        _item(
+          'show-completed',
+          showCompleted
+              ? Icons.visibility_off_outlined
+              : Icons.visibility_outlined,
+          showCompleted ? 'Hide completed' : 'Show completed',
+          onShowCompleted,
+        ),
+        _item(
+          'task-filters',
+          Icons.filter_list,
+          filtersOpen
+              ? 'Hide filters'
+              : filtered
+              ? 'Filters (on)'
+              : 'Filters',
+          onFilters,
+        ),
+        const PopupMenuDivider(height: 8),
+        _item('task-new-button', Icons.add, 'New task', onNewTask),
+      ],
+      child: Container(
+        width: 34,
+        height: 34,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: filtered ? Ember.neutral : null,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: const Icon(Icons.more_vert, size: 20, color: Ember.ink2),
+      ),
     );
   }
 }
@@ -692,14 +776,51 @@ class TaskRow extends StatelessWidget {
     final late = !done && due != null && due.compareTo(today) < 0;
     final note = showNote ? firstLine(task.notes) : null;
     final project = this.project;
+    final meta = <Widget>[
+      Text(
+        due == null ? 'No date' : formatRelativeDay(due, today: today),
+        key: Key('task-when-${task.id}'),
+        style: Ember.meta.copyWith(color: late ? Ember.nowInk : Ember.ink2),
+      ),
+      if (task.priority != TaskPriority.none) PriorityTag(task.priority),
+      if (project != null)
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 160),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+            decoration: BoxDecoration(
+              color: ProjectColors.of(project.color).soft,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              project.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Ember.text(
+                11,
+                13,
+                color: ProjectColors.of(project.color).text,
+              ),
+            ),
+          ),
+        ),
+      if (focusSeconds > 0)
+        Text(
+          formatWorked(focusSeconds),
+          style: Ember.meta.copyWith(
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
+    ];
     return Tile(
       key: Key('task-${task.id}'),
       selected: selected,
       color: selected ? Ember.white : Ember.tile,
       onTap: onTap,
-      padding: const EdgeInsets.fromLTRB(9, 7, 14, 10),
+      padding: const EdgeInsets.fromLTRB(9, 3, 14, 3),
+      // One line: ring and title on the left; date, priority and project
+      // on the right. On a narrow panel the right side wraps under itself.
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           TaskRing(
             done: done,
@@ -709,15 +830,14 @@ class TaskRow extends StatelessWidget {
           ),
           const SizedBox(width: 7),
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(top: 5),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AnimatedDefaultTextStyle(
+            flex: 3,
+            child: Row(
+              children: [
+                Flexible(
+                  child: AnimatedDefaultTextStyle(
                     duration: Motion.of(context, Motion.base),
                     curve: Motion.soft,
-                    maxLines: 2,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: done
                         ? Ember.item.copyWith(
@@ -727,56 +847,33 @@ class TaskRow extends StatelessWidget {
                         : Ember.item.copyWith(color: Ember.ink),
                     child: Text(task.title),
                   ),
-                  const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 4,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      Text(
-                        due == null
-                            ? 'No date'
-                            : formatRelativeDay(due, today: today),
-                        key: Key('task-when-${task.id}'),
-                        style: Ember.meta.copyWith(
-                          color: late ? Ember.nowInk : Ember.ink2,
-                        ),
-                      ),
-                      if (task.priority != TaskPriority.none)
-                        PriorityTag(task.priority),
-                      if (project != null)
-                        Tag(
-                          project.name,
-                          background: ProjectColors.of(project.color).soft,
-                          foreground: ProjectColors.of(project.color).text,
-                        ),
-                      if (note != null)
-                        ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 320),
-                          child: Text(
-                            '· $note',
-                            key: Key('task-note-${task.id}'),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Ember.meta,
-                          ),
-                        ),
-                    ],
+                ),
+                if (note != null) ...[
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      '· $note',
+                      key: Key('task-note-${task.id}'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Ember.meta,
+                    ),
                   ),
                 ],
-              ),
+              ],
             ),
           ),
-          if (focusSeconds > 0)
-            Padding(
-              padding: const EdgeInsets.only(top: 5, left: 10),
-              child: Text(
-                formatWorked(focusSeconds),
-                style: Ember.meta.copyWith(
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
-              ),
+          const SizedBox(width: 12),
+          Flexible(
+            flex: 2,
+            child: Wrap(
+              alignment: WrapAlignment.end,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 8,
+              runSpacing: 4,
+              children: meta,
             ),
+          ),
         ],
       ),
     );
