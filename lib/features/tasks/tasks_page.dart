@@ -199,7 +199,6 @@ class _TasksPageState extends ConsumerState<TasksPage> {
                     : StatusFilter.open,
               ),
               onFilters: () => setState(() => _showFilters = !_showFilters),
-              onNewTask: _newTaskFocus.requestFocus,
             ),
           ],
         ),
@@ -419,7 +418,7 @@ class _TasksPageState extends ConsumerState<TasksPage> {
 }
 
 /// The three-dot menu at the top right of the Tasks page: the view, show
-/// or hide completed tasks, the filters and a new task.
+/// or hide completed tasks, and the filters.
 class _MoreMenu extends StatelessWidget {
   const _MoreMenu({
     required this.view,
@@ -429,7 +428,6 @@ class _MoreMenu extends StatelessWidget {
     required this.onView,
     required this.onShowCompleted,
     required this.onFilters,
-    required this.onNewTask,
   });
 
   final _TasksView view;
@@ -439,7 +437,6 @@ class _MoreMenu extends StatelessWidget {
   final ValueChanged<_TasksView> onView;
   final VoidCallback onShowCompleted;
   final VoidCallback onFilters;
-  final VoidCallback onNewTask;
 
   PopupMenuItem<VoidCallback> _item(
     String key,
@@ -508,8 +505,6 @@ class _MoreMenu extends StatelessWidget {
               : 'Filters',
           onFilters,
         ),
-        const PopupMenuDivider(height: 8),
-        _item('task-new-button', Icons.add, 'New task', onNewTask),
       ],
       child: Container(
         width: 34,
@@ -776,14 +771,17 @@ class TaskRow extends StatelessWidget {
     final late = !done && due != null && due.compareTo(today) < 0;
     final note = showNote ? firstLine(task.notes) : null;
     final project = this.project;
-    final meta = <Widget>[
+    // On a narrow panel the project, then the priority, step aside so the
+    // row stays on one line.
+    List<Widget> meta(double width) => [
       Text(
         due == null ? 'No date' : formatRelativeDay(due, today: today),
         key: Key('task-when-${task.id}'),
         style: Ember.meta.copyWith(color: late ? Ember.nowInk : Ember.ink2),
       ),
-      if (task.priority != TaskPriority.none) PriorityTag(task.priority),
-      if (project != null)
+      if (task.priority != TaskPriority.none && width >= 320)
+        PriorityTag(task.priority),
+      if (project != null && width >= 440)
         ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 160),
           child: Container(
@@ -819,62 +817,57 @@ class TaskRow extends StatelessWidget {
       onTap: onTap,
       padding: const EdgeInsets.fromLTRB(9, 3, 14, 3),
       // One line: ring and title on the left; date, priority and project
-      // on the right. On a narrow panel the right side wraps under itself.
-      child: Row(
-        children: [
-          TaskRing(
-            done: done,
-            priority: task.priority,
-            label: '${done ? 'Undo' : 'Complete'} ${task.title}',
-            onTap: onToggle,
-          ),
-          const SizedBox(width: 7),
-          Expanded(
-            flex: 3,
-            child: Row(
-              children: [
-                Flexible(
-                  child: AnimatedDefaultTextStyle(
-                    duration: Motion.of(context, Motion.base),
-                    curve: Motion.soft,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: done
-                        ? Ember.item.copyWith(
-                            color: Ember.ink3,
-                            decoration: TextDecoration.lineThrough,
-                          )
-                        : Ember.item.copyWith(color: Ember.ink),
-                    child: Text(task.title),
-                  ),
-                ),
-                if (note != null) ...[
-                  const SizedBox(width: 8),
+      // on the right.
+      child: LayoutBuilder(
+        builder: (context, constraints) => Row(
+          children: [
+            TaskRing(
+              done: done,
+              priority: task.priority,
+              label: '${done ? 'Undo' : 'Complete'} ${task.title}',
+              onTap: onToggle,
+            ),
+            const SizedBox(width: 7),
+            Expanded(
+              child: Row(
+                children: [
                   Flexible(
-                    child: Text(
-                      '· $note',
-                      key: Key('task-note-${task.id}'),
+                    child: AnimatedDefaultTextStyle(
+                      duration: Motion.of(context, Motion.base),
+                      curve: Motion.soft,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Ember.meta,
+                      style: done
+                          ? Ember.item.copyWith(
+                              color: Ember.ink3,
+                              decoration: TextDecoration.lineThrough,
+                            )
+                          : Ember.item.copyWith(color: Ember.ink),
+                      child: Text(task.title),
                     ),
                   ),
+                  if (note != null) ...[
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        '· $note',
+                        key: Key('task-note-${task.id}'),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Ember.meta,
+                      ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Flexible(
-            flex: 2,
-            child: Wrap(
-              alignment: WrapAlignment.end,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: 8,
-              runSpacing: 4,
-              children: meta,
-            ),
-          ),
-        ],
+            const SizedBox(width: 12),
+            for (final (i, item) in meta(constraints.maxWidth).indexed) ...[
+              if (i > 0) const SizedBox(width: 8),
+              item,
+            ],
+          ],
+        ),
       ),
     );
   }
