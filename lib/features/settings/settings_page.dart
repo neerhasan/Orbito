@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
+import '../../domain/sleep.dart' show formatTime, minutesOf, timeOf;
 import '../../domain/today.dart';
 import '../../ui/ember.dart';
 import '../../ui/widgets.dart';
@@ -24,6 +25,25 @@ Future<void> saveTodaySections(
   }
 }
 
+/// Saves the usual wake time and bedtime (`HH:MM`). Synced like the Today
+/// sections.
+Future<void> saveDayTimes(
+  BuildContext context,
+  WidgetRef ref, {
+  required String wake,
+  required String bed,
+}) async {
+  final userId = ref.read(userIdProvider);
+  if (userId == null) return;
+  try {
+    await ref
+        .read(captureRepositoryProvider)
+        .saveDayTimes(userId: userId, wake: wake, bed: bed);
+  } catch (error) {
+    if (context.mounted) showMessage(context, 'Could not save. ($error)');
+  }
+}
+
 /// Settings: which sections the Today page shows, and in which order.
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
@@ -33,6 +53,41 @@ class SettingsPage extends ConsumerWidget {
     final on = readSections(ref.watch(todaySectionsProvider).value);
     void save(List<TodaySection> sections) =>
         saveTodaySections(context, ref, sections);
+
+    final times = ref.watch(dayTimesProvider).value;
+    final wake = times?.wake ?? '07:00';
+    final bed = times?.bed ?? '23:00';
+
+    Future<void> pick({required bool isWake}) async {
+      final current = minutesOf(isWake ? wake : bed) ?? 0;
+      final picked = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay(hour: current ~/ 60, minute: current % 60),
+        helpText: isWake ? 'Wake up time' : 'Bedtime',
+      );
+      if (picked == null || !context.mounted) return;
+      final value = timeOf(picked.hour * 60 + picked.minute);
+      await saveDayTimes(
+        context,
+        ref,
+        wake: isWake ? value : wake,
+        bed: isWake ? bed : value,
+      );
+    }
+
+    Widget timeRow(String key, String label, String value, bool isWake) => Tile(
+      key: Key(key),
+      onTap: () => pick(isWake: isWake),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      child: Row(
+        children: [
+          Expanded(child: Text(label, style: Ember.item)),
+          Text(formatTime(value), style: Ember.item.copyWith(color: Ember.ink)),
+          const SizedBox(width: 6),
+          const Icon(Icons.edit_outlined, size: 14, color: Ember.ink2),
+        ],
+      ),
+    );
 
     Widget column(TodayColumn which, String title) {
       // The sections that are on, in their order, then the ones that are off.
@@ -111,6 +166,25 @@ class SettingsPage extends ConsumerWidget {
         const PageHeader(
           title: 'Settings',
           subtitle: 'Your choices are kept on every device you sign in on.',
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SectionHeader(
+              icon: Icons.bedtime_outlined,
+              title: 'Your day',
+            ),
+            Text(
+              'The day bar on Today starts when you wake up and runs for 24 '
+              'hours. A red dot marks your bedtime. If you stay up later, '
+              'the bar keeps running.',
+              style: Ember.meta,
+            ),
+            const SizedBox(height: 12),
+            timeRow('setting-wake', 'Wake up time', wake, true),
+            const SizedBox(height: 6),
+            timeRow('setting-bed', 'Bedtime', bed, false),
+          ],
         ),
         Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

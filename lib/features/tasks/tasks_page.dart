@@ -191,8 +191,10 @@ class _TasksPageState extends ConsumerState<TasksPage> {
             ),
             Padding(
               padding: const EdgeInsets.only(top: 6),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   _Segments<_TasksView>(
                     keyPrefix: 'view',
@@ -207,7 +209,6 @@ class _TasksPageState extends ConsumerState<TasksPage> {
                     ],
                     onChanged: (view) => setState(() => _view = view),
                   ),
-                  const SizedBox(width: 8),
                   SoftButton(
                     key: const Key('show-completed'),
                     icon: _status == StatusFilter.open
@@ -223,7 +224,6 @@ class _TasksPageState extends ConsumerState<TasksPage> {
                           : StatusFilter.open,
                     ),
                   ),
-                  const SizedBox(width: 8),
                   SoftButton(
                     key: const Key('task-filters'),
                     icon: Icons.filter_list,
@@ -232,7 +232,6 @@ class _TasksPageState extends ConsumerState<TasksPage> {
                     onPressed: () =>
                         setState(() => _showFilters = !_showFilters),
                   ),
-                  const SizedBox(width: 8),
                   FilledButton.icon(
                     key: const Key('task-new-button'),
                     onPressed: _newTaskFocus.requestFocus,

@@ -24,6 +24,7 @@ const _tables = <String, (String, Object, Object)>{
   'sleep_logs': ('bed_time', '23:00', '01:00'),
   'inbox_items': ('text', 'rls test row', 'changed'),
   'preferences': ('today_sections', 'habits', 'tasks'),
+  'notes': ('title', 'rls test row', 'changed'),
 };
 
 Map<String, String> _readEnvFile(String path) {

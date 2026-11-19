@@ -398,14 +398,11 @@ class PlanRepository {
           );
     }
     // Notes of the project stay, but lose the link.
-    await (_db.update(_db.notes)
-          ..where((row) => row.projectId.equals(id) & row.deletedAt.isNull()))
-        .write(
-          NotesCompanion(
-            projectId: const Value(null),
-            updatedAt: Value(timestamp),
-          ),
-        );
+    await (_db.update(
+      _db.notes,
+    )..where((row) => row.projectId.equals(id) & row.deletedAt.isNull())).write(
+      NotesCompanion(projectId: const Value(null), updatedAt: Value(timestamp)),
+    );
     await (_db.update(_db.projects)..where((row) => row.id.equals(id))).write(
       ProjectsCompanion(
         deletedAt: Value(timestamp),

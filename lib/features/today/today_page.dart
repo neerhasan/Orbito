@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
-import '../../app/shell.dart' show AppPage, currentPageProvider;
+import '../../app/shell.dart'
+    show AppPage, currentPageProvider, openProjectRequestProvider;
 import '../../data/local/app_database.dart';
 import '../../domain/dates.dart';
 import '../../domain/focus.dart';
@@ -249,7 +250,6 @@ class _HabitsSection extends ConsumerWidget {
     final today = dayKey(now);
     final habits = ref.watch(habitsProvider).value ?? const <Habit>[];
     final logs = ref.watch(habitLogsProvider).value ?? const <HabitLog>[];
-    final nights = ref.watch(sleepLogsProvider).value ?? const <SleepLog>[];
     final progress = todayProgress(habits, logs, today: today);
     final planned = habits.where((h) => isPlanned(h, today)).toList();
 
@@ -270,15 +270,11 @@ class _HabitsSection extends ConsumerWidget {
       }
     }
 
-    // The day runs from today's wake time to the usual bedtime.
-    final lastNight = nightOn(nights, today);
-    final usual = usualTimes(nightsBefore(nights, end: today, count: 14));
-    final wake = minutesOf(lastNight?.wakeTime ?? '07:00')!;
-    final bed = bedScale(usual?.bed ?? '23:00');
-    final nowMinutes = now.hour * 60 + now.minute;
-    final dayShare = bed <= wake
-        ? 0.0
-        : ((nowMinutes - wake) / (bed - wake)).clamp(0.0, 1.0);
+    // The 24-hour day starts at the wake time set in Settings.
+    final times = ref.watch(dayTimesProvider).value;
+    final wakeTime = times?.wake ?? '07:00';
+    final bedTime = times?.bed ?? '23:00';
+    final day = dayProgress(now, wake: wakeTime, bed: bedTime);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -324,20 +320,29 @@ class _HabitsSection extends ConsumerWidget {
             ],
           ),
         const SizedBox(height: 14),
-        _DayBar(share: dayShare),
+        _DayBar(share: day.share, bedShare: day.bedShare),
         const SizedBox(height: 6),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              lastNight == null
-                  ? 'Day from 7:00 AM'
-                  : 'Woke ${formatTime(lastNight.wakeTime)}',
+              'Day progress · ${day.percent}%',
+              key: const Key('today-day-progress'),
               style: Ember.caption.copyWith(fontWeight: FontWeight.w400),
             ),
-            Text(
-              'Bedtime ${formatTime(usual?.bed ?? '23:00')}',
-              style: Ember.caption.copyWith(fontWeight: FontWeight.w400),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const ColorDot(_bedRed, size: 6),
+                const SizedBox(width: 5),
+                Text(
+                  day.pastBed
+                      ? 'Past bedtime ${formatTime(bedTime)}'
+                      : 'Bedtime ${formatTime(bedTime)}',
+                  key: const Key('today-bedtime'),
+                  style: Ember.caption.copyWith(fontWeight: FontWeight.w400),
+                ),
+              ],
             ),
           ],
         ),
@@ -426,12 +431,16 @@ class _HabitCard extends StatelessWidget {
   }
 }
 
-/// A line from waking to bedtime: solid for the part of the day that has
-/// passed, dotted for what is left, an orange dot for now.
+/// The red of the bedtime dot.
+const _bedRed = Color(0xFFD64545);
+
+/// The 24 hours from waking: solid for the part that has passed, dotted for
+/// what is left, a red dot at bedtime and an orange dot for now.
 class _DayBar extends StatelessWidget {
-  const _DayBar({required this.share});
+  const _DayBar({required this.share, required this.bedShare});
 
   final double share;
+  final double bedShare;
 
   @override
   Widget build(BuildContext context) {
@@ -444,7 +453,7 @@ class _DayBar extends StatelessWidget {
         height: 10,
         child: CustomPaint(
           size: const Size(double.infinity, 10),
-          painter: _DayBarPainter(value),
+          painter: _DayBarPainter(value, bedShare),
         ),
       ),
     );
@@ -452,9 +461,10 @@ class _DayBar extends StatelessWidget {
 }
 
 class _DayBarPainter extends CustomPainter {
-  _DayBarPainter(this.share);
+  _DayBarPainter(this.share, this.bedShare);
 
   final double share;
+  final double bedShare;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -472,11 +482,17 @@ class _DayBarPainter extends CustomPainter {
     for (var x = at + 6; x < size.width; x += 5) {
       canvas.drawCircle(Offset(x, y), 1, dots);
     }
+    canvas.drawCircle(
+      Offset(size.width * bedShare, y),
+      4,
+      Paint()..color = _bedRed,
+    );
     canvas.drawCircle(Offset(at, y), 5, Paint()..color = Ember.now);
   }
 
   @override
-  bool shouldRepaint(_DayBarPainter old) => old.share != share;
+  bool shouldRepaint(_DayBarPainter old) =>
+      old.share != share || old.bedShare != bedShare;
 }
 
 /// Focused time since waking, against the rest of the day so far.
@@ -490,8 +506,7 @@ class _TimeToday extends ConsumerWidget {
     final sessions =
         ref.watch(focusSessionsProvider).value ?? const <FocusSession>[];
     final timer = ref.watch(focusTimerProvider).value;
-    final nights = ref.watch(sleepLogsProvider).value ?? const <SleepLog>[];
-    final wake = nightOn(nights, today)?.wakeTime ?? '07:00';
+    final wake = ref.watch(dayTimesProvider).value?.wake ?? '07:00';
     final saved = sessionsOn(
       sessions,
       today,
@@ -717,6 +732,9 @@ class _MiniCalendar extends ConsumerStatefulWidget {
 class _MiniCalendarState extends ConsumerState<_MiniCalendar> {
   var _offset = 0;
 
+  /// The day the user clicked; its tasks show under the calendar.
+  String? _selected;
+
   @override
   Widget build(BuildContext context) {
     final now = ref.watch(clockProvider)();
@@ -735,34 +753,43 @@ class _MiniCalendarState extends ConsumerState<_MiniCalendar> {
       if (n < 1 || n > days) return const SizedBox(height: 36);
       final key = dayKey(DateTime(month.year, month.month, n));
       final isToday = key == today;
-      return SizedBox(
-        height: 36,
-        child: Column(
-          children: [
-            Container(
-              width: 26,
-              height: 26,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isToday ? Ember.now : null,
-              ),
-              child: Text(
-                '$n',
-                style: Ember.text(
-                  12,
-                  15,
-                  weight: isToday ? 600 : 400,
-                  color: isToday ? Ember.white : Ember.ink,
+      final isSelected = key == _selected;
+      return InkWell(
+        key: Key('today-day-$key'),
+        borderRadius: BorderRadius.circular(10),
+        onTap: () => setState(() => _selected = isSelected ? null : key),
+        child: SizedBox(
+          height: 36,
+          child: Column(
+            children: [
+              Container(
+                width: 26,
+                height: 26,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isToday ? Ember.now : null,
+                  border: isSelected
+                      ? Border.all(color: Ember.ink, width: 1.5)
+                      : null,
+                ),
+                child: Text(
+                  '$n',
+                  style: Ember.text(
+                    12,
+                    15,
+                    weight: isToday ? 600 : 400,
+                    color: isToday ? Ember.white : Ember.ink,
+                  ),
                 ),
               ),
-            ),
-            if (due.contains(key))
-              const Padding(
-                padding: EdgeInsets.only(top: 2),
-                child: ColorDot(Ember.ink3, size: 4),
-              ),
-          ],
+              if (due.contains(key))
+                const Padding(
+                  padding: EdgeInsets.only(top: 2),
+                  child: ColorDot(Ember.ink3, size: 4),
+                ),
+            ],
+          ),
         ),
       );
     }
@@ -827,7 +854,110 @@ class _MiniCalendarState extends ConsumerState<_MiniCalendar> {
             ],
           ),
         ),
+        if (_selected != null)
+          Appear(
+            key: ValueKey(_selected),
+            child: _DayTasks(
+              day: _selected!,
+              today: today,
+              tasks: [
+                for (final task in tasks)
+                  if (task.dueDate == _selected) task,
+              ],
+            ),
+          ),
       ],
+    );
+  }
+}
+
+/// The tasks due on the day clicked in the calendar.
+class _DayTasks extends ConsumerWidget {
+  const _DayTasks({
+    required this.day,
+    required this.today,
+    required this.tasks,
+  });
+
+  final String day;
+  final String today;
+  final List<Task> tasks;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final projects = ref.watch(projectsProvider).value ?? const <Project>[];
+    final ordered = [
+      ...tasks.where((t) => t.status != TaskStatus.done),
+      ...tasks.where((t) => t.status == TaskStatus.done),
+    ];
+    return Padding(
+      key: const Key('today-day-tasks'),
+      padding: const EdgeInsets.only(top: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            '${formatRelativeDay(day, today: today)} · ${countOf(ordered.length, 'task')}',
+            style: Ember.h3,
+          ),
+          const SizedBox(height: 8),
+          if (ordered.isEmpty)
+            Text('No tasks due this day.', style: Ember.meta)
+          else
+            for (final task in ordered)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Tile(
+                  key: Key('today-day-task-${task.id}'),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 9,
+                  ),
+                  onTap: () => ref
+                      .read(currentPageProvider.notifier)
+                      .open(AppPage.tasks),
+                  child: Row(
+                    children: [
+                      Icon(
+                        task.status == TaskStatus.done
+                            ? Icons.check_circle
+                            : Icons.radio_button_unchecked,
+                        size: 15,
+                        color: task.status == TaskStatus.done
+                            ? Ember.green
+                            : Ember.ink3,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          task.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Ember.item.copyWith(
+                            color: task.status == TaskStatus.done
+                                ? Ember.ink3
+                                : Ember.ink,
+                            decoration: task.status == TaskStatus.done
+                                ? TextDecoration.lineThrough
+                                : null,
+                          ),
+                        ),
+                      ),
+                      if (projects
+                              .where((p) => p.id == task.projectId)
+                              .firstOrNull
+                          case final project?)
+                        Tag(
+                          project.name,
+                          background: ProjectColors.of(project.color).soft,
+                          foreground: ProjectColors.of(project.color).text,
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+        ],
+      ),
     );
   }
 }
@@ -1021,6 +1151,7 @@ class _ProjectsSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final now = ref.watch(clockProvider)();
+    final today = dayKey(now);
     final projects = ref.watch(projectsProvider).value ?? const <Project>[];
     final tasks = ref.watch(tasksProvider).value ?? const <Task>[];
     final sessions =
@@ -1047,7 +1178,8 @@ class _ProjectsSection extends ConsumerWidget {
             padding: const EdgeInsets.only(bottom: 10),
             child: Text('No projects yet.', style: Ember.meta),
           ),
-        for (final project in shown) _projectRow(project, tasks, byTask),
+        for (final project in shown)
+          _projectRow(ref, project, tasks, byTask, today),
         Align(
           alignment: Alignment.centerLeft,
           child: SoftButton(
@@ -1061,9 +1193,11 @@ class _ProjectsSection extends ConsumerWidget {
   }
 
   Widget _projectRow(
+    WidgetRef ref,
     Project project,
     List<Task> tasks,
     Map<String, int> byTask,
+    String today,
   ) {
     final own = tasks.where((t) => t.projectId == project.id).toList();
     final done = own.where((t) => t.status == TaskStatus.done).length;
@@ -1076,8 +1210,13 @@ class _ProjectsSection extends ConsumerWidget {
       percent: percentDone(own),
       detail:
           '$done of ${countOf(own.length, 'task')}'
-          '${seconds == 0 ? '' : ' · ${formatWorked(seconds)}'}',
-      onTap: () => open(AppPage.projects),
+          '${seconds == 0 ? '' : ' · ${formatWorked(seconds)}'}'
+          '${project.deadline == null ? '' : ' · Due ${formatRelativeDay(project.deadline!, today: today)}'}',
+      // Opens this project, not the list of projects.
+      onTap: () {
+        ref.read(openProjectRequestProvider.notifier).ask(project.id);
+        open(AppPage.projects);
+      },
     );
   }
 }

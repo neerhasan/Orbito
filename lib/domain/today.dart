@@ -3,6 +3,8 @@
 /// that are on, in order, comma separated.
 library;
 
+import 'sleep.dart' show minutesOf;
+
 /// Where a section sits: the big main panel or the panel on the right.
 enum TodayColumn { main, side }
 
@@ -93,4 +95,60 @@ String greetingFor(DateTime now) {
   if (hour < 12) return 'Good morning';
   if (hour < 18) return 'Good afternoon';
   return 'Good evening';
+}
+
+/// Where "now" is on the 24-hour day bar. The day starts at the wake time
+/// and lasts 24 hours, so the bar keeps running past bedtime.
+class DayProgress {
+  const DayProgress({
+    required this.share,
+    required this.bedShare,
+    required this.pastBed,
+  });
+
+  /// 0 to 1: how much of the 24 hours since waking has passed.
+  final double share;
+
+  /// 0 to 1: where the bedtime dot sits on the bar.
+  final double bedShare;
+
+  /// True once the bedtime has passed (the user is up late).
+  final bool pastBed;
+
+  /// The whole percent shown next to the bar.
+  int get percent => (share * 100).round();
+}
+
+/// The day bar for [now], with [wake] and [bed] as `HH:MM`. Before today's
+/// wake time the day that began yesterday is still running.
+DayProgress dayProgress(
+  DateTime now, {
+  required String wake,
+  required String bed,
+}) {
+  final wakeMinutes = minutesOf(wake) ?? 7 * 60;
+  final bedMinutes = minutesOf(bed) ?? 23 * 60;
+  var start = DateTime(
+    now.year,
+    now.month,
+    now.day,
+    wakeMinutes ~/ 60,
+    wakeMinutes % 60,
+  );
+  if (now.isBefore(start)) {
+    start = DateTime(
+      start.year,
+      start.month,
+      start.day - 1,
+      start.hour,
+      start.minute,
+    );
+  }
+  final elapsed = now.difference(start).inSeconds / 60;
+  final bedOffset = (bedMinutes - wakeMinutes) % 1440;
+  return DayProgress(
+    share: (elapsed / 1440).clamp(0.0, 1.0),
+    bedShare: bedOffset / 1440,
+    pastBed: elapsed >= bedOffset,
+  );
 }

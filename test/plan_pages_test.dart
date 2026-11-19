@@ -344,10 +344,13 @@ void main() {
 
       expect(find.text('No open tasks'), findsOneWidget);
       expect(find.text('0 open'), findsOneWidget);
-      // Completed today: folded away, one tap to see it.
-      expect(find.text('Done today · 1'), findsOneWidget);
-      await _tap(tester, 'done-today');
+      // Completed tasks are hidden; one switch shows them, and hides them again.
+      expect(find.text('Buy shoes'), findsNothing);
+      await _tap(tester, 'show-completed');
       expect(find.text('Buy shoes'), findsOneWidget);
+      expect(find.text('Hide completed'), findsOneWidget);
+      await _tap(tester, 'show-completed');
+      expect(find.text('Buy shoes'), findsNothing);
 
       // The chart sits in the "Completed" section.
       expect(find.byKey(const Key('chart-summary')), findsNothing);

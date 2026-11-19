@@ -2,6 +2,20 @@
 
 Claude Code adds a new entry on top at the end of every session.
 
+### 2026-11-19 Founder feedback after testing M3: Notes, deadlines, day bar
+- Done:
+  - Server: `supabase/009_notes_deadline_daytimes.sql` (applied): new `notes` table with row-level security, `projects.deadline`, and `preferences.wake_time` and `preferences.bed_time`. Sync config: one new stream, `notes` (the founder deploys it).
+  - Notes: a separate Notes page in the side menu. A note has a title, text and an optional project. A project page lists its notes and has "Add note". Deleting a project keeps its notes and removes the link.
+  - Projects: an optional deadline (set, change or clear any time) on the project form, the list and the open project. Today shows it too. The add-task box on an open project is now at the top.
+  - Tasks: one "Show completed / Hide completed" switch replaces "Done today". The chart button is now called "Completed chart". The header buttons wrap instead of overflowing.
+  - Scrolling: the mouse wheel now glides instead of jumping. The panel clip is cheaper to draw.
+  - Today: calendar dates are clickable and show the tasks due that day. A project opens that project. The day bar is "Day progress": it starts at the wake time and runs 24 hours, with a red dot at bedtime and it keeps running past bedtime.
+  - Settings: "Your day" with wake up time and bedtime (synced).
+  - New menu: only Task and Note.
+- Left to do: the founder deploys the sync config and runs `docs/M3-FEEDBACK-TEST.md`. Existing Inbox items of kind "note" stay in the Inbox (not moved to Notes). Quick Launcher "note ..." lines still go to the Inbox.
+- Known problems: none known. The "add a task at the top" request: on the Tasks page the box was already above the list; on an open project it was at the bottom and is now moved up.
+- Test results: `flutter analyze`: no issues. `flutter test --concurrency=2`: all passed (13 new tests in `test/notes_and_day_test.dart`). Privacy test now lists `notes` (needs the real server to run).
+
 ### 2026-11-13 M3: Today, the Quick Launcher and the Inbox (Windows)
 - Done:
   - Server: `supabase/008_inbox_preferences.sql` (inbox_items, preferences) with row-level security; applied. Privacy test covers all 11 tables (passed). Sync config: two new streams (the founder deploys).

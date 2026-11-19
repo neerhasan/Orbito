@@ -134,10 +134,7 @@ class CaptureRepository {
   Future<void> deleteNote(String id) {
     final timestamp = _timestamp();
     return (_db.update(_db.notes)..where((row) => row.id.equals(id))).write(
-      NotesCompanion(
-        deletedAt: Value(timestamp),
-        updatedAt: Value(timestamp),
-      ),
+      NotesCompanion(deletedAt: Value(timestamp), updatedAt: Value(timestamp)),
     );
   }
 
