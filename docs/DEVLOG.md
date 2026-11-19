@@ -5,8 +5,8 @@ Claude Code adds a new entry on top at the end of every session.
 ### 2026-11-19 Founder feedback after testing M3: Notes, deadlines, day bar
 - Done:
   - Server: `supabase/009_notes_deadline_daytimes.sql` (applied): new `notes` table with row-level security, `projects.deadline`, and `preferences.wake_time` and `preferences.bed_time`. Sync config: one new stream, `notes` (the founder deploys it).
-  - Notes: a separate Notes page in the side menu. A note has a title, text and an optional project. A project page lists its notes and has "Add note". Deleting a project keeps its notes and removes the link.
-  - Projects: an optional deadline (set, change or clear any time) on the project form, the list and the open project. Today shows it too. The add-task box on an open project is now at the top.
+  - Notes: a separate Notes page in the side menu. A note has a title, text and an optional project. Notes are not shown inside a project (founder, after testing). Deleting a project keeps its notes and removes the link.
+  - Projects: an optional deadline (set, change or clear any time) on the project form, the list and the open project. Today shows it too. The add-task box on an open project is now at the top, and the open project has no large gaps between its title, add box and list.
   - Tasks: one "Show completed / Hide completed" switch replaces "Done today". The chart button is now called "Completed chart". The header buttons wrap instead of overflowing.
   - Scrolling: the mouse wheel now glides instead of jumping. The panel clip is cheaper to draw.
   - Today: calendar dates are clickable and show the tasks due that day. A project opens that project. The day bar is "Day progress": it starts at the wake time and runs 24 hours, with a red dot at bedtime and it keeps running past bedtime.

@@ -384,19 +384,14 @@ void main() {
         tester,
         () => _plan.addProject(userId: _user, name: 'Korea', color: 'blue'),
       );
-      final noteId = await _read(
-        tester,
-        () => _capture.addNote(userId: _user, title: 'Visa', projectId: id),
-      );
       await _pump(tester, AppPage.projects);
       expect(find.byKey(const Key('project-back')), findsNothing);
 
-      ProviderScope.containerOf(
-        tester.element(find.byType(PageHost)),
-      ).read(openProjectRequestProvider.notifier).ask(id);
+      ProviderScope.containerOf(tester.element(find.byType(PageHost)))
+          .read(openProjectRequestProvider.notifier)
+          .ask(id);
       await _settle(tester);
       expect(find.byKey(const Key('project-back')), findsOneWidget);
-      expect(find.byKey(Key('project-note-$noteId')), findsOneWidget);
     });
   });
 }

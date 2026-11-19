@@ -2,13 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
-import '../../app/shell.dart'
-    show
-        AppPage,
-        NoteRequest,
-        currentPageProvider,
-        noteRequestProvider,
-        openProjectRequestProvider;
+import '../../app/shell.dart' show openProjectRequestProvider;
 import '../../data/local/app_database.dart';
 import '../../data/repositories/plan_repository.dart';
 import '../../domain/dates.dart';
@@ -88,7 +82,6 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
     }
     final projects = ref.watch(projectsProvider).value ?? const <Project>[];
     final goals = ref.watch(goalsProvider).value ?? const <Goal>[];
-    final notes = ref.watch(notesProvider).value ?? const <Note>[];
     final tasks = ref.watch(tasksProvider).value ?? const <Task>[];
     final today = dayKey(ref.watch(clockProvider)());
     final byTask = secondsByTask(
@@ -164,44 +157,40 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
           today: today,
           onBack: () => _open(null),
         ),
-        const SizedBox(height: 22),
-        _ProjectNotes(
-          project: open,
-          notes: notes.where((n) => n.projectId == open.id).toList(),
-        ),
-        const SizedBox(height: 22),
-        Text('Tasks', style: Ember.h3),
-        const SizedBox(height: 8),
-        Row(
+        // One block, so the panel's wide gap does not sit between the
+        // title, the add box and the list.
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Expanded(
-              child: TextField(
-                key: const Key('project-new-task'),
-                controller: _newTask,
-                onSubmitted: (_) => _addTask(open),
-                decoration: const InputDecoration(
-                  hintText: 'Add a task to this project',
+            Text('Tasks', style: Ember.h3),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    key: const Key('project-new-task'),
+                    controller: _newTask,
+                    onSubmitted: (_) => _addTask(open),
+                    decoration: const InputDecoration(
+                      hintText: 'Add a task to this project',
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(width: 6),
+                FilledButton(
+                  key: const Key('project-add-task'),
+                  onPressed: () => _addTask(open),
+                  child: const Text('Add'),
+                ),
+              ],
             ),
-            const SizedBox(width: 6),
-            FilledButton(
-              key: const Key('project-add-task'),
-              onPressed: () => _addTask(open),
-              child: const Text('Add'),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        if (ordered.isEmpty)
-          const EmptyHint(
-            title: 'No tasks yet',
-            text: 'Add the first task of this project below.',
-          )
-        else
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+            const SizedBox(height: 12),
+            if (ordered.isEmpty)
+              const EmptyHint(
+                title: 'No tasks yet',
+                text: 'Add the first task of this project above.',
+              )
+            else
               for (var i = 0; i < ordered.length; i++) ...[
                 if (i > 0) const SizedBox(height: 6),
                 TaskRow(
@@ -216,8 +205,8 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
                   onToggle: () => _toggle(ordered[i]),
                 ),
               ],
-            ],
-          ),
+          ],
+        ),
       ],
       rail: [
         if (selectedTask != null)
@@ -727,71 +716,6 @@ class _Deadline extends StatelessWidget {
           key: const Key('project-deadline'),
           style: Ember.meta.copyWith(color: late ? Ember.nowInk : Ember.ink2),
         ),
-      ],
-    );
-  }
-}
-
-/// The notes linked to an open project, with a button to add one.
-class _ProjectNotes extends ConsumerWidget {
-  const _ProjectNotes({required this.project, required this.notes});
-
-  final Project project;
-  final List<Note> notes;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    void go(String what) {
-      ref.read(noteRequestProvider.notifier).ask(what);
-      ref.read(currentPageProvider.notifier).open(AppPage.notes);
-    }
-
-    return Column(
-      key: const Key('project-notes'),
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            Text('Notes', style: Ember.h3),
-            const Spacer(),
-            SoftButton(
-              key: const Key('project-add-note'),
-              icon: Icons.add,
-              label: 'Add note',
-              onPressed: () => go(NoteRequest.newIn(project.id)),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        if (notes.isEmpty)
-          Text('No notes linked to this project.', style: Ember.meta)
-        else
-          for (final note in notes) ...[
-            Tile(
-              key: Key('project-note-${note.id}'),
-              onTap: () => go(note.id),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.sticky_note_2_outlined,
-                    size: 16,
-                    color: Ember.ink2,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      note.title.isEmpty ? note.body : note.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Ember.item.copyWith(color: Ember.ink),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 6),
-          ],
       ],
     );
   }

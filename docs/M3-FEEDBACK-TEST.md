@@ -9,10 +9,8 @@ If something is wrong, send me the test number, the step number and what you saw
 2. Click "New note", type a title and some text, pick a project in "Project (optional)", click "Add note".
 3. The note shows in the list with the project name on it.
 4. Click the note, change the text, click "Save".
-5. Open the Projects page, open that project. You should see the note under "Notes". Click it: the Notes page opens on that note.
-6. In the project, click "Add note": a new note opens with that project already chosen.
-7. Click "New" at the top, then "Note": the Notes page opens with an empty note.
-8. In the Notes list, use the filter to show only one project's notes.
+5. Click "New" at the top, then "Note": the Notes page opens with an empty note.
+6. In the Notes list, use the filter to show only one project's notes.
 
 ## Test 2: The New menu
 1. Click "New" at the top. It shows only "Task" and "Note".
