@@ -2,6 +2,12 @@
 
 Claude Code adds a new entry on top at the end of every session.
 
+### 2026-11-20 Sleep page rebuilt after the founder's Sleep log app
+- Done: `lib/domain/sleep_view.dart` (week Monday to Sunday, month and year ranges; period names; goal; how far a night was from it; averages, consistency, changes against earlier periods). The Sleep page now follows `F:\Neeret\sleep-tracker`: Week, Month and Year with Today and arrows; four cards (dark Average sleep card with its change and a small line, Average bedtime and Average wake-up with their targets and last week, month and year, Nights at goal); the Tracking list (one row per morning, newest first, a bar from bedtime to wake time on a 3 PM to 3 PM line, green, yellow, red or deep red by distance from the goal, dashed target lines); for a year, average sleep by month and every night as a square. Clicking a night opens it in the form on the right (a day with no night starts a new one for that day). The form keeps "how rested" and the note, starts at the target times and says how far from the goal the night is. The old chart and the Recent nights list are gone.
+- Founder's choice: the targets are the bedtime and wake-up time in Settings, and the goal is the time between them. No server change.
+- Not in this step: the five detail pages of the Sleep log app; its export, import and sample data.
+- Test results: flutter analyze: no issues. flutter test --concurrency=2: 200 passed (9 new in `test/sleep_view_test.dart`, Sleep page tests rewritten). Windows release built and started; Week (normal and maximised) and Year checked on screenshots with real data.
+
 ### 2026-11-20 Habits: one-click log for the last 7 days
 - Done: the Habits page's "Today's checklist" is replaced by a log grid (founder's layout): rows are Today, Yesterday, the weekdays of this week and "Last Sunday" style names for last week; one column per habit. One click on a box logs the habit done on that day (also a forgotten earlier day); a second click clears it. Right-click or a long press skips the day; again un-skips. Clicking a habit's name opens it in the form. Many habits scroll sideways. Today's box has an orange edge while it is open.
 - Test results: flutter analyze: no issues. flutter test --concurrency=2: 191 passed (2 new).

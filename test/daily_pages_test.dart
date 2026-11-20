@@ -382,10 +382,10 @@ void main() {
   group('the Sleep page', () {
     _testPage('logs a night and shows it in the numbers', (tester) async {
       await _pumpPage(tester, AppPage.sleep);
-      expect(find.text('Not logged yet'), findsOneWidget);
-      expect(find.text('No nights logged yet.'), findsOneWidget);
+      expect(find.text('No sleep logged this week'), findsOneWidget);
+      expect(find.text('Goal is 8h or more'), findsOneWidget);
 
-      // The form starts at 11:00 PM to 7:00 AM.
+      // The form starts at the target times: 11:00 PM to 7:00 AM.
       expect(find.text('8h'), findsOneWidget);
       await _tap(tester, 'sleep-rested-good');
       await tester.enterText(find.byKey(const Key('sleep-note')), 'Quiet');
@@ -398,8 +398,10 @@ void main() {
       expect(nights.single.wakeTime, '07:00');
       expect(nights.single.rested, 'good');
       expect(nights.single.note, 'Quiet');
-      expect(find.text('11:00 PM to 7:00 AM'), findsOneWidget);
+      // The tracking list shows the week, newest first; the night is in it.
       expect(find.byKey(const Key('night-2026-11-13')), findsOneWidget);
+      expect(find.byKey(const Key('night-2026-11-09')), findsOneWidget);
+      expect(find.text('1 of 1'), findsOneWidget);
     });
 
     _testPage('a night can be changed, checked and deleted', (tester) async {
@@ -433,7 +435,9 @@ void main() {
       expect(nights, isEmpty);
     });
 
-    _testPage('the range switch changes the numbers', (tester) async {
+    _testPage('week, month, year and the arrows change the numbers', (
+      tester,
+    ) async {
       await _read(tester, () async {
         await _sleep.saveNight(
           userId: _user,
@@ -449,14 +453,30 @@ void main() {
         );
       });
       await _pumpPage(tester, AppPage.sleep);
-      expect(find.text('Average, 14 nights'), findsOneWidget);
-      expect(find.text('7h'), findsOneWidget);
+      Finder average(String text) => find.descendant(
+        of: find.byKey(const Key('sleep-average')),
+        matching: find.text(text),
+      );
+      expect(find.text('Nov 9 to 15, 2026'), findsOneWidget);
+      expect(average('8h'), findsOneWidget);
 
-      await _tap(tester, 'sleep-range-7');
-      expect(find.text('Average, 7 nights'), findsOneWidget);
-      await _tap(tester, 'sleep-range-30');
-      expect(find.text('Average, 30 nights'), findsOneWidget);
-      expect(find.text('7h'), findsOneWidget, reason: '(8h + 6h) / 2');
+      await _tap(tester, 'sleep-view-month');
+      expect(find.text('November 2026'), findsOneWidget);
+      expect(average('7h'), findsOneWidget, reason: '(8h + 6h) / 2');
+      await _tap(tester, 'sleep-view-year');
+      expect(find.text('Average sleep by month'), findsOneWidget);
+      expect(find.text('Every night'), findsOneWidget);
+
+      // Back to weeks: one week back is empty, two weeks back has the 6h.
+      await _tap(tester, 'sleep-view-week');
+      await _tap(tester, 'sleep-prev');
+      expect(find.text('Nov 2 to 8, 2026'), findsOneWidget);
+      expect(find.text('No sleep logged this week'), findsOneWidget);
+      await _tap(tester, 'sleep-prev');
+      expect(find.text('Oct 26 to Nov 1, 2026'), findsOneWidget);
+      expect(average('6h'), findsOneWidget);
+      await _tap(tester, 'sleep-today');
+      expect(find.text('Nov 9 to 15, 2026'), findsOneWidget);
     });
   });
 
