@@ -128,5 +128,32 @@ void main() {
       await _pumpShell(tester, areas: const [_area]);
       expect(find.text('Health'), findsOneWidget);
     });
+
+    testWidgets('the menu collapses to icons and opens again', (tester) async {
+      await _pumpShell(tester, areas: const [_area]);
+
+      await tester.tap(find.byKey(const Key('menu-collapse')));
+      await tester.pumpAndSettle();
+      // Only icons and the logo: no names, no "Orbito".
+      expect(find.text('Tasks'), findsNothing);
+      expect(find.text('Health'), findsNothing);
+      expect(find.text('Orbito'), findsNothing);
+      expect(find.text('Sync: Synced'), findsNothing);
+      expect(find.byTooltip('Tasks'), findsOneWidget);
+
+      // Every icon is a button.
+      await tester.tap(find.byKey(const Key('menu-sleep')));
+      await tester.pumpAndSettle();
+      expect(find.text('page: sleep'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('menu-areas')));
+      await tester.pumpAndSettle();
+      expect(find.text('page: areas'), findsOneWidget);
+
+      // The logo opens the menu again.
+      await tester.tap(find.byKey(const Key('menu-expand')));
+      await tester.pumpAndSettle();
+      expect(find.text('Tasks'), findsOneWidget);
+      expect(find.text('Orbito'), findsOneWidget);
+    });
   });
 }

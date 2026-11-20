@@ -93,6 +93,23 @@ final noteRequestProvider = NotifierProvider<NoteRequest, String?>(
   NoteRequest.new,
 );
 
+/// True while the side menu is collapsed to a rail of icons. Kept while
+/// the app runs.
+class SideMenuCollapsed extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void toggle() => state = !state;
+}
+
+final sideMenuCollapsedProvider = NotifierProvider<SideMenuCollapsed, bool>(
+  SideMenuCollapsed.new,
+);
+
+/// The side menu's width, open and collapsed.
+const _menuWidth = 232.0;
+const _railWidth = 60.0;
+
 /// The frame around every page once the user is signed in (design:
 /// `docs/design/source/Titlebar.dc.html` and `Sidebar.dc.html`): the title
 /// bar on top, the side menu on the left and the open page on the right.
@@ -147,7 +164,7 @@ class AppShell extends ConsumerWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(width: 232, child: _SideMenu()),
+                  const _SideMenuFrame(),
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(0, 0, 8, 8),
@@ -189,8 +206,19 @@ class _TitleBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final timer = ref.watch(focusTimerProvider).value;
+    final collapsed = ref.watch(sideMenuCollapsedProvider);
     void open(AppPage target) =>
         ref.read(currentPageProvider.notifier).open(target);
+    void toggleMenu() => ref.read(sideMenuCollapsedProvider.notifier).toggle();
+    final logo = Container(
+      width: 26,
+      height: 26,
+      decoration: BoxDecoration(
+        color: Ember.now,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: const Icon(Icons.show_chart, size: 16, color: Ember.white),
+    );
 
     // The whole bar moves the window (drag) and maximises it (double
     // click); the buttons on it still work as buttons.
@@ -202,32 +230,57 @@ class _TitleBar extends ConsumerWidget {
         child: Row(
           children: [
             Expanded(
-              child: Row(
-                children: [
-                  Container(
-                    width: 26,
-                    height: 26,
-                    decoration: BoxDecoration(
-                      color: Ember.now,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(
-                      Icons.show_chart,
-                      size: 16,
-                      color: Ember.white,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    'Orbito',
-                    style: Ember.text(
-                      14,
-                      17,
-                      weight: 600,
-                      color: Ember.onShell,
-                    ),
-                  ),
-                ],
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: collapsed
+                    // Collapsed: only the logo; clicking it opens the menu.
+                    ? Tooltip(
+                        message: 'Open the menu',
+                        child: InkWell(
+                          key: const Key('menu-expand'),
+                          borderRadius: BorderRadius.circular(8),
+                          onTap: toggleMenu,
+                          child: logo,
+                        ),
+                      )
+                    : SizedBox(
+                        // Ends where the side menu's rows end.
+                        width: _menuWidth - 16 - 10,
+                        child: Row(
+                          children: [
+                            logo,
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'Orbito',
+                                overflow: TextOverflow.clip,
+                                softWrap: false,
+                                style: Ember.text(
+                                  14,
+                                  17,
+                                  weight: 600,
+                                  color: Ember.onShell,
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 28,
+                              height: 28,
+                              child: IconButton(
+                                key: const Key('menu-collapse'),
+                                tooltip: 'Collapse the menu',
+                                padding: EdgeInsets.zero,
+                                iconSize: 18,
+                                color: Ember.onShell2,
+                                onPressed: toggleMenu,
+                                icon: const Icon(
+                                  Icons.keyboard_double_arrow_left,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
               ),
             ),
             ConstrainedBox(
@@ -436,8 +489,37 @@ class _AccountButton extends ConsumerWidget {
   }
 }
 
+/// Holds the side menu and slides softly between its open width and the
+/// narrow rail of icons.
+class _SideMenuFrame extends ConsumerWidget {
+  const _SideMenuFrame();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final collapsed = ref.watch(sideMenuCollapsedProvider);
+    return AnimatedContainer(
+      duration: Motion.of(context, Motion.base),
+      curve: Motion.soft,
+      width: collapsed ? _railWidth : _menuWidth,
+      child: ClipRect(
+        // The open menu keeps its full width while the frame grows, so it
+        // is revealed instead of squeezed.
+        child: OverflowBox(
+          alignment: Alignment.topLeft,
+          minWidth: collapsed ? _railWidth : _menuWidth,
+          maxWidth: collapsed ? _railWidth : _menuWidth,
+          child: _SideMenu(compact: collapsed),
+        ),
+      ),
+    );
+  }
+}
+
 class _SideMenu extends ConsumerWidget {
-  const _SideMenu();
+  const _SideMenu({required this.compact});
+
+  /// Icons only, each with its name as a tooltip.
+  final bool compact;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -459,12 +541,17 @@ class _SideMenu extends ConsumerWidget {
       label: target.label,
       icon: target.icon,
       count: count,
+      compact: compact,
       selected: page == target,
       onTap: () => open(target),
     );
+    Widget group(String label) =>
+        compact ? const _GroupGap() : _GroupLabel(label);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 2, 10, 8),
+      padding: compact
+          ? const EdgeInsets.fromLTRB(10, 2, 10, 8)
+          : const EdgeInsets.fromLTRB(12, 2, 10, 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -477,69 +564,99 @@ class _SideMenu extends ConsumerWidget {
                   AppPage.inbox,
                   count: inbox.isEmpty ? '' : '${inbox.length}',
                 ),
-                const _GroupLabel('Plan'),
+                group('Plan'),
                 item(AppPage.tasks, count: openTasks == 0 ? '' : '$openTasks'),
                 item(AppPage.projects),
                 item(AppPage.notes),
                 item(AppPage.calendar),
                 item(AppPage.goals),
-                const _GroupLabel('Daily'),
+                group('Daily'),
                 item(
                   AppPage.habits,
                   count: habitsLeft <= 0 ? '' : '$habitsLeft',
                 ),
                 item(AppPage.sleep),
                 item(AppPage.focus),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 18, 0, 6),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'Life areas',
-                          style: Ember.text(11, 13, color: Ember.onShell3),
+                if (compact)
+                  const _GroupGap()
+                else
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 18, 0, 6),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Life areas',
+                            style: Ember.text(11, 13, color: Ember.onShell3),
+                          ),
                         ),
-                      ),
-                      SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: IconButton(
-                          key: const Key('menu-areas'),
-                          tooltip: 'Life areas',
-                          padding: EdgeInsets.zero,
-                          iconSize: 14,
-                          color: Ember.onShell3,
-                          onPressed: () => open(AppPage.areas),
-                          icon: const Icon(Icons.add),
+                        SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: IconButton(
+                            key: const Key('menu-areas'),
+                            tooltip: 'Life areas',
+                            padding: EdgeInsets.zero,
+                            iconSize: 14,
+                            color: Ember.onShell3,
+                            onPressed: () => open(AppPage.areas),
+                            icon: const Icon(Icons.add),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
                 if (areas.isEmpty)
                   _MenuItem(
+                    key: compact ? const Key('menu-areas') : null,
                     label: 'Add your first area',
                     icon: Icons.add_circle_outline,
+                    compact: compact,
                     selected: page == AppPage.areas,
                     onTap: () => open(AppPage.areas),
                   )
-                else
+                else ...[
                   for (final area in areas)
                     _MenuItem(
                       label: area.name,
                       leading: AreaMark(color: area.color, icon: area.icon),
+                      compact: compact,
                       selected: page == AppPage.areas,
                       quiet: true,
                       onTap: () => open(AppPage.areas),
                     ),
+                  if (compact)
+                    _MenuItem(
+                      key: const Key('menu-areas'),
+                      label: 'Life areas',
+                      icon: Icons.add,
+                      compact: true,
+                      selected: false,
+                      onTap: () => open(AppPage.areas),
+                    ),
+                ],
               ],
             ),
           ),
           item(AppPage.settings),
           const SizedBox(height: 8),
-          const _SyncStatus(),
+          _SyncStatus(compact: compact),
         ],
       ),
+    );
+  }
+}
+
+/// In the collapsed rail, a thin line instead of a group's name.
+class _GroupGap extends StatelessWidget {
+  const _GroupGap();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 1,
+      margin: const EdgeInsets.fromLTRB(8, 12, 8, 12),
+      color: Ember.shellLine,
     );
   }
 }
@@ -570,6 +687,7 @@ class _MenuItem extends StatefulWidget {
     this.leading,
     this.count = '',
     this.quiet = false,
+    this.compact = false,
   });
 
   final String label;
@@ -583,6 +701,9 @@ class _MenuItem extends StatefulWidget {
   /// A row that shares its page with others (the life areas): it is not
   /// highlighted as the open page.
   final bool quiet;
+
+  /// Only the icon, centred, with the name as a tooltip.
+  final bool compact;
   final VoidCallback onTap;
 
   @override
@@ -596,7 +717,18 @@ class _MenuItemState extends State<_MenuItem> {
   Widget build(BuildContext context) {
     final on = widget.selected && !widget.quiet;
     final color = on ? Ember.onShell : Ember.onShell2;
-    return Padding(
+    final icon =
+        widget.leading ??
+        AnimatedSwitcher(
+          duration: Motion.of(context, Motion.base),
+          child: Icon(
+            widget.icon,
+            key: ValueKey(on),
+            size: 16,
+            color: on ? Ember.now : color,
+          ),
+        );
+    final row = Padding(
       padding: const EdgeInsets.only(bottom: 2),
       child: AnimatedContainer(
         duration: Motion.of(context, Motion.base),
@@ -617,60 +749,79 @@ class _MenuItemState extends State<_MenuItem> {
             onTap: widget.onTap,
             onHover: (hover) => setState(() => _hover = hover),
             hoverColor: Colors.transparent,
-            child: SizedBox(
-              height: 30,
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: widget.leading == null ? 8 : 12,
-                ),
-                child: Row(
-                  children: [
-                    widget.leading ??
-                        AnimatedSwitcher(
-                          duration: Motion.of(context, Motion.base),
-                          child: Icon(
-                            widget.icon,
-                            key: ValueKey(on),
-                            size: 16,
-                            color: on ? Ember.now : color,
+            child: widget.compact
+                ? SizedBox(height: 34, child: Center(child: icon))
+                : SizedBox(
+                    height: 30,
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: widget.leading == null ? 8 : 12,
+                      ),
+                      child: Row(
+                        children: [
+                          icon,
+                          SizedBox(width: widget.leading == null ? 10 : 12),
+                          Expanded(
+                            child: Text(
+                              widget.label,
+                              overflow: TextOverflow.ellipsis,
+                              style: Ember.text(13, 16, color: color),
+                            ),
                           ),
-                        ),
-                    SizedBox(width: widget.leading == null ? 10 : 12),
-                    Expanded(
-                      child: Text(
-                        widget.label,
-                        overflow: TextOverflow.ellipsis,
-                        style: Ember.text(13, 16, color: color),
+                          if (widget.count.isNotEmpty)
+                            Text(
+                              widget.count,
+                              style: Ember.text(
+                                11,
+                                13,
+                                color: on ? Ember.onShell2 : Ember.onShell3,
+                              ),
+                            ),
+                        ],
                       ),
                     ),
-                    if (widget.count.isNotEmpty)
-                      Text(
-                        widget.count,
-                        style: Ember.text(
-                          11,
-                          13,
-                          color: on ? Ember.onShell2 : Ember.onShell3,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
+                  ),
           ),
         ),
       ),
+    );
+    if (!widget.compact) return row;
+    return Tooltip(
+      message: widget.count.isEmpty
+          ? widget.label
+          : '${widget.label} · ${widget.count}',
+      waitDuration: const Duration(milliseconds: 300),
+      child: row,
     );
   }
 }
 
 /// The small sync status at the bottom of the side menu.
 class _SyncStatus extends ConsumerWidget {
-  const _SyncStatus();
+  const _SyncStatus({this.compact = false});
+
+  /// Only the coloured dot; the words show as a tooltip.
+  final bool compact;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final status = ref.watch(syncStatusTextProvider);
     final synced = status.label == 'Synced';
+    if (compact) {
+      return Tooltip(
+        message: ['Sync: ${status.label}', ?status.detail].join('\n'),
+        child: Container(
+          key: const Key('sync-status'),
+          height: 34,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: Ember.raised,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: ColorDot(synced ? Ember.green : Ember.amber, size: 7),
+        ),
+      );
+    }
     return Container(
       key: const Key('sync-status'),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),

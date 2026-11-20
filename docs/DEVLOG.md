@@ -2,6 +2,10 @@
 
 Claude Code adds a new entry on top at the end of every session.
 
+### 2026-11-20 Side menu collapses to icons
+- Done: a collapse button («) at the right of "Orbito" in the top bar. Collapsed, the side menu slides to a 60 px rail: every page, life area, Settings and "+" for life areas is an icon button with its name as a tooltip; the sync status is a coloured dot (words in the tooltip); the top bar shows only the orange logo, and clicking the logo opens the menu again. The choice is kept while the app runs (it opens again on the next start).
+- Test results: flutter analyze: no issues. flutter test --concurrency=2: 202 passed (1 new). Windows release built and started: the collapse button seen on a screenshot; the collapsed rail checked by tests only (the founder was using the screen).
+
 ### 2026-11-20 Sleep: Month first, Sleep log entry dialog
 - Done: the Sleep page opens on Month. The form on the right is gone; "Log sleep" (top right) or clicking a night opens the Sleep log app's entry dialog: Date you woke up, Bedtime and Wake time as hour, quarter hour and AM or PM, "7h of sleep, 1h short", Delete, Cancel, Save. A date with a night opens it as "Edit night". Its checks: a future date, the same bed and wake time, and more than 16 hours are refused with a message. Delete needs no confirm, as in the Sleep log app.
 - Founder's choice: no "How rested" and no note. The 7 saved nights' rested and note values were cleared on the server (one SQL update, the founder's own rows). The columns stay in the database, unused.
