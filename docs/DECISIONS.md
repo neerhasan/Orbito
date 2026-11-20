@@ -38,6 +38,7 @@ Decided by the founder:
 - 2026-11-20: Windows uses one seamless dark top bar like Notion Calendar (founder). New package `window_manager` 0.6.0 (founder approved) hides the system title bar; Orbito draws the window buttons. The app icon is the orange Orbito logo.
 - 2026-11-20: Habits are logged in a 7-day grid with one click per box (founder). Any of the last 7 days can be logged, even a day that is not planned or is before the habit was made; the future cannot. Skip is a right-click or long press.
 - 2026-11-20: The Sleep page follows the founder's Sleep log app (founder), including its status colours (green goal met, yellow up to 1h short, red up to 2h short, deep red more). Weeks start on Monday as in that app. The targets are the Settings bedtime and wake-up time and the goal is the time between them (founder's choice; no separate goal setting). Orange marks only today (the row label, the heat map ring, the latest point of the small line).
+- 2026-11-20: Sleep opens on Month (founder). Nights are logged in the Sleep log app's entry dialog, exactly (founder): no "How rested" and no note; the old values were deleted at the founder's request. The `rested` and `note` columns stay in the database unused.
 
 Defaults used until the founder changes them:
 - Sign-in: email and password, verification off during the test.

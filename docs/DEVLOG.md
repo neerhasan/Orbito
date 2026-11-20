@@ -2,6 +2,11 @@
 
 Claude Code adds a new entry on top at the end of every session.
 
+### 2026-11-20 Sleep: Month first, Sleep log entry dialog
+- Done: the Sleep page opens on Month. The form on the right is gone; "Log sleep" (top right) or clicking a night opens the Sleep log app's entry dialog: Date you woke up, Bedtime and Wake time as hour, quarter hour and AM or PM, "7h of sleep, 1h short", Delete, Cancel, Save. A date with a night opens it as "Edit night". Its checks: a future date, the same bed and wake time, and more than 16 hours are refused with a message. Delete needs no confirm, as in the Sleep log app.
+- Founder's choice: no "How rested" and no note. The 7 saved nights' rested and note values were cleared on the server (one SQL update, the founder's own rows). The columns stay in the database, unused.
+- Test results: flutter analyze: no issues. flutter test --concurrency=2: 201 passed (Sleep page tests rewritten). Windows release built and started: Month view and the Edit night dialog checked on screenshots.
+
 ### 2026-11-20 Sleep page rebuilt after the founder's Sleep log app
 - Done: `lib/domain/sleep_view.dart` (week Monday to Sunday, month and year ranges; period names; goal; how far a night was from it; averages, consistency, changes against earlier periods). The Sleep page now follows `F:\Neeret\sleep-tracker`: Week, Month and Year with Today and arrows; four cards (dark Average sleep card with its change and a small line, Average bedtime and Average wake-up with their targets and last week, month and year, Nights at goal); the Tracking list (one row per morning, newest first, a bar from bedtime to wake time on a 3 PM to 3 PM line, green, yellow, red or deep red by distance from the goal, dashed target lines); for a year, average sleep by month and every night as a square. Clicking a night opens it in the form on the right (a day with no night starts a new one for that day). The form keeps "how rested" and the note, starts at the target times and says how far from the goal the night is. The old chart and the Recent nights list are gone.
 - Founder's choice: the targets are the bedtime and wake-up time in Settings, and the goal is the time between them. No server change.

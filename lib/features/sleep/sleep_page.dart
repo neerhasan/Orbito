@@ -37,8 +37,9 @@ const _badBg = Color(0xFFFDE8E8);
 /// (`F:\Neeret\sleep-tracker`): Week, Month and Year; four cards (average
 /// sleep, bedtime, wake-up, nights at goal); the tracking list of nights
 /// on a 3 PM to 3 PM line, coloured by how far each night was from the
-/// goal; for a year, the months and every night. The form on the right
-/// logs a night, or changes the one clicked.
+/// goal; for a year, the months and every night. Log sleep (or clicking a
+/// night) opens the Sleep log app's entry dialog. Month is shown first
+/// (founder).
 ///
 /// The targets are the bedtime and wake-up time from Settings, and the goal
 /// is the time between them (founder's choice).
@@ -50,14 +51,48 @@ class SleepPage extends ConsumerStatefulWidget {
 }
 
 class _SleepPageState extends ConsumerState<SleepPage> {
-  var _view = SleepView.week;
+  var _view = SleepView.month;
 
   /// A day in the shown week, month or year; null follows today.
   String? _anchor;
 
-  /// The morning clicked in the list, shown in the form; null for a new
-  /// night this morning.
+  /// The morning open in the entry dialog (its row is highlighted), or null.
   String? _picked;
+
+  Future<void> _openEntry(
+    String day, {
+    required Map<String, SleepLog> byDay,
+    required String today,
+    required String bed,
+    required String wake,
+    required int goal,
+  }) async {
+    setState(() => _picked = day);
+    final result = await showDialog<(String, String)>(
+      context: context,
+      builder: (_) => _EntryDialog(
+        day: day,
+        byDay: byDay,
+        today: today,
+        bed: bed,
+        wake: wake,
+        goal: goal,
+      ),
+    );
+    if (!mounted) return;
+    setState(() {
+      _picked = null;
+      // Like the Sleep log app, the page moves to the saved night.
+      if (result case ('Saved', final saved)) {
+        final shown = sleepRange(_view, _anchor ?? today);
+        if (saved.compareTo(shown.start) < 0 ||
+            saved.compareTo(shown.end) > 0) {
+          _anchor = saved;
+        }
+      }
+    });
+    if (result != null) showMessage(context, result.$1);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -88,8 +123,14 @@ class _SleepPageState extends ConsumerState<SleepPage> {
       shiftSleepAnchor(_view, anchor, 1),
     ).start;
     final versus = 'vs last ${_view.name}';
-    void pick(String day) =>
-        setState(() => _picked = day == _picked ? null : day);
+    void pick(String day) => _openEntry(
+      day,
+      byDay: byDay,
+      today: today,
+      bed: bed,
+      wake: wake,
+      goal: goal,
+    );
 
     return PageLayout(
       main: [
@@ -148,6 +189,13 @@ class _SleepPageState extends ConsumerState<SleepPage> {
                           _anchor = next.compareTo(today) > 0 ? null : next;
                         }),
                   icon: const Icon(Icons.chevron_right),
+                ),
+                const SizedBox(width: 8),
+                FilledButton.icon(
+                  key: const Key('sleep-log'),
+                  onPressed: () => pick(today),
+                  icon: const Icon(Icons.add, size: 16),
+                  label: const Text('Log sleep'),
                 ),
               ],
             ),
@@ -218,7 +266,7 @@ class _SleepPageState extends ConsumerState<SleepPage> {
           EmptyHint(
             title: 'No sleep logged this ${_view.name}',
             text:
-                'Log a night on the right and it shows up here as a bar from '
+                'Press Log sleep and the night shows up here as a bar from '
                 'bedtime to wake time.',
           )
         else if (_view == SleepView.year) ...[
@@ -242,23 +290,6 @@ class _SleepPageState extends ConsumerState<SleepPage> {
             picked: _picked,
             onPick: pick,
           ),
-      ],
-      rail: [
-        _NightForm(
-          // A morning that already has a night opens it (like the Sleep log
-          // app), so saving never overwrites a night without showing it.
-          key: ValueKey('${_picked ?? today}:${byDay[_picked ?? today]?.id}'),
-          day: _picked ?? today,
-          picked: _picked != null,
-          night: byDay[_picked ?? today],
-          nights: nights,
-          today: today,
-          bed: bed,
-          wake: wake,
-          goal: goal,
-          onPickDay: (day) => setState(() => _picked = day),
-          onDone: () => setState(() => _picked = null),
-        ),
       ],
     );
   }
@@ -1307,293 +1338,362 @@ class _HeatCell extends StatelessWidget {
   }
 }
 
-/// The form on the right: log a night, or change the one clicked in the
-/// list. A new night starts at the target times from Settings.
-class _NightForm extends ConsumerStatefulWidget {
-  const _NightForm({
-    super.key,
+/// The entry dialog of the Sleep log app: the date you woke up, bedtime and
+/// wake time (hour, quarter hour, AM or PM), how long that is against the
+/// goal, and Delete, Cancel, Save. A date that already has a night loads
+/// it, so saving never overwrites a night without showing it.
+///
+/// Returns what happened (`Saved` or `Deleted`) and the morning, or null.
+class _EntryDialog extends ConsumerStatefulWidget {
+  const _EntryDialog({
     required this.day,
-    required this.picked,
-    required this.night,
-    required this.nights,
+    required this.byDay,
     required this.today,
     required this.bed,
     required this.wake,
     required this.goal,
-    required this.onPickDay,
-    required this.onDone,
   });
 
-  /// The morning shown: the one clicked, or today.
   final String day;
-
-  /// True when a day was clicked in the list (the form can be closed).
-  final bool picked;
-
-  /// The night being changed, or null for a new one.
-  final SleepLog? night;
-  final List<SleepLog> nights;
+  final Map<String, SleepLog> byDay;
   final String today;
 
-  /// The target bedtime and wake time, and the goal in minutes.
+  /// The target times a new night starts at, and the goal in minutes.
   final String bed;
   final String wake;
   final int goal;
 
-  /// Shows another morning in the form: its night, or a new one.
-  final ValueChanged<String> onPickDay;
-  final VoidCallback onDone;
-
   @override
-  ConsumerState<_NightForm> createState() => _NightFormState();
+  ConsumerState<_EntryDialog> createState() => _EntryDialogState();
 }
 
-class _NightFormState extends ConsumerState<_NightForm> {
-  late final String _day = widget.night?.day ?? widget.day;
-  late String _bed = widget.night?.bedTime ?? widget.bed;
-  late String _wake = widget.night?.wakeTime ?? widget.wake;
-  late String? _rested = widget.night?.rested;
-  late final _note = TextEditingController(text: widget.night?.note ?? '');
+class _EntryDialogState extends ConsumerState<_EntryDialog> {
+  late String _day;
+  late String _bed;
+  late String _wake;
+  String? _error;
 
   @override
-  void dispose() {
-    _note.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _fill(widget.day);
   }
 
-  Future<void> _pickDay() async {
+  /// Shows [day]: its night, or a new one at the target times.
+  void _fill(String day) {
+    final night = widget.byDay[day];
+    _day = day;
+    _bed = night?.bedTime ?? widget.bed;
+    _wake = night?.wakeTime ?? widget.wake;
+    _error = null;
+  }
+
+  SleepLog? get _night => widget.byDay[_day];
+
+  Future<void> _pickDate() async {
     final picked = await showDatePicker(
       context: context,
       initialDate: parseDayKey(_day)!,
       firstDate: DateTime(2020),
       lastDate: parseDayKey(widget.today)!,
-      helpText: 'The morning you woke up',
+      helpText: 'Date you woke up',
     );
-    if (picked != null && mounted) widget.onPickDay(dayKey(picked));
-  }
-
-  Future<void> _pickTime({required bool bed}) async {
-    final minutes = minutesOf(bed ? _bed : _wake) ?? 0;
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60),
-      helpText: bed ? 'Bedtime' : 'Woke up',
-    );
-    if (picked == null || !mounted) return;
-    final value = timeOf(picked.hour * 60 + picked.minute);
-    setState(() => bed ? _bed = value : _wake = value);
+    if (picked != null && mounted) setState(() => _fill(dayKey(picked)));
   }
 
   Future<void> _save() async {
     final userId = ref.read(userIdProvider);
     if (userId == null) return;
     final minutes = sleepMinutes(_bed, _wake);
-    if (needsCheck(minutes)) {
-      final keep = await confirmDialog(
-        context,
-        title: 'Check the times',
-        message:
-            'This night is ${formatMinutes(minutes)} long. Are the bedtime '
-            'and the wake time right?',
-        confirmLabel: 'Save anyway',
-        cancelLabel: 'Go back',
-      );
-      if (!keep || !mounted) return;
+    final error = _day.compareTo(widget.today) > 0
+        ? 'That date is in the future.'
+        : minutes == 0
+        ? 'Bedtime and wake time are the same.'
+        : minutes > 16 * 60
+        ? 'That is over 16 hours. Check the times.'
+        : null;
+    if (error != null) {
+      setState(() => _error = error);
+      return;
     }
     try {
       await ref
           .read(sleepRepositoryProvider)
-          .saveNight(
-            userId: userId,
-            day: _day,
-            bedTime: _bed,
-            wakeTime: _wake,
-            rested: _rested,
-            note: _note.text,
-          );
-      if (!mounted) return;
-      showMessage(context, 'Night saved.');
-      widget.onDone();
+          .saveNight(userId: userId, day: _day, bedTime: _bed, wakeTime: _wake);
+      if (mounted) Navigator.of(context).pop(('Saved', _day));
     } catch (error) {
-      if (mounted) showMessage(context, 'Could not save. Try again. ($error)');
+      if (mounted) setState(() => _error = 'Could not save. Try again.');
     }
   }
 
   Future<void> _delete() async {
-    final night = widget.night!;
-    final confirmed = await confirmDialog(
-      context,
-      title: 'Delete this night?',
-      message: 'The night of ${formatWeekDay(night.day)} is removed.',
-      confirmLabel: 'Delete',
-    );
-    if (!confirmed) return;
+    final night = _night;
+    if (night == null) return;
     try {
       await ref.read(sleepRepositoryProvider).deleteNight(night.id);
-      widget.onDone();
+      if (mounted) Navigator.of(context).pop(('Deleted', _day));
     } catch (error) {
-      if (mounted) showMessage(context, 'Could not delete. ($error)');
+      if (mounted) setState(() => _error = 'Could not delete. Try again.');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final editing = widget.night != null;
     final minutes = sleepMinutes(_bed, _wake);
-    final replaces =
-        !editing && widget.nights.any((night) => night.day == _day);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            Icon(editing ? Icons.edit_outlined : Icons.add, size: 16),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                editing ? 'Change a night' : 'Log a night',
-                style: Ember.h2,
-              ),
-            ),
-            if (editing || widget.picked)
-              IconButton(
-                tooltip: 'Close',
-                iconSize: 16,
-                visualDensity: VisualDensity.compact,
-                onPressed: widget.onDone,
-                icon: const Icon(Icons.close),
-              ),
-          ],
-        ),
-        const SizedBox(height: 14),
-        const FieldLabel('Night of'),
-        OutlinedButton.icon(
-          key: const Key('sleep-day'),
-          onPressed: _pickDay,
-          icon: const Icon(Icons.event_outlined, size: 16),
-          label: Text(
-            '${formatWeekDay(addDays(_day, -1))} → ${formatWeekDay(_day)}',
-          ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const FieldLabel('Bedtime'),
-                  OutlinedButton(
-                    key: const Key('sleep-bed'),
-                    onPressed: () => _pickTime(bed: true),
-                    child: Text(formatTime(_bed)),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const FieldLabel('Woke up'),
-                  OutlinedButton(
-                    key: const Key('sleep-wake'),
-                    onPressed: () => _pickTime(bed: false),
-                    child: Text(formatTime(_wake)),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        AnimatedContainer(
-          duration: Motion.of(context, Motion.base),
-          curve: Motion.soft,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          decoration: BoxDecoration(
-            color: Ember.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: needsCheck(minutes) ? Ember.amber : Ember.line,
-            ),
-          ),
-          child: Row(
+    final date = parseDayKey(_day)!;
+    final editing = _night != null;
+    return Dialog(
+      backgroundColor: Ember.paper,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 18, 16, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('Duration', style: Ember.meta),
-              const Spacer(),
-              Text(
-                formatMinutes(minutes),
-                key: const Key('sleep-duration'),
-                style: Ember.text(13, 16, weight: 600, color: Ember.ink),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      editing ? 'Edit night' : 'Log sleep',
+                      style: Ember.text(17, 22, weight: 700, color: Ember.ink),
+                    ),
+                  ),
+                  IconButton(
+                    key: const Key('sleep-close'),
+                    tooltip: 'Close',
+                    iconSize: 18,
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: 12),
+                    const FieldLabel('Date you woke up'),
+                    _Box(
+                      key: const Key('sleep-day'),
+                      onTap: _pickDate,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              '${date.day.toString().padLeft(2, '0')} - '
+                              '${monthNames[date.month - 1].substring(0, 3)}'
+                              ' - ${date.year}',
+                              style: Ember.text(
+                                13,
+                                16,
+                                weight: 500,
+                                color: Ember.ink,
+                              ),
+                            ),
+                          ),
+                          const Icon(
+                            Icons.calendar_today_outlined,
+                            size: 16,
+                            color: Ember.ink2,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const FieldLabel('Bedtime'),
+                    _TimePick(
+                      keyPrefix: 'sleep-bed',
+                      value: _bed,
+                      onChanged: (value) => setState(() {
+                        _bed = value;
+                        _error = null;
+                      }),
+                    ),
+                    const SizedBox(height: 16),
+                    const FieldLabel('Wake time'),
+                    _TimePick(
+                      keyPrefix: 'sleep-wake',
+                      value: _wake,
+                      onChanged: (value) => setState(() {
+                        _wake = value;
+                        _error = null;
+                      }),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      minutes == 0
+                          ? ''
+                          : '${formatMinutes(minutes)} of sleep, '
+                                '${goalGap(minutes, widget.goal)}',
+                      key: const Key('sleep-hint'),
+                      style: Ember.meta,
+                    ),
+                    if (_error != null) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        _error!,
+                        key: const Key('sleep-error'),
+                        style: Ember.meta.copyWith(color: _badInk),
+                      ),
+                    ],
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        if (editing)
+                          TextButton(
+                            key: const Key('sleep-delete'),
+                            onPressed: _delete,
+                            style: TextButton.styleFrom(
+                              foregroundColor: _badInk,
+                            ),
+                            child: const Text('Delete'),
+                          ),
+                        const Spacer(),
+                        OutlinedButton(
+                          key: const Key('sleep-cancel'),
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('Cancel'),
+                        ),
+                        const SizedBox(width: 8),
+                        FilledButton(
+                          key: const Key('sleep-save'),
+                          onPressed: _save,
+                          child: const Text('Save'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
         ),
-        if (!needsCheck(minutes)) ...[
-          const SizedBox(height: 6),
-          Text(
-            goalGap(minutes, widget.goal).replaceFirst('g', 'G'),
-            style: Ember.meta,
-          ),
-        ],
-        if (needsCheck(minutes)) ...[
-          const SizedBox(height: 6),
-          Text(
-            'Check the times: a night this long is unusual.',
-            style: Ember.meta.copyWith(color: Ember.amberInk),
-          ),
-        ],
-        const SizedBox(height: 12),
-        const FieldLabel('How rested? Optional'),
-        Segmented<String?>(
-          keyPrefix: 'sleep-rested',
-          expand: true,
-          value: _rested,
-          options: const [
-            ('poor', 'Poor'),
-            ('okay', 'Okay'),
-            ('good', 'Good'),
-            ('great', 'Great'),
+      ),
+    );
+  }
+}
+
+/// A soft grey field box, as in the Sleep log dialog.
+class _Box extends StatelessWidget {
+  const _Box({super.key, required this.child, this.onTap, this.width});
+
+  final Widget child;
+  final VoidCallback? onTap;
+  final double? width;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Ember.tile,
+      borderRadius: BorderRadius.circular(8),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          width: width,
+          height: 40,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          alignment: Alignment.centerLeft,
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
+/// Hour (1 to 12), minutes (quarter hours) and AM or PM, as in the Sleep
+/// log app. A stored time that is not on a quarter hour keeps its minutes.
+class _TimePick extends StatelessWidget {
+  const _TimePick({
+    required this.keyPrefix,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String keyPrefix;
+
+  /// `HH:MM`.
+  final String value;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final minutes = minutesOf(value) ?? 0;
+    final hour24 = minutes ~/ 60;
+    final minute = minutes % 60;
+    final hour = hour24 % 12 == 0 ? 12 : hour24 % 12;
+    final pm = hour24 >= 12;
+    String make(int hour, int minute, bool pm) =>
+        timeOf(((hour % 12) + (pm ? 12 : 0)) * 60 + minute);
+    final minuteOptions = ({0, 15, 30, 45, minute}.toList()..sort());
+    Widget select(
+      String part,
+      int current,
+      List<int> options,
+      String Function(int) label,
+      ValueChanged<int> pick,
+    ) => _Box(
+      width: 76,
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<int>(
+          key: Key('$keyPrefix-$part'),
+          value: current,
+          isExpanded: true,
+          borderRadius: BorderRadius.circular(8),
+          dropdownColor: Ember.white,
+          icon: const Icon(Icons.keyboard_arrow_down, size: 16),
+          style: Ember.text(13, 16, weight: 500, color: Ember.ink),
+          items: [
+            for (final option in options)
+              DropdownMenuItem(value: option, child: Text(label(option))),
           ],
-          // Tapping the chosen one again clears it.
-          onChanged: (value) =>
-              setState(() => _rested = value == _rested ? null : value),
+          onChanged: (value) {
+            if (value != null) pick(value);
+          },
         ),
-        const SizedBox(height: 12),
-        const FieldLabel('Note · optional'),
-        TextField(
-          key: const Key('sleep-note'),
-          controller: _note,
-          minLines: 2,
-          maxLines: 4,
-          decoration: const InputDecoration(
-            hintText: 'Late coffee, noise, travel…',
+      ),
+    );
+    return Row(
+      children: [
+        select(
+          'hour',
+          hour,
+          [for (var i = 1; i <= 12; i++) i],
+          (value) => '$value',
+          (value) => onChanged(make(value, minute, pm)),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Text(':', style: Ember.h3),
+        ),
+        select(
+          'minute',
+          minute,
+          minuteOptions,
+          (value) => value.toString().padLeft(2, '0'),
+          (value) => onChanged(make(hour, value, pm)),
+        ),
+        const SizedBox(width: 12),
+        Semantics(
+          button: true,
+          label: 'AM or PM. Press to switch',
+          child: _Box(
+            key: Key('$keyPrefix-ampm'),
+            width: 56,
+            onTap: () => onChanged(make(hour, minute, !pm)),
+            child: Center(
+              child: Text(
+                pm ? 'PM' : 'AM',
+                style: Ember.text(13, 16, weight: 600, color: Ember.ink),
+              ),
+            ),
           ),
         ),
-        const SizedBox(height: 16),
-        FilledButton(
-          key: const Key('sleep-save'),
-          onPressed: _save,
-          child: Text(editing ? 'Save' : 'Save night'),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          replaces
-              ? 'This morning already has a night. Saving replaces it.'
-              : 'Saving a night for a date that already has one replaces it.',
-          style: Ember.caption,
-        ),
-        if (editing) ...[
-          const SizedBox(height: 6),
-          TextButton.icon(
-            key: const Key('sleep-delete'),
-            onPressed: _delete,
-            icon: const Icon(Icons.delete_outline, size: 16),
-            label: const Text('Delete night'),
-          ),
-        ],
       ],
     );
   }
