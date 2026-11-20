@@ -17,6 +17,7 @@ import '../features/tasks/tasks_page.dart';
 import '../features/today/today_page.dart';
 import '../ui/ember.dart';
 import '../ui/widgets.dart';
+import '../ui/window_frame.dart';
 import 'providers.dart';
 import 'shell.dart';
 
@@ -28,10 +29,15 @@ class OrbitoApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
+    final signedIn = user.value != null;
     return MaterialApp(
       title: 'Orbito',
       debugShowCheckedModeBanner: false,
       theme: Ember.theme(),
+      // Signed in, the app's top bar holds the window buttons; before that
+      // a thin strip does.
+      builder: (context, child) =>
+          signedIn ? child! : WindowStrip(child: child!),
       home: user.when(
         loading: () =>
             const Scaffold(body: Center(child: CircularProgressIndicator())),
@@ -106,6 +112,7 @@ class SetupNeededApp extends StatelessWidget {
       title: 'Orbito',
       debugShowCheckedModeBanner: false,
       theme: Ember.theme(),
+      builder: (context, child) => WindowStrip(child: child!),
       home: Scaffold(
         body: Center(
           child: Padding(

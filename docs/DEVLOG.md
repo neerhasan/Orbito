@@ -2,6 +2,11 @@
 
 Claude Code adds a new entry on top at the end of every session.
 
+### 2026-11-20 One seamless top bar and the orange app icon (Windows)
+- Done: new package `window_manager` 0.6.0 (founder approved). The blue Windows title bar is hidden; Orbito's dark top bar now moves the window (drag), maximises it (double click) and holds its own minimise, maximise and close buttons (close turns red on hover). Sign-in and set-up screens get a thin dark strip with the same buttons. `windows/runner/resources/app_icon.ico` is the orange Orbito logo (16 to 256 px).
+- Known problems: Windows may keep showing the old icon on a pinned taskbar shortcut until Orbito is unpinned and pinned again.
+- Test results: flutter analyze: no issues. flutter test --concurrency=2: 189 passed. Windows release built, started, and the single dark bar checked on a screenshot.
+
 ### 2026-11-19 Calendar drag and drop
 - Done: `supabase/011_task_time.sql` (applied): tasks get `due_time` (HH:MM). Calendar: drag events to another time or day (snaps to 15 minutes, keeps the length, a dark box shows where it lands); drag the top or bottom edge of an event to change start or end; drag a task from the All day row onto the grid to give it a time, back to All day to remove it. Tasks with a time show as white blocks (design: "Task with a time"). The Tasks page shows the time after the date. The Quick Launcher now saves a typed time as the task's time, not in its notes.
 - Test results: flutter analyze: no issues. flutter test --concurrency=2: 189 passed. Windows release built.

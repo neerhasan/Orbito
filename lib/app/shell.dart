@@ -10,6 +10,7 @@ import '../features/launcher/launcher.dart';
 import '../ui/ember.dart';
 import '../ui/motion.dart';
 import '../ui/widgets.dart';
+import '../ui/window_frame.dart';
 import 'providers.dart';
 
 /// The pages the side menu can open.
@@ -191,72 +192,85 @@ class _TitleBar extends ConsumerWidget {
     void open(AppPage target) =>
         ref.read(currentPageProvider.notifier).open(target);
 
-    return Container(
-      height: 58,
-      padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
-      color: Ember.shell,
-      child: Row(
-        children: [
-          Expanded(
-            child: Row(
-              children: [
-                Container(
-                  width: 26,
-                  height: 26,
-                  decoration: BoxDecoration(
-                    color: Ember.now,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.show_chart,
-                    size: 16,
-                    color: Ember.white,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  'Orbito',
-                  style: Ember.text(14, 17, weight: 600, color: Ember.onShell),
-                ),
-              ],
-            ),
-          ),
-          ConstrainedBox(
-            constraints: const BoxConstraints(minWidth: 240, maxWidth: 480),
-            child: _SearchBox(onTap: () => openLauncher(context, ref)),
-          ),
-          Expanded(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                // The running timer stays in view on every page.
-                if (timer != null) ...[
-                  Flexible(
-                    child: FocusPill(
-                      timer: timer,
-                      onOpen: () => open(AppPage.focus),
+    // The whole bar moves the window (drag) and maximises it (double
+    // click); the buttons on it still work as buttons.
+    return WindowDragArea(
+      child: Container(
+        height: 58,
+        padding: EdgeInsets.fromLTRB(16, 12, customWindowFrame ? 6 : 8, 12),
+        color: Ember.shell,
+        child: Row(
+          children: [
+            Expanded(
+              child: Row(
+                children: [
+                  Container(
+                    width: 26,
+                    height: 26,
+                    decoration: BoxDecoration(
+                      color: Ember.now,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.show_chart,
+                      size: 16,
+                      color: Ember.white,
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 10),
+                  Text(
+                    'Orbito',
+                    style: Ember.text(
+                      14,
+                      17,
+                      weight: 600,
+                      color: Ember.onShell,
+                    ),
+                  ),
                 ],
-                _NewButton(
-                  onPick: (target) {
-                    open(target);
-                    if (target == AppPage.tasks) {
-                      ref.read(addTaskRequestProvider.notifier).ask();
-                    } else if (target == AppPage.notes) {
-                      ref
-                          .read(noteRequestProvider.notifier)
-                          .ask(NoteRequest.newNote);
-                    }
-                  },
-                ),
-                const SizedBox(width: 8),
-                _AccountButton(email: email),
-              ],
+              ),
             ),
-          ),
-        ],
+            ConstrainedBox(
+              constraints: const BoxConstraints(minWidth: 240, maxWidth: 480),
+              child: _SearchBox(onTap: () => openLauncher(context, ref)),
+            ),
+            Expanded(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  // The running timer stays in view on every page.
+                  if (timer != null) ...[
+                    Flexible(
+                      child: FocusPill(
+                        timer: timer,
+                        onOpen: () => open(AppPage.focus),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  _NewButton(
+                    onPick: (target) {
+                      open(target);
+                      if (target == AppPage.tasks) {
+                        ref.read(addTaskRequestProvider.notifier).ask();
+                      } else if (target == AppPage.notes) {
+                        ref
+                            .read(noteRequestProvider.notifier)
+                            .ask(NoteRequest.newNote);
+                      }
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  _AccountButton(email: email),
+                  if (customWindowFrame) ...[
+                    const SizedBox(width: 10),
+                    const WindowButtons(),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

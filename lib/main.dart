@@ -8,9 +8,12 @@ import 'app/env.dart';
 import 'app/providers.dart';
 import 'data/local/app_database.dart';
 import 'data/sync/sync_service.dart';
+import 'ui/window_frame.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Windows: Orbito's dark top bar replaces the system title bar.
+  setUpWindow();
 
   final env = await AppEnv.load();
   if (!env.isComplete) {
