@@ -404,6 +404,34 @@ void main() {
       expect(find.text('1 of 1'), findsOneWidget);
     });
 
+    _testPage('a morning that has a night opens it, so Save keeps it', (
+      tester,
+    ) async {
+      await _read(
+        tester,
+        () => _sleep.saveNight(
+          userId: _user,
+          day: '2026-11-13',
+          bedTime: '00:30',
+          wakeTime: '06:00',
+          note: 'Late tea',
+        ),
+      );
+      await _pumpPage(tester, AppPage.sleep);
+      expect(find.text('Change a night'), findsOneWidget);
+      expect(find.text('5h 30m'), findsWidgets);
+      await _tap(tester, 'sleep-save');
+      await _settle(tester);
+      final nights = await _read(tester, () => _sleep.watchNights(_user).first);
+      expect(nights.single.bedTime, '00:30');
+      expect(nights.single.note, 'Late tea');
+
+      // An empty morning in the list starts a new night for that day.
+      await _tap(tester, 'night-2026-11-11');
+      expect(find.text('Log a night'), findsOneWidget);
+      expect(find.text('Tue 10 Nov → Wed 11 Nov'), findsOneWidget);
+    });
+
     _testPage('a night can be changed, checked and deleted', (tester) async {
       await _read(
         tester,

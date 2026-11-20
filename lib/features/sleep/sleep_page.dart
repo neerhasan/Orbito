@@ -245,15 +245,18 @@ class _SleepPageState extends ConsumerState<SleepPage> {
       ],
       rail: [
         _NightForm(
-          key: ValueKey(_picked ?? 'new'),
+          // A morning that already has a night opens it (like the Sleep log
+          // app), so saving never overwrites a night without showing it.
+          key: ValueKey('${_picked ?? today}:${byDay[_picked ?? today]?.id}'),
           day: _picked ?? today,
           picked: _picked != null,
-          night: _picked == null ? null : byDay[_picked],
+          night: byDay[_picked ?? today],
           nights: nights,
           today: today,
           bed: bed,
           wake: wake,
           goal: goal,
+          onPickDay: (day) => setState(() => _picked = day),
           onDone: () => setState(() => _picked = null),
         ),
       ],
@@ -1317,6 +1320,7 @@ class _NightForm extends ConsumerStatefulWidget {
     required this.bed,
     required this.wake,
     required this.goal,
+    required this.onPickDay,
     required this.onDone,
   });
 
@@ -1335,6 +1339,9 @@ class _NightForm extends ConsumerStatefulWidget {
   final String bed;
   final String wake;
   final int goal;
+
+  /// Shows another morning in the form: its night, or a new one.
+  final ValueChanged<String> onPickDay;
   final VoidCallback onDone;
 
   @override
@@ -1342,7 +1349,7 @@ class _NightForm extends ConsumerStatefulWidget {
 }
 
 class _NightFormState extends ConsumerState<_NightForm> {
-  late String _day = widget.night?.day ?? widget.day;
+  late final String _day = widget.night?.day ?? widget.day;
   late String _bed = widget.night?.bedTime ?? widget.bed;
   late String _wake = widget.night?.wakeTime ?? widget.wake;
   late String? _rested = widget.night?.rested;
@@ -1362,7 +1369,7 @@ class _NightFormState extends ConsumerState<_NightForm> {
       lastDate: parseDayKey(widget.today)!,
       helpText: 'The morning you woke up',
     );
-    if (picked != null && mounted) setState(() => _day = dayKey(picked));
+    if (picked != null && mounted) widget.onPickDay(dayKey(picked));
   }
 
   Future<void> _pickTime({required bool bed}) async {
@@ -1462,7 +1469,7 @@ class _NightFormState extends ConsumerState<_NightForm> {
         const FieldLabel('Night of'),
         OutlinedButton.icon(
           key: const Key('sleep-day'),
-          onPressed: editing ? null : _pickDay,
+          onPressed: _pickDay,
           icon: const Icon(Icons.event_outlined, size: 16),
           label: Text(
             '${formatWeekDay(addDays(_day, -1))} → ${formatWeekDay(_day)}',
