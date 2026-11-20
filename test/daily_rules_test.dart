@@ -51,6 +51,29 @@ void main() {
       expect(describeDays('531'), 'Mon, Wed, Fri');
     });
 
+    test('names the days of the habit log like a diary', () {
+      String label(String day) => logDayLabel(day, today: _today);
+      expect(
+        [
+          for (var i = 13; i >= 7; i--)
+            label('2026-11-${'$i'.padLeft(2, '0')}'),
+        ],
+        [
+          'Today',
+          'Yesterday',
+          'Wednesday',
+          'Tuesday',
+          'Monday',
+          'Last Sunday',
+          'Last Saturday',
+        ],
+      );
+      expect(label('2026-11-02'), 'Last Monday');
+      expect(label('2026-11-01'), 'Sun 1 Nov');
+      // On a Monday the day before yesterday is already last week.
+      expect(logDayLabel('2026-11-14', today: '2026-11-16'), 'Last Saturday');
+    });
+
     test('each day shows done, skipped, missed, open or off', () {
       final habit = _habit(days: '12345', created: '2026-11-09');
       final marks = marksOf('h1', [

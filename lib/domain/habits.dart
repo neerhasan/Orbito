@@ -35,6 +35,20 @@ String describeDays(String days) {
   ].join(', ');
 }
 
+/// The name of a recent day in the habit log: `Today`, `Yesterday`, the
+/// weekday for the rest of this week (weeks start on Monday, as the habit
+/// days do), `Last Sunday` for a day of the week before, and `Fri 6 Nov`
+/// for anything older.
+String logDayLabel(String day, {required String today}) {
+  if (day == today) return 'Today';
+  if (day == addDays(today, -1)) return 'Yesterday';
+  final name = weekdayNames[weekdayOf(day) - 1];
+  final monday = addDays(today, 1 - weekdayOf(today));
+  if (day.compareTo(monday) >= 0) return name;
+  if (day.compareTo(addDays(monday, -7)) >= 0) return 'Last $name';
+  return formatWeekDay(day);
+}
+
 /// What one day of one habit shows.
 enum HabitDay {
   /// Marked done.

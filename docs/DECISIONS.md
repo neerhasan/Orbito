@@ -36,6 +36,7 @@ Decided by the founder:
 - 2026-11-19: Notes are their own feature with their own page and table (founder). A note may link to one project. Project deadlines are optional for every project and can be changed any time. The New menu offers only Task and Note. The Today day bar is 24 hours from the wake time set in Settings, with a red dot at the bedtime; it keeps running past bedtime. Wake and bed times live in the preferences row and sync.
 - 2026-11-19: The Calendar page is built now (founder). Google Calendar sync stays F-15 for later. Events are Orbito's own (events table); weeks start on Sunday as in the design.
 - 2026-11-20: Windows uses one seamless dark top bar like Notion Calendar (founder). New package `window_manager` 0.6.0 (founder approved) hides the system title bar; Orbito draws the window buttons. The app icon is the orange Orbito logo.
+- 2026-11-20: Habits are logged in a 7-day grid with one click per box (founder). Any of the last 7 days can be logged, even a day that is not planned or is before the habit was made; the future cannot. Skip is a right-click or long press.
 
 Defaults used until the founder changes them:
 - Sign-in: email and password, verification off during the test.

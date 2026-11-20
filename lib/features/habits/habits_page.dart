@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -11,8 +13,9 @@ import '../../ui/motion.dart';
 import '../../ui/widgets.dart';
 
 /// The Habits page (design: `docs/design/source/Habits.dc.html`): numbers at
-/// the top, today's checklist, the last 30 days, and on the right a form to
-/// add or change a habit.
+/// the top, the log of the last 7 days (one click per box, founder's
+/// layout), the last 30 days, and on the right a form to add or change a
+/// habit.
 ///
 /// No streaks (the spec says no streak pressure): each habit shows how many
 /// of its planned days were kept. A missed day is data, not a failure.
@@ -26,18 +29,13 @@ class HabitsPage extends ConsumerStatefulWidget {
 class _HabitsPageState extends ConsumerState<HabitsPage> {
   String? _selectedId;
 
-  Future<void> _mark(Habit habit, String today, String? status) async {
+  Future<void> _mark(Habit habit, String day, String? status) async {
     final userId = ref.read(userIdProvider);
     if (userId == null) return;
     try {
       await ref
           .read(habitRepositoryProvider)
-          .setMark(
-            userId: userId,
-            habitId: habit.id,
-            day: today,
-            status: status,
-          );
+          .setMark(userId: userId, habitId: habit.id, day: day, status: status);
     } catch (error) {
       if (mounted) showMessage(context, 'Could not save. Try again. ($error)');
     }
@@ -68,35 +66,15 @@ class _HabitsPageState extends ConsumerState<HabitsPage> {
           )
         else ...[
           _Numbers(habits: habits, logs: logs, today: today),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SectionHeader(
-                icon: Icons.repeat,
-                title: 'Today’s checklist',
-                trailing: Text(
-                  'Tap the ring when done · Skip keeps a rest day fair',
-                  style: Ember.meta,
-                ),
-              ),
-              for (final habit in habits)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: _HabitRow(
-                    habit: habit,
-                    area: areas
-                        .where((area) => area.id == habit.lifeAreaId)
-                        .firstOrNull,
-                    marks: marksOf(habit.id, logs),
-                    today: today,
-                    selected: habit.id == _selectedId,
-                    onTap: () => setState(() {
-                      _selectedId = habit.id == _selectedId ? null : habit.id;
-                    }),
-                    onMark: (status) => _mark(habit, today, status),
-                  ),
-                ),
-            ],
+          _LogGrid(
+            habits: habits,
+            logs: logs,
+            today: today,
+            selectedId: _selectedId,
+            onPickHabit: (habit) => setState(() {
+              _selectedId = habit.id == _selectedId ? null : habit.id;
+            }),
+            onMark: _mark,
           ),
           _LastThirtyDays(habits: habits, logs: logs, today: today),
         ],
@@ -182,52 +160,194 @@ class _Numbers extends StatelessWidget {
   }
 }
 
-/// The large round button that marks a habit done today.
-class _HabitRing extends StatelessWidget {
-  const _HabitRing({
-    required this.state,
-    required this.label,
-    required this.onTap,
+/// The habit log: the last 7 days, newest first, with one box per habit.
+/// One click on a box logs that habit done on that day, so a forgotten day
+/// (gym yesterday) is filled in later. A second click clears it.
+/// Right-click or a long press skips the day instead (a planned rest day).
+class _LogGrid extends StatelessWidget {
+  const _LogGrid({
+    required this.habits,
+    required this.logs,
+    required this.today,
+    required this.selectedId,
+    required this.onPickHabit,
+    required this.onMark,
   });
 
-  final HabitDay state;
-  final String label;
-  final VoidCallback? onTap;
+  final List<Habit> habits;
+  final List<HabitLog> logs;
+  final String today;
+  final String? selectedId;
+  final ValueChanged<Habit> onPickHabit;
+  final void Function(Habit habit, String day, String? status) onMark;
+
+  static const _dayWidth = 150.0;
+  static const _minColumn = 84.0;
+  static const _rowHeight = 40.0;
 
   @override
   Widget build(BuildContext context) {
-    final done = state == HabitDay.done;
-    return Semantics(
-      button: true,
-      checked: done,
-      label: label,
+    final days = [for (var i = 0; i < 7; i++) addDays(today, -i)];
+    final marks = {
+      for (final habit in habits) habit.id: marksOf(habit.id, logs),
+    };
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionHeader(
+          icon: Icons.check_box_outlined,
+          title: 'Log',
+          trailing: Text(
+            'Click a box to log a day · right-click to skip',
+            style: Ember.meta,
+          ),
+        ),
+        Tile(
+          padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final column = math.max(
+                _minColumn,
+                (constraints.maxWidth - _dayWidth) / habits.length,
+              );
+              final width = _dayWidth + column * habits.length;
+              final grid = SizedBox(
+                width: width,
+                child: Column(
+                  children: [
+                    SizedBox(
+                      height: 36,
+                      child: Row(
+                        children: [
+                          const SizedBox(width: _dayWidth),
+                          for (final habit in habits)
+                            SizedBox(
+                              width: column,
+                              child: _HabitHeader(
+                                habit: habit,
+                                selected: habit.id == selectedId,
+                                onTap: () => onPickHabit(habit),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    for (final day in days)
+                      Container(
+                        height: _rowHeight,
+                        decoration: const BoxDecoration(
+                          border: Border(top: BorderSide(color: Ember.line)),
+                        ),
+                        child: Row(
+                          children: [
+                            SizedBox(
+                              width: _dayWidth,
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    day == today
+                                        ? Icons.wb_sunny_outlined
+                                        : Icons.wb_twilight_outlined,
+                                    size: 15,
+                                    color: day == today
+                                        ? Ember.ink
+                                        : Ember.ink3,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      logDayLabel(day, today: today),
+                                      overflow: TextOverflow.ellipsis,
+                                      style: Ember.text(
+                                        13,
+                                        16,
+                                        weight: day == today ? 600 : 500,
+                                        color: day == today
+                                            ? Ember.ink
+                                            : Ember.ink2,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            for (final habit in habits)
+                              SizedBox(
+                                width: column,
+                                child: Center(
+                                  child: _LogBox(
+                                    key: Key('habit-cell-${habit.id}-$day'),
+                                    habit: habit,
+                                    marks: marks[habit.id]!,
+                                    day: day,
+                                    today: today,
+                                    onMark: (status) =>
+                                        onMark(habit, day, status),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              );
+              // Many habits: the grid scrolls sideways inside the tile.
+              return width > constraints.maxWidth + 0.5
+                  ? SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: grid,
+                    )
+                  : grid;
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// A habit's name at the top of its column. Clicking it opens the habit in
+/// the form on the right.
+class _HabitHeader extends StatelessWidget {
+  const _HabitHeader({
+    required this.habit,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final Habit habit;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: 'Edit ${habit.name}',
+      waitDuration: const Duration(milliseconds: 600),
       child: InkWell(
-        customBorder: const CircleBorder(),
+        key: Key('habit-${habit.id}'),
+        borderRadius: BorderRadius.circular(8),
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(4),
-          child: AnimatedContainer(
-            duration: Motion.of(context, Motion.base),
-            curve: Motion.soft,
-            width: 22,
-            height: 22,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: done ? Ember.ink : Colors.transparent,
-              border: Border.all(
-                color: done
-                    ? Ember.ink
-                    : state == HabitDay.open
-                    ? Ember.ink2
-                    : Ember.ring,
-                width: 1.6,
+        child: Container(
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: selected ? Ember.ink : Colors.transparent,
+                width: 2,
               ),
             ),
-            child: AnimatedScale(
-              scale: done ? 1 : 0,
-              duration: Motion.of(context, Motion.base),
-              curve: Motion.settle,
-              child: const Icon(Icons.check, size: 14, color: Ember.white),
+          ),
+          child: Text(
+            habit.name,
+            overflow: TextOverflow.ellipsis,
+            style: Ember.text(
+              12,
+              15,
+              weight: 600,
+              color: selected ? Ember.ink : Ember.ink2,
             ),
           ),
         ),
@@ -236,175 +356,73 @@ class _HabitRing extends StatelessWidget {
   }
 }
 
-/// The last 7 days as dots: black done, orange ring today, grey ring
-/// skipped, grey dot missed, faint dot for days off.
-class _WeekDots extends StatelessWidget {
-  const _WeekDots(this.days);
-
-  final List<HabitDay> days;
-
-  @override
-  Widget build(BuildContext context) {
-    final done = days.where((day) => day == HabitDay.done).length;
-    return Semantics(
-      label: 'Last 7 days: $done done',
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (var i = 0; i < days.length; i++) ...[
-            if (i > 0) const SizedBox(width: 6),
-            AnimatedContainer(
-              duration: Motion.of(context, Motion.base),
-              curve: Motion.soft,
-              width: 9,
-              height: 9,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: switch (days[i]) {
-                  HabitDay.done => Ember.ink,
-                  HabitDay.missed => const Color(0xFFDAD8D1),
-                  HabitDay.off => Ember.line,
-                  HabitDay.open || HabitDay.skipped => Colors.transparent,
-                },
-                border: switch (days[i]) {
-                  HabitDay.open => Border.all(color: Ember.now, width: 1.6),
-                  HabitDay.skipped => Border.all(color: Ember.ring, width: 1.6),
-                  _ => null,
-                },
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _HabitRow extends StatelessWidget {
-  const _HabitRow({
+/// One box of the habit log. Black with a tick: done. A dash: skipped.
+/// Orange edge: planned today and not done yet (now). Faint edge: not a
+/// planned day, but it can still be logged.
+class _LogBox extends StatelessWidget {
+  const _LogBox({
+    super.key,
     required this.habit,
-    required this.area,
     required this.marks,
+    required this.day,
     required this.today,
-    required this.selected,
-    required this.onTap,
     required this.onMark,
   });
 
   final Habit habit;
-  final LifeArea? area;
   final Map<String, String> marks;
+  final String day;
   final String today;
-  final bool selected;
-  final VoidCallback onTap;
   final ValueChanged<String?> onMark;
 
   @override
   Widget build(BuildContext context) {
-    final state = dayState(habit, marks, today, today: today);
-    final week = lastDays(habit, marks, today: today);
-    final kept = keptOver(habit, marks, end: today, today: today);
-    final weekDone = week.where((day) => day == HabitDay.done).length;
-    final weekPlanned = week
-        .where((day) => day != HabitDay.off && day != HabitDay.skipped)
-        .length;
-    final time = habit.usualTime;
-    final when = [
-      describeDays(habit.days),
-      if (time != null) formatTime(time),
-    ].join(' · ');
-
-    return Tile(
-      key: Key('habit-${habit.id}'),
-      selected: selected,
-      onTap: onTap,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      child: Row(
-        children: [
-          _HabitRing(
-            state: state,
-            label: '${state == HabitDay.done ? 'Undo' : 'Done'} ${habit.name}',
-            onTap: state == HabitDay.off && marks[today] == null
-                ? null
-                : () => onMark(state == HabitDay.done ? null : HabitMark.done),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                AnimatedDefaultTextStyle(
-                  duration: Motion.of(context, Motion.base),
-                  curve: Motion.soft,
-                  style: Ember.text(
-                    13,
-                    16,
-                    weight: 600,
-                    color: state == HabitDay.done ? Ember.ink3 : Ember.ink,
-                  ),
-                  child: Text(habit.name, overflow: TextOverflow.ellipsis),
-                ),
-                const SizedBox(height: 6),
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 4,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    if (area != null)
-                      NameChip(
-                        label: area!.name,
-                        swatch: AreaColors.of(area!.color),
-                        icon: ItemIcons.all[area!.icon],
-                      ),
-                    Text(when, style: Ember.meta),
-                  ],
-                ),
-              ],
+    final state = dayState(habit, marks, day, today: today);
+    final done = state == HabitDay.done;
+    final skipped = state == HabitDay.skipped;
+    final words = switch (state) {
+      HabitDay.done => 'done',
+      HabitDay.skipped => 'skipped',
+      HabitDay.off => 'day off',
+      HabitDay.open || HabitDay.missed => 'not done',
+    };
+    void skip() => onMark(skipped ? null : HabitMark.skip);
+    return Semantics(
+      button: true,
+      checked: done,
+      label: '${habit.name}, ${logDayLabel(day, today: today)}: $words',
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: () => onMark(done ? null : HabitMark.done),
+        onSecondaryTap: skip,
+        onLongPress: skip,
+        child: Padding(
+          padding: const EdgeInsets.all(6),
+          child: AnimatedContainer(
+            duration: Motion.of(context, Motion.base),
+            curve: Motion.soft,
+            width: 20,
+            height: 20,
+            decoration: BoxDecoration(
+              color: done ? Ember.ink : Ember.white,
+              borderRadius: BorderRadius.circular(5),
+              border: Border.all(
+                width: 1.5,
+                color: switch (state) {
+                  HabitDay.done => Ember.ink,
+                  HabitDay.open => Ember.now,
+                  HabitDay.missed => Ember.ink3,
+                  HabitDay.skipped || HabitDay.off => Ember.ring,
+                },
+              ),
             ),
+            child: done
+                ? const Icon(Icons.check, size: 14, color: Ember.white)
+                : skipped
+                ? const Icon(Icons.remove, size: 14, color: Ember.ink3)
+                : null,
           ),
-          const SizedBox(width: 14),
-          _WeekDots(week),
-          const SizedBox(width: 14),
-          SizedBox(
-            width: 96,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  kept.percent == null ? '—' : '${kept.percent}%',
-                  style: Ember.item.copyWith(color: Ember.ink),
-                ),
-                Text(
-                  weekPlanned == 0
-                      ? 'No planned days'
-                      : '$weekDone of $weekPlanned days',
-                  style: Ember.meta,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 10),
-          SizedBox(
-            width: 92,
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: switch (state) {
-                HabitDay.open => OutlinedButton(
-                  key: Key('habit-skip-${habit.id}'),
-                  onPressed: () => onMark(HabitMark.skip),
-                  child: const Text('Skip'),
-                ),
-                HabitDay.skipped => OutlinedButton(
-                  key: Key('habit-unskip-${habit.id}'),
-                  onPressed: () => onMark(null),
-                  child: const Text('Unskip'),
-                ),
-                HabitDay.done => Text('Done', style: Ember.meta),
-                _ => Text('Day off', style: Ember.meta),
-              },
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

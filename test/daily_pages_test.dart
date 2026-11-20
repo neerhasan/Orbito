@@ -480,26 +480,34 @@ void main() {
       expect(habit.days, '1234567');
       expect(find.text('Friday, 13 November · 0 of 1 done'), findsOneWidget);
 
-      // One tap on the ring marks today done.
-      await tester.tap(find.bySemanticsLabel('Done Read'));
+      // The log shows the last 7 days, named like a diary.
+      for (final label in ['Yesterday', 'Wednesday', 'Last Saturday']) {
+        expect(find.text(label), findsOneWidget);
+      }
+
+      // One click on today's box marks it done.
+      final todayBox = 'habit-cell-${habit.id}-2026-11-13';
+      await _tap(tester, todayBox);
       await _settle(tester);
       var logs = await _read(tester, () => _habits.watchLogs(_user).first);
       expect(logs.single.day, '2026-11-13');
       expect(logs.single.status, 'done');
       expect(find.text('Friday, 13 November · 1 of 1 done'), findsOneWidget);
+      expect(find.bySemanticsLabel('Read, Today: done'), findsOneWidget);
 
-      // Tapping again opens the day again.
-      await tester.tap(find.bySemanticsLabel('Undo Read'));
+      // Clicking again opens the day again.
+      await _tap(tester, todayBox);
       await _settle(tester);
       logs = await _read(tester, () => _habits.watchLogs(_user).first);
       expect(logs, isEmpty);
 
-      // Skip keeps a rest day fair; it can be undone.
-      await _tap(tester, 'habit-skip-${habit.id}');
+      // A long press (or right-click) skips; again un-skips.
+      await tester.longPress(find.byKey(Key(todayBox)));
       await _settle(tester);
       logs = await _read(tester, () => _habits.watchLogs(_user).first);
       expect(logs.single.status, 'skip');
-      await _tap(tester, 'habit-unskip-${habit.id}');
+      expect(find.bySemanticsLabel('Read, Today: skipped'), findsOneWidget);
+      await tester.longPress(find.byKey(Key(todayBox)));
       await _settle(tester);
       logs = await _read(tester, () => _habits.watchLogs(_user).first);
       expect(logs, isEmpty);
@@ -518,8 +526,28 @@ void main() {
         () => _habits.addHabit(userId: _user, name: 'Walk', days: '12345'),
       );
       await _pumpPage(tester, AppPage.habits);
-      expect(find.text('Day off'), findsOneWidget);
+      expect(find.bySemanticsLabel('Walk, Today: day off'), findsOneWidget);
       expect(find.text('Rest day'), findsOneWidget);
+    });
+
+    _testPage('one click logs a habit on a day that was forgotten', (
+      tester,
+    ) async {
+      final id = await _read(
+        tester,
+        () => _habits.addHabit(userId: _user, name: 'Gym'),
+      );
+      await _pumpPage(tester, AppPage.habits);
+
+      // Gym yesterday, logged today.
+      await _tap(tester, 'habit-cell-$id-2026-11-12');
+      await _settle(tester);
+      final logs = await _read(tester, () => _habits.watchLogs(_user).first);
+      expect(logs.single.day, '2026-11-12');
+      expect(logs.single.status, 'done');
+      expect(find.bySemanticsLabel('Gym, Yesterday: done'), findsOneWidget);
+      // Today is still open.
+      expect(find.text('Friday, 13 November · 0 of 1 done'), findsOneWidget);
     });
 
     _testPage('a habit can be changed and deleted', (tester) async {
