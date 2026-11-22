@@ -595,56 +595,65 @@ class _FocusModeViewState extends ConsumerState<FocusModeView>
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
               child: Column(
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 26,
-                        height: 26,
-                        decoration: BoxDecoration(
-                          color: Ember.now,
-                          borderRadius: BorderRadius.circular(8),
+                  // Dragging the top row moves the window.
+                  WindowDragArea(
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 26,
+                          height: 26,
+                          decoration: BoxDecoration(
+                            color: Ember.now,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.timer_outlined,
+                            size: 16,
+                            color: Ember.white,
+                          ),
                         ),
-                        child: const Icon(
-                          Icons.timer_outlined,
-                          size: 16,
-                          color: Ember.white,
+                        const SizedBox(width: 10),
+                        Text(
+                          'Focus mode · started $started',
+                          style: Ember.text(13, 16, color: Ember.onShell2),
                         ),
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        'Focus mode · started $started',
-                        style: Ember.text(13, 16, color: Ember.onShell2),
-                      ),
-                      const Spacer(),
-                      TextButton.icon(
-                        key: const Key('focus-fullscreen'),
-                        onPressed: () => _setFullScreen(!_fullScreen),
-                        style: TextButton.styleFrom(
-                          backgroundColor: Ember.raised,
-                          foregroundColor: Ember.onShell,
+                        const Spacer(),
+                        TextButton.icon(
+                          key: const Key('focus-fullscreen'),
+                          onPressed: () => _setFullScreen(!_fullScreen),
+                          style: TextButton.styleFrom(
+                            backgroundColor: Ember.raised,
+                            foregroundColor: Ember.onShell,
+                          ),
+                          icon: Icon(
+                            _fullScreen
+                                ? Icons.fullscreen_exit_rounded
+                                : Icons.fullscreen_rounded,
+                            size: 18,
+                          ),
+                          label: Text(
+                            _fullScreen ? 'Leave full screen' : 'Full screen',
+                          ),
                         ),
-                        icon: Icon(
-                          _fullScreen
-                              ? Icons.fullscreen_exit_rounded
-                              : Icons.fullscreen_rounded,
-                          size: 18,
+                        const SizedBox(width: 8),
+                        TextButton.icon(
+                          key: const Key('focus-exit'),
+                          onPressed: _exit,
+                          style: TextButton.styleFrom(
+                            backgroundColor: Ember.raised,
+                            foregroundColor: Ember.onShell,
+                          ),
+                          icon: const Icon(Icons.arrow_back, size: 16),
+                          label: const Text('Back to Orbito  ·  Esc'),
                         ),
-                        label: Text(
-                          _fullScreen ? 'Leave full screen' : 'Full screen',
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      TextButton.icon(
-                        key: const Key('focus-exit'),
-                        onPressed: _exit,
-                        style: TextButton.styleFrom(
-                          backgroundColor: Ember.raised,
-                          foregroundColor: Ember.onShell,
-                        ),
-                        icon: const Icon(Icons.arrow_back, size: 16),
-                        label: const Text('Back to Orbito  ·  Esc'),
-                      ),
-                    ],
+                        // The window's own buttons, since Orbito hides the
+                        // system title bar (not needed in full screen).
+                        if (!_fullScreen) ...[
+                          const SizedBox(width: 8),
+                          const WindowButtons(),
+                        ],
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Expanded(
