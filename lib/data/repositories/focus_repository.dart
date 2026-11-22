@@ -96,7 +96,7 @@ class FocusRepository {
     final timer = await _current();
     if (timer == null) return null;
     final now = _now();
-    final seconds = workedMs(timer, now) ~/ 1000;
+    final seconds = savedMs(timer, now) ~/ 1000;
     final timestamp = _timestamp(now);
     final taskId = timer.taskId;
     int? saved;

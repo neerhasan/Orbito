@@ -2,6 +2,10 @@
 /// they are easy to test.
 library;
 
+import 'dart:math' as math;
+
+import 'dart:math' as math;
+
 import '../data/local/app_database.dart';
 import 'dates.dart';
 
@@ -18,6 +22,23 @@ int workedMs(FocusTimer timer, DateTime now) {
   final since = parseStoredTime(timer.runningSince);
   final running = since == null ? 0 : now.difference(since).inMilliseconds;
   return timer.workedMs + (running < 0 ? 0 : running);
+}
+
+/// The milliseconds a stop saves. A countdown (a timer with a planned
+/// length) never saves more than its planned length, so a timer left
+/// running after it ended, or while the app was closed, does not add
+/// hours that were not worked. A stopwatch saves all of it.
+int savedMs(FocusTimer timer, DateTime now) {
+  final worked = workedMs(timer, now);
+  final target = timer.targetMinutes;
+  return target == null ? worked : math.min(worked, target * 60000);
+}
+
+/// Milliseconds left on a countdown, never below 0; null for a stopwatch.
+int? remainingMs(FocusTimer timer, DateTime now) {
+  final target = timer.targetMinutes;
+  if (target == null) return null;
+  return math.max(0, target * 60000 - workedMs(timer, now));
 }
 
 /// True while the clock is running (not paused).

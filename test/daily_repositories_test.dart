@@ -193,6 +193,14 @@ void main() {
       expect(await reopened.stop(), 20 * 60);
     });
 
+    test('a countdown saves no more than its planned length', () async {
+      await focus.start(userId: 'u', targetMinutes: 25);
+      // The app was closed for three hours while the countdown ran.
+      clock = clock.add(const Duration(hours: 3));
+      expect(await focus.stop(), 25 * 60);
+      expect((await focus.watchSessions('u').first).single.focusSeconds, 1500);
+    });
+
     test('under a minute is not saved', () async {
       await focus.start(userId: 'u');
       clock = clock.add(const Duration(seconds: 40));
