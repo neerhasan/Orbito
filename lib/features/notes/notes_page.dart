@@ -943,7 +943,8 @@ class _OpenPageState extends ConsumerState<_OpenPage> {
                   : null,
             ),
           Padding(
-            padding: EdgeInsets.fromLTRB(56, cover == null ? 36 : 0, 32, 4),
+            // Lines up with the text of the blocks below.
+            padding: EdgeInsets.fromLTRB(90, cover == null ? 36 : 0, 32, 4),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
