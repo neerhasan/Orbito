@@ -21,7 +21,9 @@ env:
 jobs:
   check:
     name: Analyze and test
-    runs-on: ubuntu-latest
+    # Windows, like the founder's PC: window_manager's native helper is
+    # built for the tests, and it does not build on the Linux runner.
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
