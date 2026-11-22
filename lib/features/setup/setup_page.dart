@@ -126,7 +126,7 @@ class _SetupPageState extends ConsumerState<SetupPage> {
                   child: Tile(
                     key: Key('suggest-$name'),
                     selected: _chosen.contains(name),
-                    color: _chosen.contains(name) ? Ember.white : Ember.tile,
+                    color: _chosen.contains(name) ? Ember.surface : Ember.tile,
                     padding: const EdgeInsets.all(14),
                     onTap: _saving
                         ? null

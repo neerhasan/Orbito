@@ -468,7 +468,7 @@ class _MoreMenu extends StatelessWidget {
           Expanded(
             child: Text(label, style: Ember.item.copyWith(color: Ember.ink)),
           ),
-          if (checked) const Icon(Icons.check, size: 15, color: Ember.ink),
+          if (checked) Icon(Icons.check, size: 15, color: Ember.ink),
         ],
       ),
     );
@@ -480,7 +480,7 @@ class _MoreMenu extends StatelessWidget {
       key: const Key('tasks-more'),
       tooltip: 'More options',
       position: PopupMenuPosition.under,
-      color: Ember.white,
+      color: Ember.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       onSelected: (action) => action(),
       itemBuilder: (context) => [
@@ -526,7 +526,7 @@ class _MoreMenu extends StatelessWidget {
           color: filtered ? Ember.neutral : null,
           borderRadius: BorderRadius.circular(10),
         ),
-        child: const Icon(Icons.more_vert, size: 20, color: Ember.ink2),
+        child: Icon(Icons.more_vert, size: 20, color: Ember.ink2),
       ),
     );
   }
@@ -555,7 +555,7 @@ class _AddBox extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.add, size: 16, color: Ember.ink2),
+          Icon(Icons.add, size: 16, color: Ember.ink2),
           const SizedBox(width: 8),
           Expanded(
             child: TextField(
@@ -620,7 +620,7 @@ class Segments<T extends Enum> extends StatelessWidget {
               button: true,
               selected: option == value,
               child: Material(
-                color: option == value ? Ember.white : Colors.transparent,
+                color: option == value ? Ember.surface : Colors.transparent,
                 borderRadius: BorderRadius.circular(6),
                 clipBehavior: Clip.antiAlias,
                 child: InkWell(
@@ -695,9 +695,9 @@ class _Pick<T> extends StatelessWidget {
           value: value,
           isDense: true,
           borderRadius: BorderRadius.circular(10),
-          dropdownColor: Ember.white,
+          dropdownColor: Ember.surface,
           style: style,
-          icon: const Icon(Icons.expand_more, size: 16, color: Ember.ink2),
+          icon: Icon(Icons.expand_more, size: 16, color: Ember.ink2),
           selectedItemBuilder: (context) => [
             for (final (_, label) in options)
               // The width limit keeps a long project name inside the box.
@@ -737,12 +737,8 @@ class PriorityTag extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return priority == TaskPriority.high
-        ? const Tag('High', background: Ember.nowTint, foreground: Ember.nowInk)
-        : const Tag(
-            'Medium',
-            background: Color(0xFFFBF0D5),
-            foreground: Ember.amberInk,
-          );
+        ? Tag('High', background: Ember.nowTint, foreground: Ember.nowInk)
+        : Tag('Medium', background: Ember.warnBg, foreground: Ember.amberInk);
   }
 }
 
@@ -841,7 +837,7 @@ class TaskRow extends StatelessWidget {
     return Tile(
       key: Key('task-${task.id}'),
       selected: selected,
-      color: selected ? Ember.white : Ember.tile,
+      color: selected ? Ember.surface : Ember.tile,
       onTap: onTap,
       padding: const EdgeInsets.fromLTRB(9, 3, 14, 3),
       // One line: ring and title on the left; date, priority and project
@@ -1430,7 +1426,7 @@ class _PriorityChoice extends StatelessWidget {
                     style: Ember.text(
                       12,
                       15,
-                      color: chosen ? Ember.white : Ember.ink,
+                      color: chosen ? Ember.onInk : Ember.ink,
                     ),
                   ),
                 ],
@@ -1542,7 +1538,7 @@ class _FocusBoxState extends ConsumerState<_FocusBox> {
             SoftButton(
               key: const Key('task-focus-stop'),
               label: 'Stop and save',
-              background: Ember.white,
+              background: Ember.surface,
               onPressed: _stop,
             ),
           ],
@@ -1790,11 +1786,11 @@ class _MonthView extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 2),
       child: Material(
-        color: swatch?.soft ?? Ember.white,
+        color: swatch?.soft ?? Ember.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(5),
           side: task.id == selectedId
-              ? const BorderSide(color: Ember.ink, width: 1.2)
+              ? BorderSide(color: Ember.ink, width: 1.2)
               : BorderSide.none,
         ),
         clipBehavior: Clip.antiAlias,

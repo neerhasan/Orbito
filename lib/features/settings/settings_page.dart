@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
+import '../../app/theme_mode.dart';
 import '../../domain/sleep.dart' show formatTime, minutesOf, timeOf;
 import '../../domain/today.dart';
 import '../../ui/ember.dart';
@@ -84,7 +85,7 @@ class SettingsPage extends ConsumerWidget {
           Expanded(child: Text(label, style: Ember.item)),
           Text(formatTime(value), style: Ember.item.copyWith(color: Ember.ink)),
           const SizedBox(width: 6),
-          const Icon(Icons.edit_outlined, size: 14, color: Ember.ink2),
+          Icon(Icons.edit_outlined, size: 14, color: Ember.ink2),
         ],
       ),
     );
@@ -166,6 +167,39 @@ class SettingsPage extends ConsumerWidget {
         const PageHeader(
           title: 'Settings',
           subtitle: 'Your choices are kept on every device you sign in on.',
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SectionHeader(icon: Icons.contrast_rounded, title: 'Look'),
+            Tile(
+              padding: const EdgeInsets.fromLTRB(14, 6, 8, 6),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Dark mode', style: Ember.item),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Kept on this device only. The moon in the top bar '
+                          'switches it too.',
+                          style: Ember.meta,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Switch(
+                    key: const Key('setting-dark'),
+                    value: ref.watch(darkModeProvider),
+                    onChanged: (dark) =>
+                        ref.read(darkModeProvider.notifier).set(dark),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
         Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

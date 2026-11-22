@@ -233,16 +233,16 @@ class _Greeting extends ConsumerWidget {
           _LinkChip(
             key: const Key('greeting-habits'),
             label: '${countOf(habitsLeft, 'habit')} left',
-            background: const Color(0xFFE3F5E9),
-            foreground: const Color(0xFF23804A),
+            background: Ember.goodBg,
+            foreground: Ember.goodInk,
             onTap: () => open(AppPage.habits),
           ),
           Text('and', style: text),
           _LinkChip(
             key: const Key('greeting-inbox'),
             label: '${countOf(inbox.length, 'line')} in the Inbox',
-            background: const Color(0xFFEEE7FD),
-            foreground: const Color(0xFF6C43D0),
+            background: Ember.violetBg,
+            foreground: Ember.violetInk,
             onTap: () => open(AppPage.inbox),
           ),
         ],
@@ -412,7 +412,7 @@ class _HabitCard extends StatelessWidget {
                     shape: BoxShape.circle,
                     color: switch (week[i]) {
                       HabitDay.done => Ember.ink,
-                      HabitDay.missed => const Color(0xFFDAD8D1),
+                      HabitDay.missed => Ember.mark,
                       HabitDay.off => Ember.line,
                       _ => Colors.transparent,
                     },
@@ -531,7 +531,7 @@ class _TimeToday extends ConsumerWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.schedule, size: 16, color: Ember.ink),
+              Icon(Icons.schedule, size: 16, color: Ember.ink),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -557,7 +557,7 @@ class _TimeToday extends ConsumerWidget {
                   if (focused > 0 && other > 0) const SizedBox(width: 3),
                   Expanded(
                     flex: math.max(1, other),
-                    child: Container(color: const Color(0xFFD5D3CC)),
+                    child: Container(color: Ember.mark),
                   ),
                 ],
               ),
@@ -618,7 +618,7 @@ class _SleepCard extends ConsumerWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.bedtime_outlined, size: 16, color: Ember.ink),
+              Icon(Icons.bedtime_outlined, size: 16, color: Ember.ink),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -629,8 +629,8 @@ class _SleepCard extends ConsumerWidget {
               if (steady != null)
                 Tag(
                   '$steady% consistent',
-                  background: const Color(0xFFE3F5E9),
-                  foreground: const Color(0xFF23804A),
+                  background: Ember.goodBg,
+                  foreground: Ember.goodInk,
                 ),
             ],
           ),
@@ -718,7 +718,7 @@ class _NightBar extends StatelessWidget {
               ? Ember.line
               : last
               ? Ember.now
-              : const Color(0xFFD5D3CC),
+              : Ember.mark,
           borderRadius: BorderRadius.circular(2),
         ),
       ),
@@ -791,7 +791,7 @@ class _MiniCalendarState extends ConsumerState<_MiniCalendar> {
                 ),
               ),
               if (due.contains(key))
-                const Padding(
+                Padding(
                   padding: EdgeInsets.only(top: 2),
                   child: ColorDot(Ember.ink3, size: 4),
                 ),

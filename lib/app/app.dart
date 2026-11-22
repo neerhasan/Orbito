@@ -20,6 +20,7 @@ import '../ui/widgets.dart';
 import '../ui/window_frame.dart';
 import 'providers.dart';
 import 'shell.dart';
+import 'theme_mode.dart';
 
 /// The app once the keys are in place: the sign-in screen, or the app frame
 /// with its pages.
@@ -30,7 +31,10 @@ class OrbitoApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
     final signedIn = user.value != null;
+    // A new theme builds the whole app again, so every colour follows it.
+    final dark = ref.watch(darkModeProvider);
     return MaterialApp(
+      key: ValueKey('theme-$dark'),
       title: 'Orbito',
       debugShowCheckedModeBanner: false,
       theme: Ember.theme(),

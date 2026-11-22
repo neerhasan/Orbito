@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:orbito/app/app.dart';
 import 'package:orbito/app/providers.dart';
 import 'package:orbito/app/shell.dart';
+import 'package:orbito/app/theme_mode.dart';
 import 'package:orbito/data/local/app_database.dart';
 import 'package:orbito/data/repositories/capture_repository.dart';
 import 'package:orbito/data/repositories/plan_repository.dart';
@@ -66,13 +67,17 @@ Future<void> _pump(WidgetTester tester, AppPage page) async {
         firstSyncDoneProvider.overrideWithValue(true),
         clockProvider.overrideWithValue(() => DateTime(2026, 11, 11, 12)),
       ],
-      child: MaterialApp(
-        theme: Ember.theme(),
-        builder: (context, child) => MediaQuery(
-          data: MediaQuery.of(context).copyWith(disableAnimations: true),
-          child: child!,
+      // Like the app: a new theme builds everything again.
+      child: Consumer(
+        builder: (context, ref, _) => MaterialApp(
+          key: ValueKey('theme-${ref.watch(darkModeProvider)}'),
+          theme: Ember.theme(),
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(disableAnimations: true),
+            child: child!,
+          ),
+          home: Scaffold(body: PageHost(page: page)),
         ),
-        home: Scaffold(body: PageHost(page: page)),
       ),
     ),
   );
@@ -339,6 +344,48 @@ void main() {
       expect(page.title, 'Visa');
       expect(page.body, 'Ask D-2');
       expect(page.content, contains('todo_list'));
+    });
+
+    _test('Notes: a title typed just before leaving the page is saved', (
+      tester,
+    ) async {
+      final first = await _read(
+        tester,
+        () => _capture.createPage(userId: _user, title: 'A'),
+      );
+      final second = await _read(
+        tester,
+        () => _capture.createPage(userId: _user, title: 'B'),
+      );
+      await _pump(tester, AppPage.notes);
+      await tester.enterText(find.byKey(const Key('page-title')), 'Plans');
+      // Straight away, before the pause that saves by itself.
+      await _tap(tester, 'page-row-$second');
+      await _settle(tester);
+      final pages = await _notes(tester);
+      expect(pages.firstWhere((page) => page.id == first).title, 'Plans');
+    });
+
+    _test('Dark mode: the Settings switch turns the paper dark and back', (
+      tester,
+    ) async {
+      addTearDown(() => Ember.useDark(false));
+      await _pump(tester, AppPage.settings);
+      expect(Ember.isDark, isFalse);
+
+      await _tap(tester, 'setting-dark');
+      await _settle(tester);
+      expect(Ember.isDark, isTrue);
+      bool darkPaper(Widget widget) =>
+          widget is Container &&
+          (widget.decoration as BoxDecoration?)?.color == Palette.dark.paper;
+      expect(find.byWidgetPredicate(darkPaper), findsWidgets);
+      expect(find.text('Dark mode'), findsOneWidget);
+
+      await _tap(tester, 'setting-dark');
+      await _settle(tester);
+      expect(Ember.isDark, isFalse);
+      expect(find.byWidgetPredicate(darkPaper), findsNothing);
     });
 
     _test('Notes: pages inside pages, favourites and the Trash', (

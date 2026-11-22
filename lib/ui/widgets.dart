@@ -197,14 +197,16 @@ class Tile extends StatefulWidget {
     required this.child,
     this.onTap,
     this.selected = false,
-    this.color = Ember.tile,
+    this.color,
     this.padding = const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
   });
 
   final Widget child;
   final VoidCallback? onTap;
   final bool selected;
-  final Color color;
+
+  /// The fill; the theme's tile colour when null.
+  final Color? color;
   final EdgeInsets padding;
 
   @override
@@ -217,9 +219,10 @@ class _TileState extends State<Tile> {
   @override
   Widget build(BuildContext context) {
     final tappable = widget.onTap != null;
+    final fill = widget.color ?? Ember.tile;
     final color = tappable && _hover
-        ? Color.lerp(widget.color, Ember.ink, 0.035)!
-        : widget.color;
+        ? Color.lerp(fill, Ember.ink, 0.035)!
+        : fill;
     return Appear(
       child: Pressable(
         enabled: tappable,
@@ -510,7 +513,7 @@ class Segmented<T> extends StatelessWidget {
           duration: Motion.of(context, Motion.base),
           curve: Motion.soft,
           decoration: BoxDecoration(
-            color: chosen ? Ember.white : Ember.tile.withValues(alpha: 0),
+            color: chosen ? Ember.surface : Ember.tile.withValues(alpha: 0),
             borderRadius: BorderRadius.circular(6),
           ),
           child: Material(
@@ -678,26 +681,26 @@ class NameChip extends StatelessWidget {
 
 /// A small label without a dot.
 class Tag extends StatelessWidget {
-  const Tag(
-    this.label, {
-    super.key,
-    this.background = Ember.neutral,
-    this.foreground = Ember.ink2,
-  });
+  const Tag(this.label, {super.key, this.background, this.foreground});
 
   final String label;
-  final Color background;
-  final Color foreground;
+
+  /// The theme's neutral and grey ink when null.
+  final Color? background;
+  final Color? foreground;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
-        color: background,
+        color: background ?? Ember.neutral,
         borderRadius: BorderRadius.circular(6),
       ),
-      child: Text(label, style: Ember.text(11, 13, color: foreground)),
+      child: Text(
+        label,
+        style: Ember.text(11, 13, color: foreground ?? Ember.ink2),
+      ),
     );
   }
 }
@@ -757,7 +760,7 @@ class TaskRing extends StatelessWidget {
               scale: done ? 1 : 0,
               duration: Motion.of(context, Motion.base),
               curve: Motion.settle,
-              child: Icon(Icons.check, size: size * 0.66, color: Ember.white),
+              child: Icon(Icons.check, size: size * 0.66, color: Ember.onInk),
             ),
           ),
         ),
@@ -897,7 +900,7 @@ class IconPicker extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                   side: selected.isEmpty
-                      ? const BorderSide(color: Ember.ink, width: 1.5)
+                      ? BorderSide(color: Ember.ink, width: 1.5)
                       : BorderSide.none,
                 ),
                 clipBehavior: Clip.antiAlias,
@@ -925,7 +928,7 @@ class IconPicker extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                   side: name == selected
-                      ? const BorderSide(color: Ember.ink, width: 1.5)
+                      ? BorderSide(color: Ember.ink, width: 1.5)
                       : BorderSide.none,
                 ),
                 clipBehavior: Clip.antiAlias,

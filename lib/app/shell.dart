@@ -12,6 +12,7 @@ import '../ui/motion.dart';
 import '../ui/widgets.dart';
 import '../ui/window_frame.dart';
 import 'providers.dart';
+import 'theme_mode.dart';
 
 /// The pages the side menu can open.
 enum AppPage {
@@ -301,6 +302,8 @@ class _TitleBar extends ConsumerWidget {
                     ),
                     const SizedBox(width: 8),
                   ],
+                  const _ThemeButton(),
+                  const SizedBox(width: 6),
                   _NewButton(
                     onPick: (target) {
                       open(target);
@@ -324,6 +327,32 @@ class _TitleBar extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// The moon (or sun) in the top bar: switches between the light and dark
+/// theme, as in the Sleep log app.
+class _ThemeButton extends ConsumerWidget {
+  const _ThemeButton();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final dark = ref.watch(darkModeProvider);
+    return IconButton(
+      key: const Key('theme-toggle'),
+      tooltip: dark ? 'Switch to light theme' : 'Switch to dark theme',
+      onPressed: () => ref.read(darkModeProvider.notifier).toggle(),
+      style: IconButton.styleFrom(
+        backgroundColor: Ember.raised,
+        foregroundColor: Ember.onShell,
+        fixedSize: const Size(34, 34),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+      icon: Icon(
+        dark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+        size: 17,
       ),
     );
   }
@@ -390,7 +419,7 @@ class _NewButton extends StatelessWidget {
       key: const Key('new-menu'),
       tooltip: 'New',
       position: PopupMenuPosition.under,
-      color: Ember.white,
+      color: Ember.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       onSelected: onPick,
       itemBuilder: (context) => [
@@ -420,7 +449,7 @@ class _NewButton extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.add, size: 16, color: Ember.ink),
+            Icon(Icons.add, size: 16, color: Ember.ink),
             const SizedBox(width: 6),
             Text(
               'New',
@@ -446,7 +475,7 @@ class _AccountButton extends ConsumerWidget {
       key: const Key('account-menu'),
       tooltip: 'Account',
       position: PopupMenuPosition.under,
-      color: Ember.white,
+      color: Ember.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       onSelected: (value) async {
         if (value != 'sign-out') return;
@@ -465,7 +494,7 @@ class _AccountButton extends ConsumerWidget {
           value: 'sign-out',
           child: Row(
             children: [
-              const Icon(Icons.logout, size: 16, color: Ember.ink2),
+              Icon(Icons.logout, size: 16, color: Ember.ink2),
               const SizedBox(width: 10),
               Text('Sign out', style: Ember.item.copyWith(color: Ember.ink)),
             ],

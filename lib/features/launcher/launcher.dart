@@ -211,7 +211,7 @@ class _QuickLauncherState extends ConsumerState<_QuickLauncher> {
                   padding: const EdgeInsets.fromLTRB(18, 14, 14, 14),
                   child: Row(
                     children: [
-                      const Icon(Icons.search, size: 18, color: Ember.ink2),
+                      Icon(Icons.search, size: 18, color: Ember.ink2),
                       const SizedBox(width: 10),
                       Expanded(
                         child: TextField(
@@ -331,12 +331,12 @@ class ToneChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (background, foreground) = switch (tone) {
-      ChipTone.ink => (Ember.ink, Ember.white),
-      ChipTone.blue => (const Color(0xFFE4EDFD), const Color(0xFF2B62D9)),
-      ChipTone.green => (const Color(0xFFE3F5E9), const Color(0xFF23804A)),
+      ChipTone.ink => (Ember.ink, Ember.onInk),
+      ChipTone.blue => (Ember.blueBg, Ember.blueInk),
+      ChipTone.green => (Ember.goodBg, Ember.goodInk),
       ChipTone.orange => (Ember.nowSoft, Ember.nowInk),
-      ChipTone.amber => (const Color(0xFFFBF0D5), Ember.amberInk),
-      ChipTone.violet => (const Color(0xFFEEE7FD), const Color(0xFF6C43D0)),
+      ChipTone.amber => (Ember.warnBg, Ember.amberInk),
+      ChipTone.violet => (Ember.violetBg, Ember.violetInk),
       ChipTone.plain => (Ember.neutral, Ember.ink),
     };
     return Tag(label, background: background, foreground: foreground);

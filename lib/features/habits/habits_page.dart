@@ -235,7 +235,7 @@ class _LogGrid extends StatelessWidget {
                     for (final day in days)
                       Container(
                         height: _rowHeight,
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           border: Border(top: BorderSide(color: Ember.line)),
                         ),
                         child: Row(
@@ -404,7 +404,7 @@ class _LogBox extends StatelessWidget {
             width: 20,
             height: 20,
             decoration: BoxDecoration(
-              color: done ? Ember.ink : Ember.white,
+              color: done ? Ember.ink : Ember.surface,
               borderRadius: BorderRadius.circular(5),
               border: Border.all(
                 width: 1.5,
@@ -417,9 +417,9 @@ class _LogBox extends StatelessWidget {
               ),
             ),
             child: done
-                ? const Icon(Icons.check, size: 14, color: Ember.white)
+                ? Icon(Icons.check, size: 14, color: Ember.onInk)
                 : skipped
-                ? const Icon(Icons.remove, size: 14, color: Ember.ink3)
+                ? Icon(Icons.remove, size: 14, color: Ember.ink3)
                 : null,
           ),
         ),
@@ -557,7 +557,7 @@ class _HeatRow extends StatelessWidget {
                         HabitDay.skipped => Ember.ring,
                         HabitDay.missed => Ember.line,
                         HabitDay.open => Colors.transparent,
-                        HabitDay.off => const Color(0xFFF7F6F2),
+                        HabitDay.off => Ember.tile,
                       },
                       border: days[i] == HabitDay.open
                           ? Border.all(color: Ember.now, width: 1.6)
@@ -862,7 +862,7 @@ class _DayToggle extends StatelessWidget {
             child: Center(
               child: Text(
                 letter,
-                style: Ember.text(12, 15, color: on ? Ember.white : Ember.ink2),
+                style: Ember.text(12, 15, color: on ? Ember.onInk : Ember.ink2),
               ),
             ),
           ),

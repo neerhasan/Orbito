@@ -132,7 +132,7 @@ class InboxPage extends ConsumerWidget {
                           key: Key('inbox-task-${item.id}'),
                           icon: Icons.check_circle_outline,
                           label: 'Make a task',
-                          background: Ember.white,
+                          background: Ember.surface,
                           onPressed: () => _makeTask(context, ref, item),
                         ),
                         IconButton(

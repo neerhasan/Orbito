@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/providers.dart';
 import '../../app/shell.dart' show NoteRequest, noteRequestProvider;
 import '../../data/local/app_database.dart';
+import '../../data/repositories/capture_repository.dart';
 import '../../domain/dates.dart';
 import '../../domain/note_tree.dart';
 import '../../domain/sleep.dart' show formatTime, timeOf;
@@ -327,7 +328,7 @@ class _NotesPageState extends ConsumerState<NotesPage> {
               ],
             ),
           ),
-          const Divider(height: 1, color: Ember.line),
+          Divider(height: 1, color: Ember.line),
           Padding(
             padding: const EdgeInsets.fromLTRB(6, 6, 6, 8),
             child: Column(
@@ -547,7 +548,7 @@ class _PageRowState extends State<_PageRow> {
                 SizedBox(
                   width: 22,
                   child: page.icon == null
-                      ? const Icon(
+                      ? Icon(
                           Icons.description_outlined,
                           size: 16,
                           color: Ember.ink2,
@@ -578,7 +579,7 @@ class _PageRowState extends State<_PageRow> {
                     key: Key('page-add-${page.id}'),
                     borderRadius: BorderRadius.circular(4),
                     onTap: widget.onAdd,
-                    child: const Tooltip(
+                    child: Tooltip(
                       message: 'Add a page inside',
                       child: SizedBox(
                         width: 24,
@@ -607,7 +608,7 @@ class _PageRowState extends State<_PageRow> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: Ember.white,
+              color: Ember.surface,
               borderRadius: BorderRadius.circular(6),
               border: Border.all(color: Ember.line),
             ),
@@ -723,7 +724,9 @@ class _OpenPageState extends ConsumerState<_OpenPage> {
     editorState: _editor,
     scrollController: _editorScroll,
   );
-  late final _repository = ref.read(captureRepositoryProvider);
+
+  /// Read when the page opens, so a save while it closes still works.
+  late final CaptureRepository _repository;
   StreamSubscription<Object?>? _changes;
   Timer? _saveSoon;
   var _dirty = false;
@@ -732,6 +735,7 @@ class _OpenPageState extends ConsumerState<_OpenPage> {
   @override
   void initState() {
     super.initState();
+    _repository = ref.read(captureRepositoryProvider);
     _changes = _editor.transactionStream.listen((_) => _changed());
   }
 
@@ -842,7 +846,7 @@ class _OpenPageState extends ConsumerState<_OpenPage> {
                   width: 64,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: entry.value,
+                    color: _coverColor(entry.value),
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
@@ -917,7 +921,9 @@ class _OpenPageState extends ConsumerState<_OpenPage> {
   @override
   Widget build(BuildContext context) {
     final page = widget.page;
-    final cover = _covers[page.cover];
+    final cover = _covers[page.cover] == null
+        ? null
+        : _coverColor(_covers[page.cover]!);
     final project = widget.project;
     final favorite = isFavorite(page);
 
@@ -1283,3 +1289,7 @@ class _TrashDialog extends ConsumerWidget {
     );
   }
 }
+
+/// A cover colour in the current theme: deeper in the dark theme.
+Color _coverColor(Color light) =>
+    Ember.isDark ? Color.lerp(light, Palette.dark.paper, 0.55)! : light;

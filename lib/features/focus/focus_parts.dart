@@ -12,7 +12,7 @@ import '../../ui/widgets.dart';
 
 /// The colour for time with no project: a quiet grey (orange is kept for
 /// "now").
-const noProjectSwatch = Swatch(Ember.ink3, Ember.neutral, Ember.ink2);
+Swatch get noProjectSwatch => Swatch(Ember.ink3, Ember.neutral, Ember.ink2);
 
 /// The colour a session shows in: its project's colour, or grey.
 Swatch swatchOfProject(String? projectId, Map<String, Project> projects) {

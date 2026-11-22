@@ -6,12 +6,16 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app/app.dart';
 import 'app/env.dart';
 import 'app/providers.dart';
+import 'app/theme_mode.dart';
+import 'ui/ember.dart';
 import 'data/local/app_database.dart';
 import 'data/sync/sync_service.dart';
 import 'ui/window_frame.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // The light or dark theme this device chose last time.
+  Ember.useDark(await loadThemeChoice());
   // Windows: Orbito's dark top bar replaces the system title bar.
   setUpWindow();
 

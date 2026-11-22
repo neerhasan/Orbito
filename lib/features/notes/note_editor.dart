@@ -87,10 +87,10 @@ EditorStyle noteEditorStyle() => EditorStyle.desktop(
   selectionColor: const Color(0x332B62D9),
   textStyleConfiguration: TextStyleConfiguration(
     text: Ember.text(15, 24, weight: 400, color: Ember.ink),
-    code: const TextStyle(
+    code: TextStyle(
       fontFamily: 'Consolas',
-      color: Color(0xFFC8242F),
-      backgroundColor: Color(0xFFEDEBE5),
+      color: Ember.badInk,
+      backgroundColor: Ember.neutral,
     ),
     href: const TextStyle(
       color: Color(0xFF2B62D9),
@@ -157,7 +157,7 @@ Map<String, BlockComponentBuilder> noteBlockBuilders(EditorState editor) {
       configuration: plain.copyWith(
         placeholderText: (_) => 'Code',
         padding: (_) => const EdgeInsets.fromLTRB(14, 12, 14, 12),
-        textStyle: (node, {textSpan}) => const TextStyle(
+        textStyle: (node, {textSpan}) => TextStyle(
           fontFamily: 'Consolas',
           fontSize: 13.5,
           height: 1.5,
@@ -256,8 +256,8 @@ final noteSlashItems = <SelectionMenuItem>[
 ];
 
 /// The "/" menu in Orbito's colours.
-const noteMenuStyle = SelectionMenuStyle(
-  selectionMenuBackgroundColor: Ember.white,
+SelectionMenuStyle get noteMenuStyle => SelectionMenuStyle(
+  selectionMenuBackgroundColor: Ember.surface,
   selectionMenuItemTextColor: Ember.ink,
   selectionMenuItemIconColor: Ember.ink2,
   selectionMenuItemSelectedTextColor: Ember.ink,
@@ -482,7 +482,7 @@ class _BlockHandle extends StatelessWidget {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: Ember.white,
+                    color: Ember.surface,
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(color: Ember.line),
                   ),
@@ -676,7 +676,7 @@ class _ToggleBlockComponentWidgetState extends State<ToggleBlockComponentWidget>
               child: AnimatedRotation(
                 turns: _collapsed ? 0 : 0.25,
                 duration: const Duration(milliseconds: 150),
-                child: const Icon(
+                child: Icon(
                   Icons.arrow_right_rounded,
                   size: 22,
                   color: Ember.ink,

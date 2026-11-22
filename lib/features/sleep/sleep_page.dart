@@ -28,10 +28,10 @@ const _sevLabels = [
 ];
 
 /// Text and background of good, bad and neutral changes.
-const _goodInk = Color(0xFF23804A);
-const _goodBg = Color(0xFFE3F5E9);
-const _badInk = Color(0xFFC8242F);
-const _badBg = Color(0xFFFDE8E8);
+Color get _goodInk => Ember.goodInk;
+Color get _goodBg => Ember.goodBg;
+Color get _badInk => Ember.badInk;
+Color get _badBg => Ember.badBg;
 
 /// The Sleep page, after the founder's Sleep log app
 /// (`F:\Neeret\sleep-tracker`): Week, Month and Year; four cards (average
@@ -1496,7 +1496,7 @@ class _EntryDialogState extends ConsumerState<_EntryDialog> {
                               ),
                             ),
                           ),
-                          const Icon(
+                          Icon(
                             Icons.calendar_today_outlined,
                             size: 16,
                             color: Ember.ink2,
@@ -1645,7 +1645,7 @@ class _TimePick extends StatelessWidget {
           value: current,
           isExpanded: true,
           borderRadius: BorderRadius.circular(8),
-          dropdownColor: Ember.white,
+          dropdownColor: Ember.surface,
           icon: const Icon(Icons.keyboard_arrow_down, size: 16),
           style: Ember.text(13, 16, weight: 500, color: Ember.ink),
           items: [

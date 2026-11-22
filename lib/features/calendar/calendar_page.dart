@@ -16,8 +16,8 @@ import '../../ui/widgets.dart';
 import '../tasks/tasks_page.dart' show Segments;
 
 /// The colours of an event block (the design's "ev" tag).
-const _eventSoft = Color(0xFFE4EDFD);
-const _eventInk = Color(0xFF1F4FB8);
+Color get _eventSoft => Ember.blueBg;
+Color get _eventInk => Ember.blueInk;
 
 /// How tall one hour is on the time grid.
 const _hourHeight = 48.0;
@@ -500,7 +500,7 @@ class _MonthGrid extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(6, 6, 6, 4),
         decoration: BoxDecoration(
           border: Border(
-            top: const BorderSide(color: Ember.line),
+            top: BorderSide(color: Ember.line),
             left: BorderSide(
               color: day == picked ? Ember.ink : Colors.transparent,
               width: day == picked ? 2 : 0,
@@ -780,7 +780,7 @@ class _AllDay extends StatelessWidget {
   Widget _taskChip(Task task, {Key? key, required VoidCallback onTap}) => _Chip(
     key: key,
     label: task.title,
-    background: Ember.white,
+    background: Ember.surface,
     foreground: task.status == TaskStatus.done ? Ember.ink3 : Ember.ink,
     border: true,
     done: task.status == TaskStatus.done,
@@ -956,8 +956,8 @@ class _DayColumnState extends State<_DayColumn> {
                 Positioned.fill(
                   child: DecoratedBox(
                     decoration: BoxDecoration(
-                      color: isToday ? const Color(0xFFFBF6F2) : null,
-                      border: const Border(left: BorderSide(color: Ember.line)),
+                      color: isToday ? Ember.todayTint : null,
+                      border: Border(left: BorderSide(color: Ember.line)),
                     ),
                     child: CustomPaint(painter: _HourLines()),
                   ),
@@ -1199,7 +1199,7 @@ class _DayColumnState extends State<_DayColumn> {
       ),
     );
     return Material(
-      color: Ember.white,
+      color: Ember.surface,
       borderRadius: BorderRadius.circular(6),
       child: !tap
           ? content
@@ -1222,7 +1222,7 @@ class _DayColumnState extends State<_DayColumn> {
         decoration: BoxDecoration(
           color: Ember.neutral,
           borderRadius: BorderRadius.circular(6),
-          border: const Border(left: BorderSide(color: Ember.ink, width: 3)),
+          border: Border(left: BorderSide(color: Ember.ink, width: 3)),
         ),
         child: ClipRect(
           child: Text(

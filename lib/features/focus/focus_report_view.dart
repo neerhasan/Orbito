@@ -765,7 +765,7 @@ class _GoalButton extends ConsumerWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          color: Ember.white,
+          color: Ember.surface,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: Ember.line),
         ),
@@ -929,7 +929,7 @@ class _NoData extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 28),
       child: Column(
         children: [
-          const Icon(Icons.inventory_2_outlined, color: Ember.ink3, size: 28),
+          Icon(Icons.inventory_2_outlined, color: Ember.ink3, size: 28),
           const SizedBox(height: 6),
           Text('No focus in this period', style: Ember.meta),
         ],
