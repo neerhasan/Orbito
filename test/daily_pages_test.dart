@@ -300,15 +300,16 @@ void main() {
       expect(find.text('Write the plan'), findsOneWidget);
       expect(find.text('of 45:00'), findsOneWidget);
 
+      // The countdown shows the time left.
       await _wait(tester, const Duration(minutes: 5));
-      expect(find.text('05:00'), findsOneWidget);
+      expect(find.text('40:00'), findsOneWidget);
 
       // Paused time is not counted.
       await _tap(tester, 'focus-pause');
       await _settle(tester);
       expect(find.textContaining('Paused'), findsOneWidget);
       await _wait(tester, const Duration(minutes: 10));
-      expect(find.text('05:00'), findsOneWidget);
+      expect(find.text('40:00'), findsOneWidget);
       await _tap(tester, 'focus-pause');
       await _settle(tester);
 
@@ -321,7 +322,7 @@ void main() {
       await _wait(tester, const Duration(minutes: 2));
       await _tap(tester, 'focus-pill');
       await _settle(tester);
-      expect(find.text('07:00'), findsOneWidget);
+      expect(find.text('38:00'), findsOneWidget);
 
       await _tap(tester, 'focus-stop');
       await _settle(tester);
@@ -376,6 +377,116 @@ void main() {
         () => _focus.watchSessions(_user).first,
       );
       expect(sessions.single.focusSeconds, 3 * 60);
+    });
+
+    _testPage('a countdown ends with a break; a stopwatch counts up', (
+      tester,
+    ) async {
+      final task = await _read(
+        tester,
+        () => _tasks.addTask(userId: _user, title: 'Read'),
+      );
+      await _pumpApp(tester);
+      await _tap(tester, 'menu-focus');
+      await _settle(tester);
+
+      // Pick the task, then start: 25 minutes by default.
+      await _tap(tester, 'focus-pick-$task');
+      expect(find.byKey(const Key('focus-picked')), findsOneWidget);
+      expect(find.text('25:00'), findsOneWidget);
+      await _tap(tester, 'focus-start');
+      await _settle(tester);
+      expect(find.byKey(const Key('focus-mode')), findsOneWidget);
+
+      // Past the end the clock stops at 00:00 and a break is offered.
+      await _wait(tester, const Duration(minutes: 40));
+      expect(find.text('00:00'), findsOneWidget);
+      expect(find.text('Time is up'), findsOneWidget);
+      await _tap(tester, 'focus-fullscreen');
+      await _tap(tester, 'focus-break');
+      await _settle(tester);
+      final saved = await _read(tester, () => _focus.watchSessions(_user).first);
+      expect(saved.single.focusSeconds, 25 * 60);
+
+      // Back on the Focus page, the break counts down; it can be skipped.
+      expect(find.byKey(const Key('focus-mode')), findsNothing);
+      expect(find.text('Break · rest your eyes'), findsOneWidget);
+      expect(find.byKey(Key('focus-record-${saved.single.id}')), findsOneWidget);
+      await _tap(tester, 'focus-break-skip');
+      expect(find.byKey(const Key('focus-start')), findsOneWidget);
+
+      // A stopwatch has no end.
+      await _tap(tester, 'focus-stopwatch-true');
+      expect(find.text('00:00'), findsOneWidget);
+      await _tap(tester, 'focus-start');
+      await _settle(tester);
+      await _wait(tester, const Duration(minutes: 30));
+      expect(find.text('30:00'), findsOneWidget);
+      expect(find.text('Stopwatch'), findsOneWidget);
+    });
+
+    _testPage('the report shows the numbers and the goal can change', (
+      tester,
+    ) async {
+      final task = await _read(
+        tester,
+        () => _tasks.addTask(userId: _user, title: 'Plan'),
+      );
+      await _read(tester, () => _focus.start(userId: _user, taskId: task));
+      _clock = _clock.add(const Duration(minutes: 70));
+      await _read(tester, () => _focus.stop(completeTask: true));
+      await _pumpPage(tester, AppPage.focus);
+
+      await _tap(tester, 'focus-report');
+      await _settle(tester);
+      expect(find.text('Focus report'), findsOneWidget);
+      for (final key in ['report-total', 'report-week', 'report-today']) {
+        expect(
+          find.descendant(
+            of: find.byKey(Key(key)),
+            matching: find.text('1h 10m'),
+          ),
+          findsOneWidget,
+        );
+      }
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('report-done-today')),
+          matching: find.text('1'),
+        ),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('report-row-2026-11-13')), findsOneWidget);
+      expect(find.text('Total focus time: 1h 10m'), findsOneWidget);
+      expect(find.text('No project'), findsWidgets);
+      expect(find.text('Nov 9 to 15, 2026'), findsOneWidget);
+      expect(find.text('Goal: 4h'), findsOneWidget);
+      expect(
+        find.text('Focus days: 1 · Goal days: 0 · Goal rate: 0%'),
+        findsOneWidget,
+      );
+
+      // A lower goal: the day now reaches it.
+      await _tap(tester, 'report-goal');
+      await tester.pump(const Duration(milliseconds: 500));
+      await _tap(tester, 'report-goal-60');
+      await tester.pump(const Duration(milliseconds: 500));
+      await _settle(tester);
+      expect(find.text('Goal: 1h'), findsOneWidget);
+      expect(
+        find.text('Focus days: 1 · Goal days: 1 · Goal rate: 8%'),
+        findsOneWidget,
+      );
+
+      // Periods move with the arrows.
+      await _tap(tester, 'report-period-FocusPeriod.month');
+      expect(find.text('November 2026'), findsWidgets);
+      await _tap(tester, 'report-prev');
+      expect(find.text('October 2026'), findsOneWidget);
+      expect(find.text('No focus in this period'), findsWidgets);
+
+      await _tap(tester, 'focus-report-back');
+      expect(find.byKey(const Key('focus-start')), findsOneWidget);
     });
   });
 

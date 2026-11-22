@@ -27,6 +27,14 @@ void setUpWindow() {
   window.title = 'Orbito';
 }
 
+/// Puts the window in full screen or takes it out. Does nothing in tests
+/// or where Orbito keeps the system frame.
+void setWindowFullScreen(bool on) {
+  final window = _window;
+  if (window == null) return;
+  if (window.isFullScreen != on) window.isFullScreen = on;
+}
+
 /// Makes [child] move the window when dragged, and maximise or restore it
 /// on a double click. Buttons inside still work as before.
 class WindowDragArea extends StatelessWidget {

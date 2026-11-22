@@ -9,10 +9,13 @@ import '../../app/providers.dart';
 import '../../data/local/app_database.dart';
 import '../../domain/dates.dart';
 import '../../domain/focus.dart';
-import '../../domain/sleep.dart' show formatTime, timeOf;
+import '../../domain/focus_report.dart';
 import '../../ui/ember.dart';
 import '../../ui/motion.dart';
 import '../../ui/widgets.dart';
+import '../../ui/window_frame.dart';
+import 'focus_parts.dart';
+import 'focus_report_view.dart';
 
 /// Redraws its widget once a second while it is shown, so a clock moves.
 mixin _EverySecond<T extends StatefulWidget> on State<T> {
@@ -33,13 +36,6 @@ mixin _EverySecond<T extends StatefulWidget> on State<T> {
   }
 }
 
-/// `9:05 AM` from a stored time.
-String _clockOf(String stored) {
-  final moment = parseStoredTime(stored);
-  if (moment == null) return '';
-  return formatTime(timeOf(moment.hour * 60 + moment.minute));
-}
-
 /// Starts a session and tells the user when that fails.
 Future<void> startFocus(
   BuildContext context,
@@ -49,6 +45,7 @@ Future<void> startFocus(
 }) async {
   final userId = ref.read(userIdProvider);
   if (userId == null) return;
+  ref.read(focusBreakProvider.notifier).end();
   try {
     await ref
         .read(focusRepositoryProvider)
@@ -60,8 +57,30 @@ Future<void> startFocus(
   }
 }
 
-/// The Focus page while no timer runs: pick a task (or none), pick a
-/// planned length, start. Today's sessions are listed below.
+/// How long a break after a countdown lasts.
+const focusBreakLength = Duration(minutes: 5);
+
+/// The end of the running break, or null when there is none. A break is
+/// kept only while the app is open and is never saved as focus.
+class FocusBreak extends Notifier<DateTime?> {
+  @override
+  DateTime? build() => null;
+
+  void start(DateTime now) => state = now.add(focusBreakLength);
+
+  void end() => state = null;
+}
+
+final focusBreakProvider = NotifierProvider<FocusBreak, DateTime?>(
+  FocusBreak.new,
+);
+
+/// The countdown lengths offered, in minutes.
+const _lengths = [25, 45, 60, 90];
+
+/// The Focus page while no timer runs: the timer in the middle (countdown
+/// or stopwatch), today's tasks and records on the right, and the report
+/// one tap away.
 class FocusPage extends ConsumerStatefulWidget {
   const FocusPage({super.key});
 
@@ -70,25 +89,48 @@ class FocusPage extends ConsumerStatefulWidget {
 }
 
 class _FocusPageState extends ConsumerState<FocusPage> {
-  int? _target = 25;
+  var _stopwatch = false;
+  var _length = 25;
+  String? _picked;
+  var _report = false;
+  var _allTasks = false;
+
+  int? get _target => _stopwatch ? null : _length;
+
+  Future<void> _complete(Task task) async {
+    try {
+      await ref.read(taskRepositoryProvider).setDone(task.id, done: true);
+      if (_picked == task.id) setState(() => _picked = null);
+      if (mounted) showMessage(context, 'Done: ${task.title}');
+    } catch (error) {
+      if (mounted) showMessage(context, 'Could not save. ($error)');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_report) {
+      return FocusReportView(onBack: () => setState(() => _report = false));
+    }
     final tasks = ref.watch(tasksProvider).value ?? const <Task>[];
     final projects = ref.watch(projectsProvider).value ?? const <Project>[];
     final sessions =
         ref.watch(focusSessionsProvider).value ?? const <FocusSession>[];
     final today = dayKey(ref.watch(clockProvider)());
-    final byTask = secondsByTask(sessions);
+    final tasksById = {for (final task in tasks) task.id: task};
+    final projectsById = {for (final project in projects) project.id: project};
+    final todaySessions = sessionsOn(sessions, today);
+    final todaySeconds = totalSeconds(todaySessions);
+    final sessionsToday = <String, int>{};
+    for (final session in todaySessions) {
+      final id = session.taskId;
+      if (id != null) sessionsToday[id] = (sessionsToday[id] ?? 0) + 1;
+    }
+    // Tasks due soonest first; tasks with no date last.
     final open = tasks.where((task) => task.status != TaskStatus.done).toList()
       ..sort((a, b) => (a.dueDate ?? '9999').compareTo(b.dueDate ?? '9999'));
-    final todaySessions = sessionsOn(sessions, today);
-    final todaySeconds = todaySessions.fold<int>(
-      0,
-      (sum, session) => sum + session.focusSeconds,
-    );
-    Task? taskOf(String? id) =>
-        tasks.where((task) => task.id == id).firstOrNull;
+    final picked = tasksById[_picked];
+    final shownTasks = _allTasks ? open : open.take(8).toList();
 
     return PageLayout(
       main: [
@@ -99,64 +141,123 @@ class _FocusPageState extends ConsumerState<FocusPage> {
               child: PageHeader(
                 title: 'Focus',
                 subtitle:
-                    'Pick a task. Its time adds to the task and its project.',
+                    'Pick a task, then start. Its time adds to the '
+                    'task and its project.',
               ),
             ),
             Padding(
               padding: const EdgeInsets.only(top: 8),
-              child: OutlinedButton.icon(
-                key: const Key('focus-start-free'),
-                onPressed: () =>
-                    startFocus(context, ref, targetMinutes: _target),
-                icon: const Icon(Icons.play_arrow_rounded, size: 18),
-                label: const Text('Start without a task'),
+              child: SoftButton(
+                key: const Key('focus-report'),
+                label: 'Report',
+                icon: Icons.insights_outlined,
+                onPressed: () => setState(() => _report = true),
               ),
             ),
           ],
         ),
-        Row(
+        Wrap(
+          spacing: 12,
+          runSpacing: 8,
+          alignment: WrapAlignment.center,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            Text('Planned length', style: Ember.meta),
-            const SizedBox(width: 12),
-            Segmented<int?>(
-              keyPrefix: 'focus-length',
-              value: _target,
-              options: [
-                for (final minutes in targetChoices)
-                  (minutes, minutes == null ? 'No limit' : '${minutes}m'),
-              ],
-              onChanged: (value) => setState(() => _target = value),
+            Segmented<bool>(
+              keyPrefix: 'focus-stopwatch',
+              value: _stopwatch,
+              options: const [(false, 'Countdown'), (true, 'Stopwatch')],
+              onChanged: (value) => setState(() => _stopwatch = value),
             ),
+            if (!_stopwatch)
+              Segmented<int>(
+                keyPrefix: 'focus-length',
+                value: _length,
+                options: [for (final m in _lengths) (m, '${m}m')],
+                onChanged: (value) => setState(() => _length = value),
+              ),
           ],
         ),
-        if (open.isEmpty)
-          const EmptyHint(
-            title: 'No open tasks',
-            text: 'Start without a task, or add one first.',
-          )
-        else
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              for (final task in open.take(12))
+        Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: _PickedTask(
+              task: picked,
+              project: projectsById[picked?.projectId],
+              sessionsToday: sessionsToday[picked?.id] ?? 0,
+              onClear: () => setState(() => _picked = null),
+            ),
+          ),
+        ),
+        _ReadyTimer(
+          target: _target,
+          taskPicked: picked != null,
+          onStart: () => startFocus(
+            context,
+            ref,
+            taskId: picked?.id,
+            targetMinutes: _target,
+          ),
+          onStartFree: () => startFocus(context, ref, targetMinutes: _target),
+        ),
+      ],
+      rail: [
+        StatTile(
+          key: const Key('focus-today-stat'),
+          label: 'Focus time today',
+          value: formatWorked(todaySeconds),
+          detail: countOf(todaySessions.length, 'session'),
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SectionHeader(
+              icon: Icons.checklist_rounded,
+              title: 'Tasks',
+              trailing: Text(
+                countOf(open.length, 'open task'),
+                style: Ember.meta,
+              ),
+            ),
+            if (open.isEmpty)
+              const EmptyHint(
+                title: 'No open tasks',
+                text: 'Start without a task, or add one first.',
+              )
+            else ...[
+              for (final task in shownTasks)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 6),
-                  child: _TaskToStart(
+                  child: FocusTaskRow(
                     task: task,
-                    project: projects
-                        .where((project) => project.id == task.projectId)
-                        .firstOrNull,
-                    seconds: byTask[task.id] ?? 0,
+                    project: projectsById[task.projectId],
+                    sessionsToday: sessionsToday[task.id] ?? 0,
+                    picked: task.id == _picked,
+                    onPick: () => setState(
+                      () => _picked = _picked == task.id ? null : task.id,
+                    ),
                     onStart: () => startFocus(
                       context,
                       ref,
                       taskId: task.id,
                       targetMinutes: _target,
                     ),
+                    onDone: () => _complete(task),
+                  ),
+                ),
+              if (open.length > 8)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton(
+                    key: const Key('focus-tasks-more'),
+                    onPressed: () => setState(() => _allTasks = !_allTasks),
+                    child: Text(
+                      _allTasks ? 'Show fewer' : 'Show all ${open.length}',
+                    ),
                   ),
                 ),
             ],
-          ),
+          ],
+        ),
         Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -170,39 +271,12 @@ class _FocusPageState extends ConsumerState<FocusPage> {
                 style: Ember.meta,
               ),
             ),
-            if (todaySessions.isEmpty)
-              Text('No sessions yet today.', style: Ember.meta)
-            else
-              for (final session in todaySessions)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
-                  child: Tile(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 10,
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            taskOf(session.taskId)?.title ?? 'No task',
-                            overflow: TextOverflow.ellipsis,
-                            style: Ember.item.copyWith(color: Ember.ink),
-                          ),
-                        ),
-                        Text(_clockOf(session.startedAt), style: Ember.meta),
-                        SizedBox(
-                          width: 70,
-                          child: Text(
-                            formatWorked(session.focusSeconds),
-                            textAlign: TextAlign.right,
-                            style: Ember.item.copyWith(color: Ember.ink),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+            FocusDayRecords(
+              sessions: todaySessions,
+              day: today,
+              tasks: tasksById,
+              projects: projectsById,
+            ),
           ],
         ),
       ],
@@ -210,57 +284,170 @@ class _FocusPageState extends ConsumerState<FocusPage> {
   }
 }
 
-class _TaskToStart extends StatelessWidget {
-  const _TaskToStart({
+/// The task the next session is for, above the timer.
+class _PickedTask extends StatelessWidget {
+  const _PickedTask({
     required this.task,
     required this.project,
-    required this.seconds,
-    required this.onStart,
+    required this.sessionsToday,
+    required this.onClear,
   });
 
-  final Task task;
+  final Task? task;
   final Project? project;
-  final int seconds;
-  final VoidCallback onStart;
+  final int sessionsToday;
+  final VoidCallback onClear;
 
   @override
   Widget build(BuildContext context) {
+    final task = this.task;
+    if (task == null) {
+      return Text(
+        'No task picked. Pick one on the right, or start without one.',
+        key: const Key('focus-picked-none'),
+        textAlign: TextAlign.center,
+        style: Ember.meta,
+      );
+    }
+    final swatch = project == null
+        ? noProjectSwatch
+        : ProjectColors.of(project!.color);
     return Tile(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      key: const Key('focus-picked'),
+      padding: const EdgeInsets.fromLTRB(14, 8, 4, 8),
       child: Row(
         children: [
-          Expanded(
-            child: Text(
-              task.title,
-              overflow: TextOverflow.ellipsis,
-              style: Ember.item.copyWith(color: Ember.ink),
-            ),
-          ),
-          if (project != null) ...[
-            NameChip(
-              label: project!.name,
-              swatch: ProjectColors.of(project!.color),
-              icon: ItemIcons.of(project!.icon),
-            ),
-            const SizedBox(width: 10),
-          ],
-          SizedBox(
-            width: 64,
-            child: Text(
-              seconds == 0 ? '' : formatWorked(seconds),
-              textAlign: TextAlign.right,
-              style: Ember.meta,
-            ),
-          ),
+          ColorDot(swatch.dot),
           const SizedBox(width: 10),
-          FilledButton.icon(
-            key: Key('focus-start-${task.id}'),
-            onPressed: onStart,
-            icon: const Icon(Icons.play_arrow_rounded, size: 18),
-            label: const Text('Start'),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  task.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Ember.item.copyWith(color: Ember.ink),
+                ),
+                if (project != null || sessionsToday > 0) ...[
+                  const SizedBox(height: 3),
+                  Row(
+                    children: [
+                      if (project != null)
+                        Text(
+                          project!.name,
+                          style: Ember.text(11, 13, color: swatch.text),
+                        ),
+                      if (project != null && sessionsToday > 0)
+                        const SizedBox(width: 8),
+                      SessionDots(count: sessionsToday, color: swatch.dot),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+          IconButton(
+            key: const Key('focus-unpick'),
+            tooltip: 'Clear the task',
+            visualDensity: VisualDensity.compact,
+            onPressed: onClear,
+            icon: const Icon(Icons.close, size: 16),
+            color: Ember.ink2,
           ),
         ],
       ),
+    );
+  }
+}
+
+/// The ring before a session starts: the length that will count down (or
+/// 00:00 for a stopwatch), or a running break after a countdown.
+class _ReadyTimer extends ConsumerStatefulWidget {
+  const _ReadyTimer({
+    required this.target,
+    required this.taskPicked,
+    required this.onStart,
+    required this.onStartFree,
+  });
+
+  final int? target;
+  final bool taskPicked;
+  final VoidCallback onStart;
+  final VoidCallback onStartFree;
+
+  @override
+  ConsumerState<_ReadyTimer> createState() => _ReadyTimerState();
+}
+
+class _ReadyTimerState extends ConsumerState<_ReadyTimer> with _EverySecond {
+  @override
+  Widget build(BuildContext context) {
+    final breakEnds = ref.watch(focusBreakProvider);
+    final now = ref.watch(clockProvider)();
+    final target = widget.target;
+    final onBreak = breakEnds != null && now.isBefore(breakEnds);
+    final breakOver = breakEnds != null && !onBreak;
+
+    final String clock;
+    final String below;
+    var fill = 0.0;
+    if (onBreak) {
+      final left = breakEnds.difference(now).inMilliseconds;
+      clock = formatClock(left + 999);
+      below = 'Break · rest your eyes';
+      fill = 1 - left / focusBreakLength.inMilliseconds;
+    } else {
+      clock = target == null ? '00:00' : formatClock(target * 60000);
+      below = breakOver
+          ? 'Break is over'
+          : target == null
+          ? 'Stopwatch'
+          : 'Countdown';
+    }
+
+    return Column(
+      children: [
+        _Ring(
+          fill: fill,
+          running: onBreak,
+          clock: clock,
+          below: below,
+          dark: false,
+          breath: null,
+        ),
+        const SizedBox(height: 18),
+        if (onBreak)
+          OutlinedButton(
+            key: const Key('focus-break-skip'),
+            onPressed: () => ref.read(focusBreakProvider.notifier).end(),
+            child: const Text('Skip the break'),
+          )
+        else
+          Wrap(
+            spacing: 10,
+            runSpacing: 8,
+            alignment: WrapAlignment.center,
+            children: [
+              FilledButton.icon(
+                key: const Key('focus-start'),
+                style: FilledButton.styleFrom(minimumSize: const Size(0, 44)),
+                onPressed: widget.onStart,
+                icon: const Icon(Icons.play_arrow_rounded, size: 20),
+                label: const Text('Start to focus'),
+              ),
+              if (widget.taskPicked)
+                OutlinedButton(
+                  key: const Key('focus-start-free'),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(0, 44),
+                  ),
+                  onPressed: widget.onStartFree,
+                  child: const Text('Start without a task'),
+                ),
+            ],
+          ),
+      ],
     );
   }
 }
@@ -286,6 +473,9 @@ class _FocusModeViewState extends ConsumerState<FocusModeView>
     duration: const Duration(milliseconds: 2600),
   );
 
+  /// True while the window fills the whole screen.
+  var _fullScreen = false;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -296,8 +486,29 @@ class _FocusModeViewState extends ConsumerState<FocusModeView>
 
   @override
   void dispose() {
+    // Never leave the user stuck in full screen.
+    if (_fullScreen) setWindowFullScreen(false);
     _breath.dispose();
     super.dispose();
+  }
+
+  void _setFullScreen(bool on) {
+    setWindowFullScreen(on);
+    setState(() => _fullScreen = on);
+  }
+
+  /// Esc leaves full screen first, then focus mode.
+  void _escape() {
+    if (_fullScreen) {
+      _setFullScreen(false);
+    } else {
+      widget.onExit();
+    }
+  }
+
+  void _exit() {
+    if (_fullScreen) _setFullScreen(false);
+    widget.onExit();
   }
 
   Future<void> _togglePause() async {
@@ -308,7 +519,11 @@ class _FocusModeViewState extends ConsumerState<FocusModeView>
     }
   }
 
-  Future<void> _stop({required bool completeTask}) async {
+  Future<void> _stop({
+    required bool completeTask,
+    bool takeBreak = false,
+  }) async {
+    if (_fullScreen) _setFullScreen(false);
     int? saved;
     try {
       saved = await ref
@@ -317,6 +532,9 @@ class _FocusModeViewState extends ConsumerState<FocusModeView>
     } catch (error) {
       if (mounted) showMessage(context, 'Could not stop. ($error)');
       return;
+    }
+    if (takeBreak) {
+      ref.read(focusBreakProvider.notifier).start(ref.read(clockProvider)());
     }
     if (!mounted) return;
     showMessage(
@@ -336,34 +554,38 @@ class _FocusModeViewState extends ConsumerState<FocusModeView>
     final sessions =
         ref.watch(focusSessionsProvider).value ?? const <FocusSession>[];
     final now = ref.watch(clockProvider)();
-    final task = tasks.where((t) => t.id == timer.taskId).firstOrNull;
-    final project = projects.where((p) => p.id == task?.projectId).firstOrNull;
+    final today = dayKey(now);
+    final tasksById = {for (final task in tasks) task.id: task};
+    final projectsById = {for (final project in projects) project.id: project};
+    final task = tasksById[timer.taskId];
+    final project = projectsById[task?.projectId];
     final goal = goals.where((g) => g.id == project?.goalId).firstOrNull;
     final worked = workedMs(timer, now);
     final running = isRunning(timer);
     final target = timer.targetMinutes;
     final targetMs = target == null ? null : target * 60000;
-    final started = _clockOf(timer.startedAt);
-    // With a planned length the ring fills towards it; without one it
-    // makes one turn per hour.
+    final started = clockOfStored(timer.startedAt);
+    // A countdown fills towards its length and shows the time left; a
+    // stopwatch makes one turn per hour and shows the time worked.
     final fill = targetMs == null
         ? (worked % 3600000) / 3600000
         : math.min(1.0, worked / targetMs);
     final reached = targetMs != null && worked >= targetMs;
+    final left = remainingMs(timer, now);
+    final clock = left == null ? formatClock(worked) : formatClock(left);
     final onTask = secondsByTask(sessions)[task?.id] ?? 0;
+    final todaySessions = sessionsOn(sessions, today);
     final String below;
     if (reached) {
-      below = 'Planned length reached';
+      below = 'Time is up';
     } else if (targetMs == null) {
-      below = running ? 'No planned length' : 'Paused';
+      below = running ? 'Stopwatch' : 'Paused';
     } else {
       below = '${running ? '' : 'Paused · '}of ${formatClock(targetMs)}';
     }
 
     return CallbackShortcuts(
-      bindings: {
-        const SingleActivator(LogicalKeyboardKey.escape): widget.onExit,
-      },
+      bindings: {const SingleActivator(LogicalKeyboardKey.escape): _escape},
       child: Focus(
         autofocus: true,
         child: Scaffold(
@@ -395,8 +617,26 @@ class _FocusModeViewState extends ConsumerState<FocusModeView>
                       ),
                       const Spacer(),
                       TextButton.icon(
+                        key: const Key('focus-fullscreen'),
+                        onPressed: () => _setFullScreen(!_fullScreen),
+                        style: TextButton.styleFrom(
+                          backgroundColor: Ember.raised,
+                          foregroundColor: Ember.onShell,
+                        ),
+                        icon: Icon(
+                          _fullScreen
+                              ? Icons.fullscreen_exit_rounded
+                              : Icons.fullscreen_rounded,
+                          size: 18,
+                        ),
+                        label: Text(
+                          _fullScreen ? 'Leave full screen' : 'Full screen',
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      TextButton.icon(
                         key: const Key('focus-exit'),
-                        onPressed: widget.onExit,
+                        onPressed: _exit,
                         style: TextButton.styleFrom(
                           backgroundColor: Ember.raised,
                           foregroundColor: Ember.onShell,
@@ -447,11 +687,36 @@ class _FocusModeViewState extends ConsumerState<FocusModeView>
                                 _Ring(
                                   fill: fill,
                                   breath: _breath,
-                                  running: running,
-                                  clock: formatClock(worked),
+                                  running: running && !reached,
+                                  clock: clock,
                                   below: below,
+                                  dark: true,
                                 ),
                                 const SizedBox(height: 26),
+                                if (reached) ...[
+                                  FilledButton.icon(
+                                    key: const Key('focus-break'),
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: Ember.white,
+                                      foregroundColor: Ember.ink,
+                                      minimumSize: const Size(0, 44),
+                                    ),
+                                    onPressed: () => _stop(
+                                      completeTask: false,
+                                      takeBreak: true,
+                                    ),
+                                    icon: const Icon(
+                                      Icons.free_breakfast_outlined,
+                                      size: 18,
+                                    ),
+                                    label: Text(
+                                      'Save and take a '
+                                      '${focusBreakLength.inMinutes}-minute '
+                                      'break',
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                ],
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
@@ -471,11 +736,13 @@ class _FocusModeViewState extends ConsumerState<FocusModeView>
                                       label: const Text('Stop and save'),
                                     ),
                                     const SizedBox(width: 12),
-                                    _PauseButton(
-                                      running: running,
-                                      onTap: _togglePause,
-                                    ),
-                                    const SizedBox(width: 12),
+                                    if (!reached) ...[
+                                      _PauseButton(
+                                        running: running,
+                                        onTap: _togglePause,
+                                      ),
+                                      const SizedBox(width: 12),
+                                    ],
                                     if (task != null)
                                       FilledButton.icon(
                                         key: const Key('focus-done'),
@@ -499,7 +766,12 @@ class _FocusModeViewState extends ConsumerState<FocusModeView>
                                     maxWidth: 440,
                                   ),
                                   child: Text(
-                                    task == null
+                                    reached
+                                        ? 'The countdown is over. The '
+                                              'planned '
+                                              '${formatWorked(target! * 60)} '
+                                              'is what gets saved.'
+                                        : task == null
                                         ? 'Stop and save keeps this time as '
                                               'a session without a task.'
                                         : 'Stop and save keeps the task open '
@@ -526,13 +798,32 @@ class _FocusModeViewState extends ConsumerState<FocusModeView>
                             children: [
                               _SessionSummary(
                                 started: started,
-                                worked: worked,
+                                worked: savedMs(timer, now),
                                 running: running,
                                 onTaskBefore: onTask,
                                 hasTask: task != null,
                               ),
                               if (task != null)
                                 _QuickNote(key: ValueKey(task.id), task: task),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  SectionHeader(
+                                    icon: Icons.schedule,
+                                    title: 'Today',
+                                    trailing: Text(
+                                      formatWorked(totalSeconds(todaySessions)),
+                                      style: Ember.meta,
+                                    ),
+                                  ),
+                                  FocusDayRecords(
+                                    sessions: todaySessions,
+                                    day: today,
+                                    tasks: tasksById,
+                                    projects: projectsById,
+                                  ),
+                                ],
+                              ),
                             ],
                           ),
                         ),
@@ -575,8 +866,9 @@ class _DarkTag extends StatelessWidget {
   }
 }
 
-/// The big ring with the clock. The orange arc flows smoothly as time
-/// passes, and a soft glow breathes behind it while the clock runs.
+/// The big ring with the clock and a circle of small ticks. The orange arc
+/// flows smoothly as time passes, and a soft glow breathes behind it while
+/// the clock runs. [dark] is for focus mode; otherwise it sits on paper.
 class _Ring extends StatelessWidget {
   const _Ring({
     required this.fill,
@@ -584,23 +876,27 @@ class _Ring extends StatelessWidget {
     required this.running,
     required this.clock,
     required this.below,
+    required this.dark,
   });
 
   final double fill;
-  final Animation<double> breath;
+  final Animation<double>? breath;
   final bool running;
   final String clock;
   final String below;
+  final bool dark;
 
   @override
   Widget build(BuildContext context) {
+    final breath = this.breath;
+    final idleInk = dark ? Ember.onShell3 : Ember.ink;
     return SizedBox(
       width: 300,
       height: 300,
       child: Stack(
         alignment: Alignment.center,
         children: [
-          if (running)
+          if (running && breath != null)
             AnimatedBuilder(
               animation: breath,
               builder: (context, _) {
@@ -626,7 +922,11 @@ class _Ring extends StatelessWidget {
             curve: Curves.linear,
             builder: (context, value, _) => CustomPaint(
               size: const Size(300, 300),
-              painter: _RingPainter(value),
+              painter: _RingPainter(
+                value,
+                track: dark ? Ember.raised : Ember.tile,
+                ticks: dark ? Ember.shellLine : Ember.line,
+              ),
             ),
           ),
           Column(
@@ -639,7 +939,7 @@ class _Ring extends StatelessWidget {
                   60,
                   66,
                   weight: 700,
-                  color: running ? Ember.now : Ember.onShell3,
+                  color: running ? Ember.now : idleInk,
                   letterSpacing: -0.04,
                 ),
                 child: Text(
@@ -653,7 +953,12 @@ class _Ring extends StatelessWidget {
               const SizedBox(height: 6),
               Text(
                 below,
-                style: Ember.text(13, 16, weight: 400, color: Ember.onShell2),
+                style: Ember.text(
+                  13,
+                  16,
+                  weight: 400,
+                  color: dark ? Ember.onShell2 : Ember.ink2,
+                ),
               ),
             ],
           ),
@@ -664,19 +969,37 @@ class _Ring extends StatelessWidget {
 }
 
 class _RingPainter extends CustomPainter {
-  _RingPainter(this.fill);
+  _RingPainter(this.fill, {required this.track, required this.ticks});
 
   final double fill;
+  final Color track;
+  final Color ticks;
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = size.center(Offset.zero);
     final radius = size.width / 2 - 8;
+    // 60 small ticks just inside the ring, like a clock face.
+    final tick = Paint()
+      ..color = ticks
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round;
+    for (var i = 0; i < 60; i++) {
+      final angle = 2 * math.pi * i / 60 - math.pi / 2;
+      final direction = Offset(math.cos(angle), math.sin(angle));
+      final outer = radius - 14;
+      final inner = outer - (i % 5 == 0 ? 9 : 5);
+      canvas.drawLine(
+        center + direction * inner,
+        center + direction * outer,
+        tick,
+      );
+    }
     canvas.drawCircle(
       center,
       radius,
       Paint()
-        ..color = Ember.raised
+        ..color = track
         ..style = PaintingStyle.stroke
         ..strokeWidth = 6,
     );
@@ -695,7 +1018,8 @@ class _RingPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_RingPainter old) => old.fill != fill;
+  bool shouldRepaint(_RingPainter old) =>
+      old.fill != fill || old.track != track || old.ticks != ticks;
 }
 
 class _PauseButton extends StatelessWidget {
@@ -865,7 +1189,9 @@ class _FocusPillState extends ConsumerState<FocusPill> with _EverySecond {
     final tasks = ref.watch(tasksProvider).value ?? const <Task>[];
     final task = tasks.where((t) => t.id == timer.taskId).firstOrNull;
     final running = isRunning(timer);
-    final worked = workedMs(timer, ref.watch(clockProvider)());
+    final now = ref.watch(clockProvider)();
+    // A countdown shows the time left; a stopwatch the time worked.
+    final shown = remainingMs(timer, now) ?? workedMs(timer, now);
     // The title bar's timer (design: Titlebar.dc.html).
     return Appear(
       child: Material(
@@ -904,7 +1230,7 @@ class _FocusPillState extends ConsumerState<FocusPill> with _EverySecond {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    formatClock(worked),
+                    formatClock(shown),
                     style:
                         Ember.text(
                           13,
