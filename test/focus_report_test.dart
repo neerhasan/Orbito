@@ -65,10 +65,28 @@ void main() {
     };
     final sessions = [
       // Ran 9:00 to 10:00 with a pause: only 40 minutes count.
-      _session('1', start: _at(20, 9), end: _at(20, 10), minutes: 40, task: 'a'),
-      _session('2', start: _at(20, 11), end: _at(20, 11, 30), minutes: 30, task: 'b'),
+      _session(
+        '1',
+        start: _at(20, 9),
+        end: _at(20, 10),
+        minutes: 40,
+        task: 'a',
+      ),
+      _session(
+        '2',
+        start: _at(20, 11),
+        end: _at(20, 11, 30),
+        minutes: 30,
+        task: 'b',
+      ),
       _session('3', start: _at(19, 8), end: _at(19, 9), minutes: 60, task: 'a'),
-      _session('4', start: _at(20, 14), end: _at(20, 14, 20), minutes: 20, task: 'c'),
+      _session(
+        '4',
+        start: _at(20, 14),
+        end: _at(20, 14, 20),
+        minutes: 20,
+        task: 'c',
+      ),
       _session('5', start: _at(20, 15), end: _at(20, 15, 10), minutes: 10),
     ];
 
@@ -83,10 +101,7 @@ void main() {
     expect(byProject.first.key, 'p1');
     expect(byProject.first.value, 40 * 60);
     // A task with no project and no task at all both count as no project.
-    expect(
-      byProject.firstWhere((entry) => entry.key == null).value,
-      30 * 60,
-    );
+    expect(byProject.firstWhere((entry) => entry.key == null).value, 30 * 60);
 
     final byTask = secondsByTaskSorted(todays);
     expect(byTask.first.key, 'a');

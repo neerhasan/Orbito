@@ -37,33 +37,33 @@ void main() {
     expect(childrenOf(list, null).map((p) => p.id), [work, home]);
     expect(childrenOf(list, work).map((p) => p.id), [ideas, plans]);
     expect(pageTitle(pagesById(list)[home]!), 'Untitled');
-    expect(
-      pathTo(pagesById(list), plans).map((p) => p.id),
-      [work, plans],
-    );
+    expect(pathTo(pagesById(list), plans).map((p) => p.id), [work, plans]);
     expect(descendantsOf(list, work), {ideas, plans});
   });
 
-  test('content saves with a plain-text copy; icon, cover, favourite', () async {
-    final id = await pages.createPage(userId: 'u');
-    await pages.savePage(
-      id,
-      title: ' Visa ',
-      content: '{"document":{}}',
-      body: 'Ask about D-2',
-    );
-    await pages.setPageIcon(id, '🎓');
-    await pages.setPageCover(id, 'blue');
-    await pages.setFavorite(id, favorite: true);
+  test(
+    'content saves with a plain-text copy; icon, cover, favourite',
+    () async {
+      final id = await pages.createPage(userId: 'u');
+      await pages.savePage(
+        id,
+        title: ' Visa ',
+        content: '{"document":{}}',
+        body: 'Ask about D-2',
+      );
+      await pages.setPageIcon(id, '🎓');
+      await pages.setPageCover(id, 'blue');
+      await pages.setFavorite(id, favorite: true);
 
-    final page = (await all()).single;
-    expect(page.title, 'Visa');
-    expect(page.content, '{"document":{}}');
-    expect(page.body, 'Ask about D-2');
-    expect((page.icon, page.cover), ('🎓', 'blue'));
-    expect(favoritePages(await all()).single.id, id);
-    expect(searchPages(await all(), 'd-2').single.id, id);
-  });
+      final page = (await all()).single;
+      expect(page.title, 'Visa');
+      expect(page.content, '{"document":{}}');
+      expect(page.body, 'Ask about D-2');
+      expect((page.icon, page.cover), ('🎓', 'blue'));
+      expect(favoritePages(await all()).single.id, id);
+      expect(searchPages(await all(), 'd-2').single.id, id);
+    },
+  );
 
   test('a page cannot move inside itself or a page inside it', () async {
     final a = await pages.createPage(userId: 'u');
@@ -101,17 +101,20 @@ void main() {
     expect(childrenOf(list, a).single.id, b);
   });
 
-  test('a page restored while its parent is in the Trash goes to the top', () async {
-    final a = await pages.createPage(userId: 'u');
-    final b = await pages.createPage(userId: 'u', parentId: a);
-    await pages.trashPage(b);
-    await pages.trashPage(a);
+  test(
+    'a page restored while its parent is in the Trash goes to the top',
+    () async {
+      final a = await pages.createPage(userId: 'u');
+      final b = await pages.createPage(userId: 'u', parentId: a);
+      await pages.trashPage(b);
+      await pages.trashPage(a);
 
-    await pages.restorePage(b, userId: 'u');
-    final list = await all();
-    expect(childrenOf(list, null).single.id, b);
-    expect(trashedPages(list).single.id, a);
-  });
+      await pages.restorePage(b, userId: 'u');
+      final list = await all();
+      expect(childrenOf(list, null).single.id, b);
+      expect(trashedPages(list).single.id, a);
+    },
+  );
 
   test('delete forever removes the page and every page inside it', () async {
     final a = await pages.createPage(userId: 'u');

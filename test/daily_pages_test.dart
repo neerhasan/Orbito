@@ -405,13 +405,19 @@ void main() {
       await _tap(tester, 'focus-fullscreen');
       await _tap(tester, 'focus-break');
       await _settle(tester);
-      final saved = await _read(tester, () => _focus.watchSessions(_user).first);
+      final saved = await _read(
+        tester,
+        () => _focus.watchSessions(_user).first,
+      );
       expect(saved.single.focusSeconds, 25 * 60);
 
       // Back on the Focus page, the break counts down; it can be skipped.
       expect(find.byKey(const Key('focus-mode')), findsNothing);
       expect(find.text('Break · rest your eyes'), findsOneWidget);
-      expect(find.byKey(Key('focus-record-${saved.single.id}')), findsOneWidget);
+      expect(
+        find.byKey(Key('focus-record-${saved.single.id}')),
+        findsOneWidget,
+      );
       await _tap(tester, 'focus-break-skip');
       expect(find.byKey(const Key('focus-start')), findsOneWidget);
 

@@ -88,7 +88,9 @@ class _FocusReportViewState extends ConsumerState<FocusReportView> {
             StatTile(
               key: const Key('report-week'),
               label: 'Focus this week',
-              value: formatWorked(totalSeconds(sessionsIn(sessions, weekRange))),
+              value: formatWorked(
+                totalSeconds(sessionsIn(sessions, weekRange)),
+              ),
             ),
             StatTile(
               key: const Key('report-today'),
@@ -121,9 +123,7 @@ class _FocusReportViewState extends ConsumerState<FocusReportView> {
             key: const Key('report-records-more'),
             onPressed: () =>
                 setState(() => _recordDays = _recordDays == 14 ? 60 : 14),
-            child: Text(
-              _recordDays == 14 ? 'Show 60 days' : 'Show 14 days',
-            ),
+            child: Text(_recordDays == 14 ? 'Show 60 days' : 'Show 14 days'),
           ),
           child: _RecordsGrid(
             sessions: sessions,
@@ -669,8 +669,7 @@ class _StackedBars extends StatelessWidget {
               for (var i = 0; i < buckets.length; i++)
                 Expanded(
                   child: Tooltip(
-                    message:
-                        '${buckets[i].label}: ${formatWorked(totals[i])}',
+                    message: '${buckets[i].label}: ${formatWorked(totals[i])}',
                     child: Padding(
                       padding: EdgeInsets.symmetric(horizontal: many ? 1 : 4),
                       child: Column(
@@ -798,12 +797,7 @@ class _GoalCalendar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final stats = focusGoalStats(
-      byDay,
-      month,
-      goalMinutes: goal,
-      today: today,
-    );
+    final stats = focusGoalStats(byDay, month, goalMinutes: goal, today: today);
     final monthDate = parseDayKey(month)!;
     final days = monthGridDays(month);
     return Column(
@@ -851,9 +845,7 @@ class _GoalCalendar extends StatelessWidget {
           childAspectRatio: 1.15,
           children: [
             for (final name in weekdayShort)
-              Center(
-                child: Text(name.substring(0, 2), style: Ember.caption),
-              ),
+              Center(child: Text(name.substring(0, 2), style: Ember.caption)),
             for (final day in days)
               _GoalDay(
                 day: day,
@@ -904,9 +896,7 @@ class _GoalDay extends StatelessWidget {
           height: 30,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: reached
-                ? Border.all(color: Ember.green, width: 2)
-                : null,
+            border: reached ? Border.all(color: Ember.green, width: 2) : null,
           ),
           child: Stack(
             alignment: Alignment.center,
@@ -921,10 +911,7 @@ class _GoalDay extends StatelessWidget {
                 ),
               ),
               if (seconds > 0 && !reached)
-                Positioned(
-                  bottom: 2,
-                  child: ColorDot(Ember.ink3, size: 4),
-                ),
+                Positioned(bottom: 2, child: ColorDot(Ember.ink3, size: 4)),
             ],
           ),
         ),

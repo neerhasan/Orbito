@@ -38,8 +38,7 @@ List<Note> childrenOf(Iterable<Note> pages, String? parentId) {
   final byId = pagesById(pages);
   return pages
       .where(
-        (page) =>
-            page.trashedAt == null && shownParent(page, byId) == parentId,
+        (page) => page.trashedAt == null && shownParent(page, byId) == parentId,
       )
       .toList()
     ..sort(comparePages);
@@ -120,8 +119,7 @@ List<Note> searchPages(Iterable<Note> pages, String query) {
   final inText = visible
       .where(
         (page) =>
-            !inTitle.contains(page) &&
-            page.body.toLowerCase().contains(needle),
+            !inTitle.contains(page) && page.body.toLowerCase().contains(needle),
       )
       .toList();
   return [...inTitle, ...inText];

@@ -1,3 +1,4 @@
+import 'package:appflowy_editor/appflowy_editor.dart' hide Document;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -309,36 +310,85 @@ void main() {
   });
 
   group('pages', () {
-    _test('the Notes page writes a note linked to a project', (tester) async {
-      await _read(
-        tester,
-        () => _plan.addProject(userId: _user, name: 'Korea', color: 'blue'),
-      );
+    _test('Notes: a new page saves its title and blocks by itself', (
+      tester,
+    ) async {
       await _pump(tester, AppPage.notes);
-      expect(find.text('No notes yet'), findsOneWidget);
+      expect(find.text('No pages yet'), findsOneWidget);
 
-      await tester.enterText(find.byKey(const Key('note-title')), 'Visa');
-      await tester.enterText(find.byKey(const Key('note-body')), 'Ask D-2');
-      await _tap(tester, 'note-project');
-      await tester.pump();
-      await tester.tap(find.text('Korea').last);
-      await tester.pump();
-      await _tap(tester, 'note-save');
+      await _tap(tester, 'notes-empty-new');
+      await _settle(tester);
+      expect(find.byKey(const Key('page-editor')), findsOneWidget);
+      await tester.enterText(find.byKey(const Key('page-title')), 'Visa');
+
+      // Blocks are typed into the editor; here a to-do is added to it.
+      final editor = tester
+          .widget<AppFlowyEditor>(find.byType(AppFlowyEditor))
+          .editorState;
+      await tester.runAsync(
+        () => editor.apply(
+          editor.transaction
+            ..insertNode([1], todoListNode(checked: false, text: 'Ask D-2')),
+        ),
+      );
+      // It saves a moment after typing stops.
+      await tester.pump(const Duration(seconds: 1));
       await _settle(tester);
 
-      final notes = await _notes(tester);
-      expect(notes.single.title, 'Visa');
-      expect(notes.single.body, 'Ask D-2');
-      expect(notes.single.projectId, isNotNull);
-      expect(find.text('Edit note'), findsOneWidget);
+      final page = (await _notes(tester)).single;
+      expect(page.title, 'Visa');
+      expect(page.body, 'Ask D-2');
+      expect(page.content, contains('todo_list'));
     });
 
-    _test('an empty note is not saved', (tester) async {
+    _test('Notes: pages inside pages, favourites and the Trash', (
+      tester,
+    ) async {
+      // A note from before pages: its text opens as blocks.
+      final old = await _read(
+        tester,
+        () => _capture.addNote(
+          userId: _user,
+          title: 'Korea',
+          body: 'Visa\nFlights',
+        ),
+      );
       await _pump(tester, AppPage.notes);
-      await _tap(tester, 'note-save');
+      expect(find.text('Flights', findRichText: true), findsOneWidget);
+
+      // A page added inside it opens at once, under it.
+      await _tap(tester, 'page-add-inside');
       await _settle(tester);
-      expect(find.text('Write a title or some text.'), findsOneWidget);
-      expect(await _notes(tester), isEmpty);
+      var pages = await _notes(tester);
+      final inside = pages.firstWhere((page) => page.id != old);
+      expect(inside.parentId, old);
+      expect(find.byKey(Key('crumb-$old')), findsOneWidget);
+      expect(find.byKey(Key('page-row-${inside.id}')), findsOneWidget);
+
+      // Favourite.
+      await _tap(tester, 'page-favorite');
+      await _settle(tester);
+      expect(find.byKey(Key('favorite-${inside.id}')), findsOneWidget);
+
+      // The Trash: the parent goes, and the page inside with it.
+      await _tap(tester, 'crumb-$old');
+      await _settle(tester);
+      await _tap(tester, 'page-more');
+      await tester.pump(const Duration(milliseconds: 400));
+      await _tap(tester, 'page-action-trash');
+      await _settle(tester);
+      expect(find.text('No pages yet'), findsOneWidget);
+      expect(find.byKey(Key('favorite-${inside.id}')), findsNothing);
+
+      await _tap(tester, 'notes-trash');
+      await tester.pump(const Duration(milliseconds: 400));
+      await _tap(tester, 'trash-restore-$old');
+      await _settle(tester);
+      await _tap(tester, 'trash-close');
+      await tester.pump(const Duration(milliseconds: 400));
+      pages = await _notes(tester);
+      expect(pages.every((page) => page.trashedAt == null), isTrue);
+      expect(find.byKey(Key('page-row-$old')), findsOneWidget);
     });
 
     _test('Today: a click on a date shows the tasks due that day', (
