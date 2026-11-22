@@ -2,6 +2,13 @@
 
 Claude Code adds a new entry on top at the end of every session.
 
+### 2026-11-22 Focus page and Focus report (after the founder's inspiration images)
+- Done: the Focus page is now a timer page in Orbito's style: Countdown (25, 45, 60, 90 minutes) or Stopwatch; the picked task above a big ring with clock ticks; "Start to focus"; on the right, focus time today, the open tasks (done ring, project, one dot per session today, a start button; clicking a row picks it) and today's records (a 24-hour strip and one coloured row per session). In focus mode: Full screen (Esc leaves full screen first), the countdown shows the time left, and at 00:00 "Save and take a 5-minute break"; the break counts down on the Focus page and can be skipped. The title bar timer shows the time left of a countdown.
+- Focus report (the "Report" button): six numbers (total, this week, today; tasks done in total, this week, today); the records grid (rows Today, Yesterday, 20 Nov …, 0:00 to 24:00, 14 or 60 days); Daily, Weekly, Monthly or Yearly with arrows for: focus time by project or by task, project share (donut with names, %, time), focus by day (stacked bars with a legend); the focus goal ("Goal: 4h", change it from the button) with focus days, goal days, goal rate and a month calendar with a green ring on goal days.
+- Data: `supabase/012_focus_goal.sql` (applied on the server): `preferences.focus_goal_minutes`. Synced like the other settings; no sync config change. A countdown now saves at most its planned length (a timer left running, or the app closed, no longer adds hours that were not worked).
+- Not built: white noise (founder: skip for now; it needs a sound package), estimated sessions per task, long breaks.
+- Test results: flutter analyze: no issues. flutter test --concurrency=2: 213 passed (7 new in `test/focus_report_test.dart`, 1 repository, 1 goal setting, 2 Focus page; the first Focus test now expects the countdown).
+
 ### 2026-11-20 Side menu collapses to icons
 - Done: a collapse button («) at the right of "Orbito" in the top bar. Collapsed, the side menu slides to a 60 px rail: every page, life area, Settings and "+" for life areas is an icon button with its name as a tooltip; the sync status is a coloured dot (words in the tooltip); the top bar shows only the orange logo, and clicking the logo opens the menu again. The choice is kept while the app runs (it opens again on the next start).
 - Test results: flutter analyze: no issues. flutter test --concurrency=2: 202 passed (1 new). Windows release built and started: the collapse button seen on a screenshot; the collapsed rail checked by tests only (the founder was using the screen).
