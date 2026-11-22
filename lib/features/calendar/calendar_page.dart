@@ -25,8 +25,12 @@ const _hourHeight = 48.0;
 /// The width of the hour labels on the left of the time grid.
 const _gutter = 56.0;
 
-/// How long a task with a time looks on the grid.
+/// How long a task with a time takes when it has no length of its own.
 const _taskMinutes = 30;
+
+/// How long [task] takes on the grid.
+int _lengthOfTask(Task task) =>
+    math.max(15, task.durationMinutes ?? _taskMinutes);
 
 /// The last minute of a day (23:59): an event cannot end later.
 const _lastMinute = 23 * 60 + 59;
@@ -59,6 +63,7 @@ class _GridActions {
     required this.onMoveEvent,
     required this.onResizeEvent,
     required this.onScheduleTask,
+    required this.onResizeTask,
   });
 
   final void Function(String day, int minutes) onSlot;
@@ -71,6 +76,7 @@ class _GridActions {
   onResizeEvent;
   final Future<void> Function(Task task, String day, int? minutes)
   onScheduleTask;
+  final Future<void> Function(Task task, int start, int end) onResizeTask;
 }
 
 /// The Calendar page (design: `Calendar.dc.html`): a month view and a time
@@ -103,11 +109,19 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
   /// Bumps so the new-event form takes fresh values.
   var _serial = 0;
 
+  /// The month the small calendar on the left shows; null follows the view.
+  String? _miniMonth;
+
+  /// True while the event panel is open on the right (as in Notion
+  /// Calendar, it opens only for a new or a picked event).
+  var _formOpen = false;
+
   /// Starts a new event on [day], from [minutes] for an hour.
   void _newAt(String day, {int? minutes}) {
     setState(() {
       _day = day;
       _eventId = null;
+      _formOpen = true;
       if (minutes != null) {
         final from = math.min(minutes, 23 * 60);
         _start = timeOf(from);
@@ -122,6 +136,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
 
   void _openEvent(CalendarEvent event) => setState(() {
     _eventId = event.id == _eventId ? null : event.id;
+    _formOpen = _eventId != null;
     _day = event.day;
     _serial++;
   });
@@ -190,8 +205,43 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
             day: day,
             time: minutes == null
                 ? null
-                : timeOf(minutes.clamp(0, _lastMinute - _taskMinutes)),
+                : timeOf(minutes.clamp(0, _lastMinute - _lengthOfTask(task))),
           );
+    } catch (error) {
+      _report(error);
+    }
+  }
+
+  /// A task block's top or bottom edge was dragged: a new start, a new
+  /// length, or both.
+  Future<void> _resizeTask(Task task, int start, int end) async {
+    final repository = ref.read(taskRepositoryProvider);
+    try {
+      await repository.scheduleTask(
+        task.id,
+        day: task.dueDate!,
+        time: timeOf(start),
+      );
+      await repository.setTaskDuration(task.id, end - start);
+    } catch (error) {
+      _report(error);
+    }
+  }
+
+  /// A task dropped back on the task list: no date, no time.
+  Future<void> _unscheduleTask(Task task) async {
+    try {
+      await ref.read(taskRepositoryProvider).unscheduleTask(task.id);
+    } catch (error) {
+      _report(error);
+    }
+  }
+
+  Future<void> _completeTask(Task task) async {
+    try {
+      await ref
+          .read(taskRepositoryProvider)
+          .setDone(task.id, done: task.status != TaskStatus.done);
     } catch (error) {
       _report(error);
     }
@@ -227,7 +277,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
       sessions: sessions,
     );
 
-    return PageLayout(
+    final page = PageLayout(
       main: [
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -315,38 +365,61 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
               onMoveEvent: _moveEvent,
               onResizeEvent: _resizeEvent,
               onScheduleTask: _scheduleTask,
+              onResizeTask: _resizeTask,
             ),
           ),
       ],
-      rail: [
-        _DaySummary(
-          key: ValueKey('summary-$pickedDay'),
-          day: pickedDay,
-          today: today,
-          items: items,
-          onEvent: _openEvent,
-          onTask: _openTask,
-          onProject: _openProject,
+      rail: !_formOpen
+          ? null
+          : [
+              _EventForm(
+                key: ValueKey('form-${open?.id ?? 'new'}-$_serial'),
+                event: open,
+                day: pickedDay,
+                start: _start,
+                end: _end,
+                projects: projects,
+                defaultStart: _nextHour(now),
+                onSaved: (id) => setState(() {
+                  _eventId = id;
+                  _serial++;
+                }),
+                onClosed: () => setState(() {
+                  _eventId = null;
+                  _start = null;
+                  _end = null;
+                  _formOpen = false;
+                  _serial++;
+                }),
+              ),
+            ],
+    );
+
+    // As in Notion Calendar: on the left a small month and every open task,
+    // ready to be dragged onto a day or a time.
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(
+          width: 264,
+          child: _CalendarSide(
+            month: _miniMonth ?? anchor,
+            today: today,
+            picked: pickedDay,
+            tasks: tasks,
+            projects: projects,
+            onMonth: (month) => setState(() => _miniMonth = month),
+            onPickDay: (day) => setState(() {
+              _anchor = day;
+              _day = day;
+            }),
+            onDropTask: _unscheduleTask,
+            onCompleteTask: _completeTask,
+            onOpenTask: _openTask,
+          ),
         ),
-        _EventForm(
-          key: ValueKey('form-${open?.id ?? 'new'}-$_serial'),
-          event: open,
-          day: pickedDay,
-          start: _start,
-          end: _end,
-          projects: projects,
-          defaultStart: _nextHour(now),
-          onSaved: (id) => setState(() {
-            _eventId = id;
-            _serial++;
-          }),
-          onClosed: () => setState(() {
-            _eventId = null;
-            _start = null;
-            _end = null;
-            _serial++;
-          }),
-        ),
+        const SizedBox(width: 8),
+        Expanded(child: page),
       ],
     );
   }
@@ -389,7 +462,11 @@ class _DayItems {
     for (final task in tasksOn(day))
       if (task.dueTime != null)
         if (minutesOf(task.dueTime!) case final int start)
-          TimeBlock(task.id, start, start + _taskMinutes),
+          TimeBlock(
+            task.id,
+            start,
+            math.min(_lastMinute, start + _lengthOfTask(task)),
+          ),
   ];
 
   List<Project> deadlinesOn(String day) =>
@@ -895,7 +972,7 @@ class _DayColumnState extends State<_DayColumn> {
       15,
       (minutesOf(event.endTime) ?? 0) - (minutesOf(event.startTime) ?? 0),
     ),
-    _TaskDrag() => _taskMinutes,
+    _TaskDrag(:final task) => _lengthOfTask(task),
   };
 
   int _landing(_Drag drag, Offset global) {
@@ -918,7 +995,11 @@ class _DayColumnState extends State<_DayColumn> {
         else
           block,
       ...focusBlocksOn(day, items.sessions),
-      ...items.taskBlocksOn(day),
+      for (final block in items.taskBlocksOn(day))
+        if (resize != null && resize.id == block.id)
+          TimeBlock(block.id, resize.start, resize.end)
+        else
+          block,
     ]);
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -987,8 +1068,8 @@ class _DayColumnState extends State<_DayColumn> {
                           (width - 4) / item.columns - 2,
                           _height(item.block),
                         ),
-                        _taskBlock(task, tap: true),
-                        _taskBlock(task, tap: false),
+                        _taskBlock(task, item.block, handles: true),
+                        _taskBlock(task, item.block, handles: false),
                       ),
                       _ => _focusBlock(item.block),
                     },
@@ -1117,18 +1198,35 @@ class _DayColumnState extends State<_DayColumn> {
                     child: content,
                   ),
                 ),
-                _edge(event, top: true),
-                _edge(event, top: false),
+                _eventEdge(event, top: true),
+                _eventEdge(event, top: false),
               ],
             ),
     );
   }
 
-  /// The top or bottom edge of an event: drag it to change the start or
-  /// the end.
-  Widget _edge(CalendarEvent event, {required bool top}) {
+  Widget _eventEdge(CalendarEvent event, {required bool top}) {
     final start = minutesOf(event.startTime) ?? 0;
-    final end = minutesOf(event.endTime) ?? start + 60;
+    return _edge(
+      id: event.id,
+      keyName: 'event',
+      start: start,
+      end: minutesOf(event.endTime) ?? start + 60,
+      top: top,
+      onDone: (from, to) => widget.actions.onResizeEvent(event, from, to),
+    );
+  }
+
+  /// The top or bottom edge of an event or a task: drag it to change the
+  /// start or the end, in quarter hours.
+  Widget _edge({
+    required String id,
+    required String keyName,
+    required int start,
+    required int end,
+    required bool top,
+    required Future<void> Function(int start, int end) onDone,
+  }) {
     return Positioned(
       top: top ? 0 : null,
       bottom: top ? null : 0,
@@ -1138,13 +1236,13 @@ class _DayColumnState extends State<_DayColumn> {
       child: MouseRegion(
         cursor: SystemMouseCursors.resizeUpDown,
         child: GestureDetector(
-          key: Key('event-${top ? 'top' : 'bottom'}-${event.id}'),
+          key: Key('$keyName-${top ? 'top' : 'bottom'}-$id'),
           behavior: HitTestBehavior.opaque,
           // Count from where the edge was pressed, so no movement is lost.
           dragStartBehavior: DragStartBehavior.down,
           onVerticalDragStart: (_) {
             _resizeDy = 0;
-            setState(() => _resize = (id: event.id, start: start, end: end));
+            setState(() => _resize = (id: id, start: start, end: end));
           },
           onVerticalDragUpdate: (details) {
             _resizeDy += details.delta.dy;
@@ -1152,12 +1250,12 @@ class _DayColumnState extends State<_DayColumn> {
             setState(() {
               _resize = top
                   ? (
-                      id: event.id,
+                      id: id,
                       start: _snap(start + delta).clamp(0, end - 15),
                       end: end,
                     )
                   : (
-                      id: event.id,
+                      id: id,
                       start: start,
                       end: _snap(end + delta).clamp(start + 15, _lastMinute),
                     );
@@ -1167,7 +1265,7 @@ class _DayColumnState extends State<_DayColumn> {
             final done = _resize;
             if (done == null) return;
             if (done.start != start || done.end != end) {
-              await widget.actions.onResizeEvent(event, done.start, done.end);
+              await onDone(done.start, done.end);
             }
             if (mounted) setState(() => _resize = null);
           },
@@ -1176,8 +1274,28 @@ class _DayColumnState extends State<_DayColumn> {
     );
   }
 
-  Widget _taskBlock(Task task, {required bool tap}) {
+  /// A task with a time: white (a raised surface), its title and from-to
+  /// times. Its top and bottom edges change the start and the length.
+  Widget _taskBlock(Task task, TimeBlock block, {required bool handles}) {
     final done = task.status == TaskStatus.done;
+    final short = block.end - block.start < 45;
+    final title = Text(
+      task.title,
+      maxLines: block.end - block.start < 75 ? 1 : 2,
+      overflow: TextOverflow.ellipsis,
+      style: Ember.text(
+        11,
+        13,
+        weight: 600,
+        color: done ? Ember.ink3 : Ember.ink,
+      ).copyWith(decoration: done ? TextDecoration.lineThrough : null),
+    );
+    final times = Text(
+      '${formatTime(timeOf(block.start))} to ${formatTime(timeOf(block.end))}',
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: Ember.text(10.5, 13, color: Ember.ink2),
+    );
     final content = Container(
       padding: const EdgeInsets.fromLTRB(6, 3, 4, 2),
       decoration: BoxDecoration(
@@ -1185,29 +1303,52 @@ class _DayColumnState extends State<_DayColumn> {
         border: Border.all(color: Ember.ring),
       ),
       child: ClipRect(
-        child: Text(
-          '${task.title} · ${formatTime(task.dueTime!)}',
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: Ember.text(
-            11,
-            13,
-            weight: 600,
-            color: done ? Ember.ink3 : Ember.ink,
-          ).copyWith(decoration: done ? TextDecoration.lineThrough : null),
-        ),
+        child: short
+            ? Row(
+                children: [
+                  Flexible(child: title),
+                  const SizedBox(width: 6),
+                  Flexible(child: times),
+                ],
+              )
+            // Cut, not overflowing, when the block is short.
+            : SingleChildScrollView(
+                physics: const NeverScrollableScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [title, times],
+                ),
+              ),
       ),
+    );
+    final start = minutesOf(task.dueTime!) ?? block.start;
+    final end = start + _lengthOfTask(task);
+    Widget edge({required bool top}) => _edge(
+      id: task.id,
+      keyName: 'task',
+      start: start,
+      end: math.min(end, _lastMinute),
+      top: top,
+      onDone: (from, to) => widget.actions.onResizeTask(task, from, to),
     );
     return Material(
       color: Ember.surface,
       borderRadius: BorderRadius.circular(6),
-      child: !tap
+      child: !handles
           ? content
-          : InkWell(
-              key: Key('calendar-timed-task-${task.id}'),
-              borderRadius: BorderRadius.circular(6),
-              onTap: widget.actions.onTask,
-              child: content,
+          : Stack(
+              children: [
+                Positioned.fill(
+                  child: InkWell(
+                    key: Key('calendar-timed-task-${task.id}'),
+                    borderRadius: BorderRadius.circular(6),
+                    onTap: widget.actions.onTask,
+                    child: content,
+                  ),
+                ),
+                edge(top: true),
+                edge(top: false),
+              ],
             ),
     );
   }
@@ -1254,78 +1395,415 @@ class _HourLines extends CustomPainter {
 
 // ------------------------------------------------------------ right panel
 
-/// The picked day: its events, project deadlines and tasks.
-class _DaySummary extends StatelessWidget {
-  const _DaySummary({
-    super.key,
-    required this.day,
+/// The left side, as in Notion Calendar: a small month to jump to a day,
+/// and every open task, grouped by when it is due. A task is dragged from
+/// here onto a time (it gets a date and a time) or onto the All day row
+/// (a date only); dropped back here, it loses both.
+class _CalendarSide extends StatelessWidget {
+  const _CalendarSide({
+    required this.month,
     required this.today,
-    required this.items,
-    required this.onEvent,
-    required this.onTask,
-    required this.onProject,
+    required this.picked,
+    required this.tasks,
+    required this.projects,
+    required this.onMonth,
+    required this.onPickDay,
+    required this.onDropTask,
+    required this.onCompleteTask,
+    required this.onOpenTask,
   });
 
-  final String day;
+  /// A day in the month the small calendar shows.
+  final String month;
   final String today;
-  final _DayItems items;
-  final ValueChanged<CalendarEvent> onEvent;
-  final VoidCallback onTask;
-  final ValueChanged<String> onProject;
+  final String picked;
+  final List<Task> tasks;
+  final List<Project> projects;
+  final ValueChanged<String> onMonth;
+  final ValueChanged<String> onPickDay;
+  final ValueChanged<Task> onDropTask;
+  final ValueChanged<Task> onCompleteTask;
+  final VoidCallback onOpenTask;
 
   @override
   Widget build(BuildContext context) {
-    final events = items.eventsOn(day);
-    final deadlines = items.deadlinesOn(day);
-    final tasks = items.tasksOn(day);
-    final empty = events.isEmpty && deadlines.isEmpty && tasks.isEmpty;
+    final open = tasks.where((task) => task.status != TaskStatus.done).toList()
+      ..sort((a, b) {
+        final byDay = (a.dueDate ?? '').compareTo(b.dueDate ?? '');
+        if (byDay != 0) return byDay;
+        return (a.dueTime ?? '99').compareTo(b.dueTime ?? '99');
+      });
+    final groups = <(String, String, List<Task>)>[
+      (
+        'none',
+        'No date',
+        [
+          for (final t in open)
+            if (t.dueDate == null) t,
+        ],
+      ),
+      (
+        'overdue',
+        'Overdue',
+        [
+          for (final t in open)
+            if (t.dueDate != null && t.dueDate!.compareTo(today) < 0) t,
+        ],
+      ),
+      (
+        'today',
+        'Today',
+        [
+          for (final t in open)
+            if (t.dueDate == today) t,
+        ],
+      ),
+      (
+        'later',
+        'Later',
+        [
+          for (final t in open)
+            if (t.dueDate != null && t.dueDate!.compareTo(today) > 0) t,
+        ],
+      ),
+    ];
+    final projectsById = {for (final p in projects) p.id: p};
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Ember.paper,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      clipBehavior: Clip.hardEdge,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
+            child: _MiniMonth(
+              month: month,
+              today: today,
+              picked: picked,
+              onMonth: onMonth,
+              onPickDay: onPickDay,
+            ),
+          ),
+          Divider(height: 1, color: Ember.line),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            child: Row(
+              children: [
+                Expanded(child: Text('Tasks', style: Ember.h3)),
+                Text('${open.length}', style: Ember.meta),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
+            child: Text(
+              'Drag a task onto a time or a day.',
+              style: Ember.caption,
+            ),
+          ),
+          Expanded(
+            child: DragTarget<_Drag>(
+              key: const Key('calendar-task-list'),
+              onWillAcceptWithDetails: (details) =>
+                  details.data is _TaskDrag &&
+                  (details.data as _TaskDrag).task.dueDate != null,
+              onAcceptWithDetails: (details) {
+                if (details.data case _TaskDrag(:final task)) {
+                  onDropTask(task);
+                }
+              },
+              builder: (context, candidates, _) => Container(
+                color: candidates.isEmpty ? null : Ember.tile,
+                child: open.isEmpty
+                    ? Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Text(
+                          'No open tasks. Add one on the Tasks page.',
+                          style: Ember.meta,
+                        ),
+                      )
+                    : ListView(
+                        padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
+                        children: [
+                          for (final (key, label, list) in groups)
+                            if (list.isNotEmpty) ...[
+                              Padding(
+                                key: Key('calendar-group-$key'),
+                                padding: const EdgeInsets.fromLTRB(8, 10, 8, 4),
+                                child: Text(
+                                  '$label · ${list.length}',
+                                  style: Ember.caption.copyWith(
+                                    color: key == 'overdue'
+                                        ? Ember.nowInk
+                                        : Ember.ink3,
+                                  ),
+                                ),
+                              ),
+                              for (final task in list)
+                                _SideTask(
+                                  task: task,
+                                  today: today,
+                                  project: projectsById[task.projectId],
+                                  onComplete: () => onCompleteTask(task),
+                                  onOpen: onOpenTask,
+                                ),
+                            ],
+                        ],
+                      ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// One task in the left list: a done ring, its title, when it is due and
+/// its project. Drag it onto the calendar.
+class _SideTask extends StatelessWidget {
+  const _SideTask({
+    required this.task,
+    required this.today,
+    required this.project,
+    required this.onComplete,
+    required this.onOpen,
+  });
+
+  final Task task;
+  final String today;
+  final Project? project;
+  final VoidCallback onComplete;
+  final VoidCallback onOpen;
+
+  String get _when {
+    final timed = task.dueTime != null && minutesOf(task.dueTime!) != null;
+    final parts = <String>[
+      if (task.dueDate != null) formatRelativeDay(task.dueDate!, today: today),
+      if (timed) formatTime(task.dueTime!),
+      if (timed) _length(_lengthOfTask(task)),
+    ];
+    return parts.join(' · ');
+  }
+
+  static String _length(int minutes) {
+    final hours = minutes ~/ 60;
+    final rest = minutes % 60;
+    if (hours == 0) return '${rest}m';
+    return rest == 0 ? '${hours}h' : '${hours}h ${rest}m';
+  }
+
+  Widget _row({required bool interactive}) {
+    final swatch = project == null ? null : ProjectColors.of(project!.color);
+    final when = _when;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(2, 4, 8, 4),
+      decoration: BoxDecoration(
+        color: interactive ? null : Ember.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: interactive ? null : Border.all(color: Ember.line),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (interactive)
+            TaskRing(
+              done: false,
+              priority: task.priority,
+              label: 'Complete ${task.title}',
+              size: 16,
+              onTap: onComplete,
+            )
+          else
+            const SizedBox(width: 8),
+          const SizedBox(width: 2),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    task.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: Ember.text(12.5, 16, color: Ember.ink),
+                  ),
+                  if (when.isNotEmpty || swatch != null) ...[
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        if (swatch != null) ...[
+                          ColorDot(swatch.dot, size: 6),
+                          const SizedBox(width: 5),
+                        ],
+                        Flexible(
+                          child: Text(
+                            when.isEmpty ? project!.name : when,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Ember.text(
+                              11,
+                              13,
+                              weight: 400,
+                              color:
+                                  task.dueDate != null &&
+                                      task.dueDate!.compareTo(today) < 0
+                                  ? Ember.nowInk
+                                  : Ember.ink2,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Draggable<_Drag>(
+      data: _TaskDrag(task),
+      dragAnchorStrategy: pointerDragAnchorStrategy,
+      feedback: Material(
+        color: Colors.transparent,
+        child: SizedBox(width: 220, child: _row(interactive: false)),
+      ),
+      childWhenDragging: Opacity(opacity: 0.35, child: _row(interactive: true)),
+      child: MouseRegion(
+        cursor: SystemMouseCursors.grab,
+        child: InkWell(
+          key: Key('calendar-list-task-${task.id}'),
+          borderRadius: BorderRadius.circular(8),
+          onTap: onOpen,
+          child: _row(interactive: true),
+        ),
+      ),
+    );
+  }
+}
+
+/// The small month on the left: arrows to change the month, today in
+/// orange, the picked day ringed. A click jumps the calendar to that day.
+class _MiniMonth extends StatelessWidget {
+  const _MiniMonth({
+    required this.month,
+    required this.today,
+    required this.picked,
+    required this.onMonth,
+    required this.onPickDay,
+  });
+
+  final String month;
+  final String today;
+  final String picked;
+  final ValueChanged<String> onMonth;
+  final ValueChanged<String> onPickDay;
+
+  @override
+  Widget build(BuildContext context) {
+    final date = parseDayKey(month)!;
+    final days = shownDays(CalendarView.month, month);
     return Column(
-      key: const Key('calendar-day-summary'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          day == today ? 'Today · ${formatLongDay(day)}' : formatLongDay(day),
-          style: Ember.h3,
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                '${monthNames[date.month - 1]} ${date.year}',
+                key: const Key('mini-title'),
+                style: Ember.h3,
+              ),
+            ),
+            IconButton(
+              key: const Key('mini-prev'),
+              tooltip: 'Earlier month',
+              iconSize: 16,
+              color: Ember.ink2,
+              visualDensity: VisualDensity.compact,
+              onPressed: () =>
+                  onMonth(stepAnchor(CalendarView.month, month, -1)),
+              icon: const Icon(Icons.chevron_left),
+            ),
+            IconButton(
+              key: const Key('mini-next'),
+              tooltip: 'Later month',
+              iconSize: 16,
+              color: Ember.ink2,
+              visualDensity: VisualDensity.compact,
+              onPressed: () =>
+                  onMonth(stepAnchor(CalendarView.month, month, 1)),
+              icon: const Icon(Icons.chevron_right),
+            ),
+          ],
         ),
-        const SizedBox(height: 8),
-        if (empty) Text('Nothing planned this day.', style: Ember.meta),
-        for (final event in events)
-          _line(
-            Key('summary-event-${event.id}'),
-            '${formatTime(event.startTime)}  ${event.title}',
-            items.coloursOf(event).$2,
-            () => onEvent(event),
-          ),
-        for (final project in deadlines)
-          _line(
-            Key('summary-deadline-${project.id}'),
-            'Deadline · ${project.name}',
-            ProjectColors.of(project.color).text,
-            () => onProject(project.id),
-          ),
-        for (final task in tasks)
-          _line(
-            Key('summary-task-${task.id}'),
-            task.title,
-            task.status == TaskStatus.done ? Ember.ink3 : Ember.ink,
-            onTask,
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            for (final letter in const ['S', 'M', 'T', 'W', 'T', 'F', 'S'])
+              Expanded(
+                child: Center(child: Text(letter, style: Ember.caption)),
+              ),
+          ],
+        ),
+        const SizedBox(height: 2),
+        for (var week = 0; week < days.length ~/ 7; week++)
+          Row(
+            children: [
+              for (final day in days.sublist(week * 7, week * 7 + 7))
+                Expanded(child: _cell(day, date.month)),
+            ],
           ),
       ],
     );
   }
 
-  Widget _line(Key key, String label, Color color, VoidCallback onTap) {
+  Widget _cell(String day, int month) {
+    final number = parseDayKey(day)!;
+    final isToday = day == today;
+    final isPicked = day == picked;
     return InkWell(
-      key: key,
-      borderRadius: BorderRadius.circular(6),
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 5),
-        child: Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: Ember.item.copyWith(color: color),
+      key: Key('mini-day-$day'),
+      customBorder: const CircleBorder(),
+      onTap: () => onPickDay(day),
+      child: Container(
+        height: 28,
+        alignment: Alignment.center,
+        child: Container(
+          width: 24,
+          height: 24,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: isToday ? Ember.now : null,
+            border: isPicked && !isToday
+                ? Border.all(color: Ember.ink, width: 1.5)
+                : null,
+          ),
+          child: Text(
+            '${number.day}',
+            style: Ember.text(
+              11.5,
+              14,
+              weight: isToday ? 600 : 500,
+              color: isToday
+                  ? Ember.white
+                  : number.month == month
+                  ? Ember.ink
+                  : Ember.ink3,
+            ),
+          ),
         ),
       ),
     );
@@ -1512,15 +1990,14 @@ class _EventFormState extends ConsumerState<_EventForm> {
                 style: Ember.h2,
               ),
             ),
-            if (editing)
-              IconButton(
-                key: const Key('event-close'),
-                tooltip: 'Close',
-                iconSize: 16,
-                color: Ember.ink2,
-                onPressed: widget.onClosed,
-                icon: const Icon(Icons.close),
-              ),
+            IconButton(
+              key: const Key('event-close'),
+              tooltip: 'Close',
+              iconSize: 16,
+              color: Ember.ink2,
+              onPressed: widget.onClosed,
+              icon: const Icon(Icons.close),
+            ),
           ],
         ),
         const SizedBox(height: 14),

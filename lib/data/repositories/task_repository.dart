@@ -111,6 +111,31 @@ class TaskRepository {
     );
   }
 
+  /// How long a task with a time takes on the Calendar, in minutes (at
+  /// least 15).
+  Future<void> setTaskDuration(String id, int minutes) {
+    if (minutes < 15) {
+      throw ArgumentError.value(minutes, 'minutes', 'At least 15 minutes');
+    }
+    return (_db.update(_db.tasks)..where((row) => row.id.equals(id))).write(
+      TasksCompanion(
+        durationMinutes: Value(minutes),
+        updatedAt: Value(_timestamp()),
+      ),
+    );
+  }
+
+  /// Takes a task off the calendar: no date and no time.
+  Future<void> unscheduleTask(String id) {
+    return (_db.update(_db.tasks)..where((row) => row.id.equals(id))).write(
+      TasksCompanion(
+        dueDate: const Value(null),
+        dueTime: const Value(null),
+        updatedAt: Value(_timestamp()),
+      ),
+    );
+  }
+
   /// Marks a task done, or open again. The completion time is kept so the
   /// chart can count tasks completed per day.
   Future<void> setDone(String id, {required bool done}) {

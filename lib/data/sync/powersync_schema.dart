@@ -52,6 +52,7 @@ const powerSyncSchema = Schema([
     Column.text('goal_id'),
     Column.text('due_date'),
     Column.text('due_time'),
+    Column.integer('duration_minutes'),
     Column.text('priority'),
     Column.text('status'),
     Column.text('completed_at'),

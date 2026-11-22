@@ -114,6 +114,9 @@ class Tasks extends Table with SyncColumns {
   /// `HH:MM` on the due day, or null for "any time that day".
   TextColumn get dueTime => text().nullable()();
 
+  /// How long the task takes on the Calendar, in minutes; null means 30.
+  IntColumn get durationMinutes => integer().nullable()();
+
   /// One of `TaskPriority`: `none`, `medium`, `high`.
   TextColumn get priority => text()();
 
