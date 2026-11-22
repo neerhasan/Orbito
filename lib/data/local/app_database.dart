@@ -246,6 +246,9 @@ class Preferences extends Table with SyncColumns {
   /// `HH:MM`. The usual wake time and bedtime; null until the user sets them.
   TextColumn get wakeTime => text().nullable()();
   TextColumn get bedTime => text().nullable()();
+
+  /// The daily focus goal in minutes; null until the user picks one.
+  IntColumn get focusGoalMinutes => integer().nullable()();
 }
 
 /// A note, optionally linked to one project.

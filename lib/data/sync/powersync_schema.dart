@@ -113,6 +113,7 @@ const powerSyncSchema = Schema([
     Column.text('today_sections'),
     Column.text('wake_time'),
     Column.text('bed_time'),
+    Column.integer('focus_goal_minutes'),
     Column.text('created_at'),
     Column.text('updated_at'),
     Column.text('deleted_at'),

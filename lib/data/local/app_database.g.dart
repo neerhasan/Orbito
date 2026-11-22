@@ -6397,6 +6397,17 @@ class $PreferencesTable extends Preferences
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _focusGoalMinutesMeta = const VerificationMeta(
+    'focusGoalMinutes',
+  );
+  @override
+  late final GeneratedColumn<int> focusGoalMinutes = GeneratedColumn<int>(
+    'focus_goal_minutes',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -6407,6 +6418,7 @@ class $PreferencesTable extends Preferences
     todaySections,
     wakeTime,
     bedTime,
+    focusGoalMinutes,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -6478,6 +6490,15 @@ class $PreferencesTable extends Preferences
         bedTime.isAcceptableOrUnknown(data['bed_time']!, _bedTimeMeta),
       );
     }
+    if (data.containsKey('focus_goal_minutes')) {
+      context.handle(
+        _focusGoalMinutesMeta,
+        focusGoalMinutes.isAcceptableOrUnknown(
+          data['focus_goal_minutes']!,
+          _focusGoalMinutesMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -6519,6 +6540,10 @@ class $PreferencesTable extends Preferences
         DriftSqlType.string,
         data['${effectivePrefix}bed_time'],
       ),
+      focusGoalMinutes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}focus_goal_minutes'],
+      ),
     );
   }
 
@@ -6547,6 +6572,9 @@ class Preference extends DataClass implements Insertable<Preference> {
   /// `HH:MM`. The usual wake time and bedtime; null until the user sets them.
   final String? wakeTime;
   final String? bedTime;
+
+  /// The daily focus goal in minutes; null until the user picks one.
+  final int? focusGoalMinutes;
   const Preference({
     required this.id,
     required this.userId,
@@ -6556,6 +6584,7 @@ class Preference extends DataClass implements Insertable<Preference> {
     required this.todaySections,
     this.wakeTime,
     this.bedTime,
+    this.focusGoalMinutes,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -6573,6 +6602,9 @@ class Preference extends DataClass implements Insertable<Preference> {
     }
     if (!nullToAbsent || bedTime != null) {
       map['bed_time'] = Variable<String>(bedTime);
+    }
+    if (!nullToAbsent || focusGoalMinutes != null) {
+      map['focus_goal_minutes'] = Variable<int>(focusGoalMinutes);
     }
     return map;
   }
@@ -6593,6 +6625,9 @@ class Preference extends DataClass implements Insertable<Preference> {
       bedTime: bedTime == null && nullToAbsent
           ? const Value.absent()
           : Value(bedTime),
+      focusGoalMinutes: focusGoalMinutes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(focusGoalMinutes),
     );
   }
 
@@ -6610,6 +6645,7 @@ class Preference extends DataClass implements Insertable<Preference> {
       todaySections: serializer.fromJson<String>(json['todaySections']),
       wakeTime: serializer.fromJson<String?>(json['wakeTime']),
       bedTime: serializer.fromJson<String?>(json['bedTime']),
+      focusGoalMinutes: serializer.fromJson<int?>(json['focusGoalMinutes']),
     );
   }
   @override
@@ -6624,6 +6660,7 @@ class Preference extends DataClass implements Insertable<Preference> {
       'todaySections': serializer.toJson<String>(todaySections),
       'wakeTime': serializer.toJson<String?>(wakeTime),
       'bedTime': serializer.toJson<String?>(bedTime),
+      'focusGoalMinutes': serializer.toJson<int?>(focusGoalMinutes),
     };
   }
 
@@ -6636,6 +6673,7 @@ class Preference extends DataClass implements Insertable<Preference> {
     String? todaySections,
     Value<String?> wakeTime = const Value.absent(),
     Value<String?> bedTime = const Value.absent(),
+    Value<int?> focusGoalMinutes = const Value.absent(),
   }) => Preference(
     id: id ?? this.id,
     userId: userId ?? this.userId,
@@ -6645,6 +6683,9 @@ class Preference extends DataClass implements Insertable<Preference> {
     todaySections: todaySections ?? this.todaySections,
     wakeTime: wakeTime.present ? wakeTime.value : this.wakeTime,
     bedTime: bedTime.present ? bedTime.value : this.bedTime,
+    focusGoalMinutes: focusGoalMinutes.present
+        ? focusGoalMinutes.value
+        : this.focusGoalMinutes,
   );
   Preference copyWithCompanion(PreferencesCompanion data) {
     return Preference(
@@ -6658,6 +6699,9 @@ class Preference extends DataClass implements Insertable<Preference> {
           : this.todaySections,
       wakeTime: data.wakeTime.present ? data.wakeTime.value : this.wakeTime,
       bedTime: data.bedTime.present ? data.bedTime.value : this.bedTime,
+      focusGoalMinutes: data.focusGoalMinutes.present
+          ? data.focusGoalMinutes.value
+          : this.focusGoalMinutes,
     );
   }
 
@@ -6671,7 +6715,8 @@ class Preference extends DataClass implements Insertable<Preference> {
           ..write('deletedAt: $deletedAt, ')
           ..write('todaySections: $todaySections, ')
           ..write('wakeTime: $wakeTime, ')
-          ..write('bedTime: $bedTime')
+          ..write('bedTime: $bedTime, ')
+          ..write('focusGoalMinutes: $focusGoalMinutes')
           ..write(')'))
         .toString();
   }
@@ -6686,6 +6731,7 @@ class Preference extends DataClass implements Insertable<Preference> {
     todaySections,
     wakeTime,
     bedTime,
+    focusGoalMinutes,
   );
   @override
   bool operator ==(Object other) =>
@@ -6698,7 +6744,8 @@ class Preference extends DataClass implements Insertable<Preference> {
           other.deletedAt == this.deletedAt &&
           other.todaySections == this.todaySections &&
           other.wakeTime == this.wakeTime &&
-          other.bedTime == this.bedTime);
+          other.bedTime == this.bedTime &&
+          other.focusGoalMinutes == this.focusGoalMinutes);
 }
 
 class PreferencesCompanion extends UpdateCompanion<Preference> {
@@ -6710,6 +6757,7 @@ class PreferencesCompanion extends UpdateCompanion<Preference> {
   final Value<String> todaySections;
   final Value<String?> wakeTime;
   final Value<String?> bedTime;
+  final Value<int?> focusGoalMinutes;
   final Value<int> rowid;
   const PreferencesCompanion({
     this.id = const Value.absent(),
@@ -6720,6 +6768,7 @@ class PreferencesCompanion extends UpdateCompanion<Preference> {
     this.todaySections = const Value.absent(),
     this.wakeTime = const Value.absent(),
     this.bedTime = const Value.absent(),
+    this.focusGoalMinutes = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   PreferencesCompanion.insert({
@@ -6731,6 +6780,7 @@ class PreferencesCompanion extends UpdateCompanion<Preference> {
     required String todaySections,
     this.wakeTime = const Value.absent(),
     this.bedTime = const Value.absent(),
+    this.focusGoalMinutes = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        userId = Value(userId),
@@ -6746,6 +6796,7 @@ class PreferencesCompanion extends UpdateCompanion<Preference> {
     Expression<String>? todaySections,
     Expression<String>? wakeTime,
     Expression<String>? bedTime,
+    Expression<int>? focusGoalMinutes,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -6757,6 +6808,7 @@ class PreferencesCompanion extends UpdateCompanion<Preference> {
       if (todaySections != null) 'today_sections': todaySections,
       if (wakeTime != null) 'wake_time': wakeTime,
       if (bedTime != null) 'bed_time': bedTime,
+      if (focusGoalMinutes != null) 'focus_goal_minutes': focusGoalMinutes,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -6770,6 +6822,7 @@ class PreferencesCompanion extends UpdateCompanion<Preference> {
     Value<String>? todaySections,
     Value<String?>? wakeTime,
     Value<String?>? bedTime,
+    Value<int?>? focusGoalMinutes,
     Value<int>? rowid,
   }) {
     return PreferencesCompanion(
@@ -6781,6 +6834,7 @@ class PreferencesCompanion extends UpdateCompanion<Preference> {
       todaySections: todaySections ?? this.todaySections,
       wakeTime: wakeTime ?? this.wakeTime,
       bedTime: bedTime ?? this.bedTime,
+      focusGoalMinutes: focusGoalMinutes ?? this.focusGoalMinutes,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -6812,6 +6866,9 @@ class PreferencesCompanion extends UpdateCompanion<Preference> {
     if (bedTime.present) {
       map['bed_time'] = Variable<String>(bedTime.value);
     }
+    if (focusGoalMinutes.present) {
+      map['focus_goal_minutes'] = Variable<int>(focusGoalMinutes.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -6829,6 +6886,7 @@ class PreferencesCompanion extends UpdateCompanion<Preference> {
           ..write('todaySections: $todaySections, ')
           ..write('wakeTime: $wakeTime, ')
           ..write('bedTime: $bedTime, ')
+          ..write('focusGoalMinutes: $focusGoalMinutes, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -11162,6 +11220,7 @@ typedef $$PreferencesTableCreateCompanionBuilder =
       required String todaySections,
       Value<String?> wakeTime,
       Value<String?> bedTime,
+      Value<int?> focusGoalMinutes,
       Value<int> rowid,
     });
 typedef $$PreferencesTableUpdateCompanionBuilder =
@@ -11174,6 +11233,7 @@ typedef $$PreferencesTableUpdateCompanionBuilder =
       Value<String> todaySections,
       Value<String?> wakeTime,
       Value<String?> bedTime,
+      Value<int?> focusGoalMinutes,
       Value<int> rowid,
     });
 
@@ -11223,6 +11283,11 @@ class $$PreferencesTableFilterComposer
 
   ColumnFilters<String> get bedTime => $composableBuilder(
     column: $table.bedTime,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get focusGoalMinutes => $composableBuilder(
+    column: $table.focusGoalMinutes,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -11275,6 +11340,11 @@ class $$PreferencesTableOrderingComposer
     column: $table.bedTime,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get focusGoalMinutes => $composableBuilder(
+    column: $table.focusGoalMinutes,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$PreferencesTableAnnotationComposer
@@ -11311,6 +11381,11 @@ class $$PreferencesTableAnnotationComposer
 
   GeneratedColumn<String> get bedTime =>
       $composableBuilder(column: $table.bedTime, builder: (column) => column);
+
+  GeneratedColumn<int> get focusGoalMinutes => $composableBuilder(
+    column: $table.focusGoalMinutes,
+    builder: (column) => column,
+  );
 }
 
 class $$PreferencesTableTableManager
@@ -11352,6 +11427,7 @@ class $$PreferencesTableTableManager
                 Value<String> todaySections = const Value.absent(),
                 Value<String?> wakeTime = const Value.absent(),
                 Value<String?> bedTime = const Value.absent(),
+                Value<int?> focusGoalMinutes = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => PreferencesCompanion(
                 id: id,
@@ -11362,6 +11438,7 @@ class $$PreferencesTableTableManager
                 todaySections: todaySections,
                 wakeTime: wakeTime,
                 bedTime: bedTime,
+                focusGoalMinutes: focusGoalMinutes,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -11374,6 +11451,7 @@ class $$PreferencesTableTableManager
                 required String todaySections,
                 Value<String?> wakeTime = const Value.absent(),
                 Value<String?> bedTime = const Value.absent(),
+                Value<int?> focusGoalMinutes = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => PreferencesCompanion.insert(
                 id: id,
@@ -11384,6 +11462,7 @@ class $$PreferencesTableTableManager
                 todaySections: todaySections,
                 wakeTime: wakeTime,
                 bedTime: bedTime,
+                focusGoalMinutes: focusGoalMinutes,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

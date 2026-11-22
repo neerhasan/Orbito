@@ -12,6 +12,7 @@ import '../data/repositories/sleep_repository.dart';
 import '../data/repositories/task_repository.dart';
 import '../data/sync/sync_service.dart';
 import '../data/sync/sync_status_text.dart';
+import '../domain/focus_report.dart' show defaultFocusGoalMinutes;
 
 /// These are created in `main()` and handed in when the app starts.
 final supabaseProvider = Provider<SupabaseClient>(
@@ -169,6 +170,16 @@ final dayTimesProvider = StreamProvider<({String? wake, String? bed})>((ref) {
   final userId = ref.watch(userIdProvider);
   if (userId == null) return Stream.value((wake: null, bed: null));
   return ref.watch(captureRepositoryProvider).watchDayTimes(userId);
+});
+
+/// The daily focus goal in minutes (4 hours until the user picks one).
+final focusGoalProvider = StreamProvider<int>((ref) {
+  final userId = ref.watch(userIdProvider);
+  if (userId == null) return Stream.value(defaultFocusGoalMinutes);
+  return ref
+      .watch(captureRepositoryProvider)
+      .watchFocusGoal(userId)
+      .map((minutes) => minutes ?? defaultFocusGoalMinutes);
 });
 
 /// The stored choice of Today sections, or null before the user made one.

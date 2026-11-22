@@ -190,6 +190,47 @@ class CaptureRepository {
     });
   }
 
+  /// The daily focus goal in minutes, or null before the user picked one.
+  Stream<int?> watchFocusGoal(String userId) {
+    final query = _db.select(_db.preferences)
+      ..where((row) => row.userId.equals(userId) & row.deletedAt.isNull());
+    return query.watch().map((rows) => rows.firstOrNull?.focusGoalMinutes);
+  }
+
+  Future<void> saveFocusGoal({required String userId, required int minutes}) {
+    final id = _stableId('preferences:$userId');
+    return _db.transaction(() async {
+      final timestamp = _timestamp();
+      final existing = await (_db.select(
+        _db.preferences,
+      )..where((row) => row.id.equals(id))).getSingleOrNull();
+      if (existing == null) {
+        await _db
+            .into(_db.preferences)
+            .insert(
+              PreferencesCompanion.insert(
+                id: id,
+                userId: userId,
+                todaySections: '',
+                focusGoalMinutes: Value(minutes),
+                createdAt: timestamp,
+                updatedAt: timestamp,
+              ),
+            );
+        return;
+      }
+      await (_db.update(
+        _db.preferences,
+      )..where((row) => row.id.equals(id))).write(
+        PreferencesCompanion(
+          focusGoalMinutes: Value(minutes),
+          deletedAt: const Value(null),
+          updatedAt: Value(timestamp),
+        ),
+      );
+    });
+  }
+
   /// The stored Today sections, or null before the user changed them.
   Stream<String?> watchTodaySections(String userId) {
     final query = _db.select(_db.preferences)

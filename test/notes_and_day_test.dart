@@ -274,6 +274,38 @@ void main() {
       times = await _read(tester, () => _capture.watchDayTimes(_user).first);
       expect((times.wake, times.bed), ('06:30', '22:45'));
     });
+
+    _test('the focus goal is saved and keeps the day times', (tester) async {
+      expect(
+        await _read(tester, () => _capture.watchFocusGoal(_user).first),
+        isNull,
+      );
+      await _read(
+        tester,
+        () => _capture.saveFocusGoal(userId: _user, minutes: 180),
+      );
+      expect(
+        await _read(tester, () => _capture.watchFocusGoal(_user).first),
+        180,
+      );
+      await _read(
+        tester,
+        () => _capture.saveDayTimes(userId: _user, wake: '06:30', bed: '22:45'),
+      );
+      await _read(
+        tester,
+        () => _capture.saveFocusGoal(userId: _user, minutes: 300),
+      );
+      final times = await _read(
+        tester,
+        () => _capture.watchDayTimes(_user).first,
+      );
+      expect((times.wake, times.bed), ('06:30', '22:45'));
+      expect(
+        await _read(tester, () => _capture.watchFocusGoal(_user).first),
+        300,
+      );
+    });
   });
 
   group('pages', () {
