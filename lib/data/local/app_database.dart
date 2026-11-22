@@ -258,8 +258,33 @@ class Notes extends Table with SyncColumns {
   String get tableName => 'notes';
 
   TextColumn get title => text()();
+
+  /// A plain-text copy of [content], kept for search and previews.
   TextColumn get body => text()();
   TextColumn get projectId => text().nullable()();
+
+  /// The page's blocks as editor JSON; null for a note made before pages
+  /// (its [body] is then turned into paragraphs when it opens).
+  TextColumn get content => text().nullable()();
+
+  /// The page this page sits inside, or null for a top-level page.
+  TextColumn get parentId => text().nullable()();
+
+  /// An emoji, or null for the default page icon.
+  TextColumn get icon => text().nullable()();
+
+  /// A cover colour name, or null for no cover.
+  TextColumn get cover => text().nullable()();
+
+  /// 1 when the page is a favourite.
+  IntColumn get favorite => integer().nullable()();
+
+  /// When the page went to the Trash (ISO 8601, UTC); null when it is not
+  /// in the Trash.
+  TextColumn get trashedAt => text().nullable()();
+
+  /// The page's place among its sibling pages (smaller first).
+  RealColumn get sortOrder => real().nullable()();
 }
 
 /// An event on the Calendar page: a day, a start and an end time.

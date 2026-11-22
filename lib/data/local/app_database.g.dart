@@ -6978,6 +6978,79 @@ class $NotesTable extends Notes with TableInfo<$NotesTable, Note> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _contentMeta = const VerificationMeta(
+    'content',
+  );
+  @override
+  late final GeneratedColumn<String> content = GeneratedColumn<String>(
+    'content',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _parentIdMeta = const VerificationMeta(
+    'parentId',
+  );
+  @override
+  late final GeneratedColumn<String> parentId = GeneratedColumn<String>(
+    'parent_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _iconMeta = const VerificationMeta('icon');
+  @override
+  late final GeneratedColumn<String> icon = GeneratedColumn<String>(
+    'icon',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _coverMeta = const VerificationMeta('cover');
+  @override
+  late final GeneratedColumn<String> cover = GeneratedColumn<String>(
+    'cover',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _favoriteMeta = const VerificationMeta(
+    'favorite',
+  );
+  @override
+  late final GeneratedColumn<int> favorite = GeneratedColumn<int>(
+    'favorite',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _trashedAtMeta = const VerificationMeta(
+    'trashedAt',
+  );
+  @override
+  late final GeneratedColumn<String> trashedAt = GeneratedColumn<String>(
+    'trashed_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
+  @override
+  late final GeneratedColumn<double> sortOrder = GeneratedColumn<double>(
+    'sort_order',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -6988,6 +7061,13 @@ class $NotesTable extends Notes with TableInfo<$NotesTable, Note> {
     title,
     body,
     projectId,
+    content,
+    parentId,
+    icon,
+    cover,
+    favorite,
+    trashedAt,
+    sortOrder,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -7058,6 +7138,48 @@ class $NotesTable extends Notes with TableInfo<$NotesTable, Note> {
         projectId.isAcceptableOrUnknown(data['project_id']!, _projectIdMeta),
       );
     }
+    if (data.containsKey('content')) {
+      context.handle(
+        _contentMeta,
+        content.isAcceptableOrUnknown(data['content']!, _contentMeta),
+      );
+    }
+    if (data.containsKey('parent_id')) {
+      context.handle(
+        _parentIdMeta,
+        parentId.isAcceptableOrUnknown(data['parent_id']!, _parentIdMeta),
+      );
+    }
+    if (data.containsKey('icon')) {
+      context.handle(
+        _iconMeta,
+        icon.isAcceptableOrUnknown(data['icon']!, _iconMeta),
+      );
+    }
+    if (data.containsKey('cover')) {
+      context.handle(
+        _coverMeta,
+        cover.isAcceptableOrUnknown(data['cover']!, _coverMeta),
+      );
+    }
+    if (data.containsKey('favorite')) {
+      context.handle(
+        _favoriteMeta,
+        favorite.isAcceptableOrUnknown(data['favorite']!, _favoriteMeta),
+      );
+    }
+    if (data.containsKey('trashed_at')) {
+      context.handle(
+        _trashedAtMeta,
+        trashedAt.isAcceptableOrUnknown(data['trashed_at']!, _trashedAtMeta),
+      );
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
+    }
     return context;
   }
 
@@ -7099,6 +7221,34 @@ class $NotesTable extends Notes with TableInfo<$NotesTable, Note> {
         DriftSqlType.string,
         data['${effectivePrefix}project_id'],
       ),
+      content: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}content'],
+      ),
+      parentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}parent_id'],
+      ),
+      icon: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}icon'],
+      ),
+      cover: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cover'],
+      ),
+      favorite: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}favorite'],
+      ),
+      trashedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}trashed_at'],
+      ),
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}sort_order'],
+      ),
     );
   }
 
@@ -7121,8 +7271,33 @@ class Note extends DataClass implements Insertable<Note> {
   /// Set when the row is deleted (soft delete), so other devices learn of it.
   final String? deletedAt;
   final String title;
+
+  /// A plain-text copy of [content], kept for search and previews.
   final String body;
   final String? projectId;
+
+  /// The page's blocks as editor JSON; null for a note made before pages
+  /// (its [body] is then turned into paragraphs when it opens).
+  final String? content;
+
+  /// The page this page sits inside, or null for a top-level page.
+  final String? parentId;
+
+  /// An emoji, or null for the default page icon.
+  final String? icon;
+
+  /// A cover colour name, or null for no cover.
+  final String? cover;
+
+  /// 1 when the page is a favourite.
+  final int? favorite;
+
+  /// When the page went to the Trash (ISO 8601, UTC); null when it is not
+  /// in the Trash.
+  final String? trashedAt;
+
+  /// The page's place among its sibling pages (smaller first).
+  final double? sortOrder;
   const Note({
     required this.id,
     required this.userId,
@@ -7132,6 +7307,13 @@ class Note extends DataClass implements Insertable<Note> {
     required this.title,
     required this.body,
     this.projectId,
+    this.content,
+    this.parentId,
+    this.icon,
+    this.cover,
+    this.favorite,
+    this.trashedAt,
+    this.sortOrder,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -7147,6 +7329,27 @@ class Note extends DataClass implements Insertable<Note> {
     map['body'] = Variable<String>(body);
     if (!nullToAbsent || projectId != null) {
       map['project_id'] = Variable<String>(projectId);
+    }
+    if (!nullToAbsent || content != null) {
+      map['content'] = Variable<String>(content);
+    }
+    if (!nullToAbsent || parentId != null) {
+      map['parent_id'] = Variable<String>(parentId);
+    }
+    if (!nullToAbsent || icon != null) {
+      map['icon'] = Variable<String>(icon);
+    }
+    if (!nullToAbsent || cover != null) {
+      map['cover'] = Variable<String>(cover);
+    }
+    if (!nullToAbsent || favorite != null) {
+      map['favorite'] = Variable<int>(favorite);
+    }
+    if (!nullToAbsent || trashedAt != null) {
+      map['trashed_at'] = Variable<String>(trashedAt);
+    }
+    if (!nullToAbsent || sortOrder != null) {
+      map['sort_order'] = Variable<double>(sortOrder);
     }
     return map;
   }
@@ -7165,6 +7368,25 @@ class Note extends DataClass implements Insertable<Note> {
       projectId: projectId == null && nullToAbsent
           ? const Value.absent()
           : Value(projectId),
+      content: content == null && nullToAbsent
+          ? const Value.absent()
+          : Value(content),
+      parentId: parentId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(parentId),
+      icon: icon == null && nullToAbsent ? const Value.absent() : Value(icon),
+      cover: cover == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cover),
+      favorite: favorite == null && nullToAbsent
+          ? const Value.absent()
+          : Value(favorite),
+      trashedAt: trashedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(trashedAt),
+      sortOrder: sortOrder == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sortOrder),
     );
   }
 
@@ -7182,6 +7404,13 @@ class Note extends DataClass implements Insertable<Note> {
       title: serializer.fromJson<String>(json['title']),
       body: serializer.fromJson<String>(json['body']),
       projectId: serializer.fromJson<String?>(json['projectId']),
+      content: serializer.fromJson<String?>(json['content']),
+      parentId: serializer.fromJson<String?>(json['parentId']),
+      icon: serializer.fromJson<String?>(json['icon']),
+      cover: serializer.fromJson<String?>(json['cover']),
+      favorite: serializer.fromJson<int?>(json['favorite']),
+      trashedAt: serializer.fromJson<String?>(json['trashedAt']),
+      sortOrder: serializer.fromJson<double?>(json['sortOrder']),
     );
   }
   @override
@@ -7196,6 +7425,13 @@ class Note extends DataClass implements Insertable<Note> {
       'title': serializer.toJson<String>(title),
       'body': serializer.toJson<String>(body),
       'projectId': serializer.toJson<String?>(projectId),
+      'content': serializer.toJson<String?>(content),
+      'parentId': serializer.toJson<String?>(parentId),
+      'icon': serializer.toJson<String?>(icon),
+      'cover': serializer.toJson<String?>(cover),
+      'favorite': serializer.toJson<int?>(favorite),
+      'trashedAt': serializer.toJson<String?>(trashedAt),
+      'sortOrder': serializer.toJson<double?>(sortOrder),
     };
   }
 
@@ -7208,6 +7444,13 @@ class Note extends DataClass implements Insertable<Note> {
     String? title,
     String? body,
     Value<String?> projectId = const Value.absent(),
+    Value<String?> content = const Value.absent(),
+    Value<String?> parentId = const Value.absent(),
+    Value<String?> icon = const Value.absent(),
+    Value<String?> cover = const Value.absent(),
+    Value<int?> favorite = const Value.absent(),
+    Value<String?> trashedAt = const Value.absent(),
+    Value<double?> sortOrder = const Value.absent(),
   }) => Note(
     id: id ?? this.id,
     userId: userId ?? this.userId,
@@ -7217,6 +7460,13 @@ class Note extends DataClass implements Insertable<Note> {
     title: title ?? this.title,
     body: body ?? this.body,
     projectId: projectId.present ? projectId.value : this.projectId,
+    content: content.present ? content.value : this.content,
+    parentId: parentId.present ? parentId.value : this.parentId,
+    icon: icon.present ? icon.value : this.icon,
+    cover: cover.present ? cover.value : this.cover,
+    favorite: favorite.present ? favorite.value : this.favorite,
+    trashedAt: trashedAt.present ? trashedAt.value : this.trashedAt,
+    sortOrder: sortOrder.present ? sortOrder.value : this.sortOrder,
   );
   Note copyWithCompanion(NotesCompanion data) {
     return Note(
@@ -7228,6 +7478,13 @@ class Note extends DataClass implements Insertable<Note> {
       title: data.title.present ? data.title.value : this.title,
       body: data.body.present ? data.body.value : this.body,
       projectId: data.projectId.present ? data.projectId.value : this.projectId,
+      content: data.content.present ? data.content.value : this.content,
+      parentId: data.parentId.present ? data.parentId.value : this.parentId,
+      icon: data.icon.present ? data.icon.value : this.icon,
+      cover: data.cover.present ? data.cover.value : this.cover,
+      favorite: data.favorite.present ? data.favorite.value : this.favorite,
+      trashedAt: data.trashedAt.present ? data.trashedAt.value : this.trashedAt,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
     );
   }
 
@@ -7241,7 +7498,14 @@ class Note extends DataClass implements Insertable<Note> {
           ..write('deletedAt: $deletedAt, ')
           ..write('title: $title, ')
           ..write('body: $body, ')
-          ..write('projectId: $projectId')
+          ..write('projectId: $projectId, ')
+          ..write('content: $content, ')
+          ..write('parentId: $parentId, ')
+          ..write('icon: $icon, ')
+          ..write('cover: $cover, ')
+          ..write('favorite: $favorite, ')
+          ..write('trashedAt: $trashedAt, ')
+          ..write('sortOrder: $sortOrder')
           ..write(')'))
         .toString();
   }
@@ -7256,6 +7520,13 @@ class Note extends DataClass implements Insertable<Note> {
     title,
     body,
     projectId,
+    content,
+    parentId,
+    icon,
+    cover,
+    favorite,
+    trashedAt,
+    sortOrder,
   );
   @override
   bool operator ==(Object other) =>
@@ -7268,7 +7539,14 @@ class Note extends DataClass implements Insertable<Note> {
           other.deletedAt == this.deletedAt &&
           other.title == this.title &&
           other.body == this.body &&
-          other.projectId == this.projectId);
+          other.projectId == this.projectId &&
+          other.content == this.content &&
+          other.parentId == this.parentId &&
+          other.icon == this.icon &&
+          other.cover == this.cover &&
+          other.favorite == this.favorite &&
+          other.trashedAt == this.trashedAt &&
+          other.sortOrder == this.sortOrder);
 }
 
 class NotesCompanion extends UpdateCompanion<Note> {
@@ -7280,6 +7558,13 @@ class NotesCompanion extends UpdateCompanion<Note> {
   final Value<String> title;
   final Value<String> body;
   final Value<String?> projectId;
+  final Value<String?> content;
+  final Value<String?> parentId;
+  final Value<String?> icon;
+  final Value<String?> cover;
+  final Value<int?> favorite;
+  final Value<String?> trashedAt;
+  final Value<double?> sortOrder;
   final Value<int> rowid;
   const NotesCompanion({
     this.id = const Value.absent(),
@@ -7290,6 +7575,13 @@ class NotesCompanion extends UpdateCompanion<Note> {
     this.title = const Value.absent(),
     this.body = const Value.absent(),
     this.projectId = const Value.absent(),
+    this.content = const Value.absent(),
+    this.parentId = const Value.absent(),
+    this.icon = const Value.absent(),
+    this.cover = const Value.absent(),
+    this.favorite = const Value.absent(),
+    this.trashedAt = const Value.absent(),
+    this.sortOrder = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   NotesCompanion.insert({
@@ -7301,6 +7593,13 @@ class NotesCompanion extends UpdateCompanion<Note> {
     required String title,
     required String body,
     this.projectId = const Value.absent(),
+    this.content = const Value.absent(),
+    this.parentId = const Value.absent(),
+    this.icon = const Value.absent(),
+    this.cover = const Value.absent(),
+    this.favorite = const Value.absent(),
+    this.trashedAt = const Value.absent(),
+    this.sortOrder = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        userId = Value(userId),
@@ -7317,6 +7616,13 @@ class NotesCompanion extends UpdateCompanion<Note> {
     Expression<String>? title,
     Expression<String>? body,
     Expression<String>? projectId,
+    Expression<String>? content,
+    Expression<String>? parentId,
+    Expression<String>? icon,
+    Expression<String>? cover,
+    Expression<int>? favorite,
+    Expression<String>? trashedAt,
+    Expression<double>? sortOrder,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -7328,6 +7634,13 @@ class NotesCompanion extends UpdateCompanion<Note> {
       if (title != null) 'title': title,
       if (body != null) 'body': body,
       if (projectId != null) 'project_id': projectId,
+      if (content != null) 'content': content,
+      if (parentId != null) 'parent_id': parentId,
+      if (icon != null) 'icon': icon,
+      if (cover != null) 'cover': cover,
+      if (favorite != null) 'favorite': favorite,
+      if (trashedAt != null) 'trashed_at': trashedAt,
+      if (sortOrder != null) 'sort_order': sortOrder,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -7341,6 +7654,13 @@ class NotesCompanion extends UpdateCompanion<Note> {
     Value<String>? title,
     Value<String>? body,
     Value<String?>? projectId,
+    Value<String?>? content,
+    Value<String?>? parentId,
+    Value<String?>? icon,
+    Value<String?>? cover,
+    Value<int?>? favorite,
+    Value<String?>? trashedAt,
+    Value<double?>? sortOrder,
     Value<int>? rowid,
   }) {
     return NotesCompanion(
@@ -7352,6 +7672,13 @@ class NotesCompanion extends UpdateCompanion<Note> {
       title: title ?? this.title,
       body: body ?? this.body,
       projectId: projectId ?? this.projectId,
+      content: content ?? this.content,
+      parentId: parentId ?? this.parentId,
+      icon: icon ?? this.icon,
+      cover: cover ?? this.cover,
+      favorite: favorite ?? this.favorite,
+      trashedAt: trashedAt ?? this.trashedAt,
+      sortOrder: sortOrder ?? this.sortOrder,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -7383,6 +7710,27 @@ class NotesCompanion extends UpdateCompanion<Note> {
     if (projectId.present) {
       map['project_id'] = Variable<String>(projectId.value);
     }
+    if (content.present) {
+      map['content'] = Variable<String>(content.value);
+    }
+    if (parentId.present) {
+      map['parent_id'] = Variable<String>(parentId.value);
+    }
+    if (icon.present) {
+      map['icon'] = Variable<String>(icon.value);
+    }
+    if (cover.present) {
+      map['cover'] = Variable<String>(cover.value);
+    }
+    if (favorite.present) {
+      map['favorite'] = Variable<int>(favorite.value);
+    }
+    if (trashedAt.present) {
+      map['trashed_at'] = Variable<String>(trashedAt.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<double>(sortOrder.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -7400,6 +7748,13 @@ class NotesCompanion extends UpdateCompanion<Note> {
           ..write('title: $title, ')
           ..write('body: $body, ')
           ..write('projectId: $projectId, ')
+          ..write('content: $content, ')
+          ..write('parentId: $parentId, ')
+          ..write('icon: $icon, ')
+          ..write('cover: $cover, ')
+          ..write('favorite: $favorite, ')
+          ..write('trashedAt: $trashedAt, ')
+          ..write('sortOrder: $sortOrder, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -11508,6 +11863,13 @@ typedef $$NotesTableCreateCompanionBuilder = NotesCompanion Function({
   required String title,
   required String body,
   Value<String?> projectId,
+  Value<String?> content,
+  Value<String?> parentId,
+  Value<String?> icon,
+  Value<String?> cover,
+  Value<int?> favorite,
+  Value<String?> trashedAt,
+  Value<double?> sortOrder,
   Value<int> rowid,
 });
 typedef $$NotesTableUpdateCompanionBuilder = NotesCompanion Function({
@@ -11519,6 +11881,13 @@ typedef $$NotesTableUpdateCompanionBuilder = NotesCompanion Function({
   Value<String> title,
   Value<String> body,
   Value<String?> projectId,
+  Value<String?> content,
+  Value<String?> parentId,
+  Value<String?> icon,
+  Value<String?> cover,
+  Value<int?> favorite,
+  Value<String?> trashedAt,
+  Value<double?> sortOrder,
   Value<int> rowid,
 });
 
@@ -11567,6 +11936,41 @@ class $$NotesTableFilterComposer extends Composer<_$AppDatabase, $NotesTable> {
 
   ColumnFilters<String> get projectId => $composableBuilder(
     column: $table.projectId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get content => $composableBuilder(
+    column: $table.content,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get parentId => $composableBuilder(
+    column: $table.parentId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get icon => $composableBuilder(
+    column: $table.icon,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cover => $composableBuilder(
+    column: $table.cover,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get favorite => $composableBuilder(
+    column: $table.favorite,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get trashedAt => $composableBuilder(
+    column: $table.trashedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -11619,6 +12023,41 @@ class $$NotesTableOrderingComposer
     column: $table.projectId,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get content => $composableBuilder(
+    column: $table.content,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get parentId => $composableBuilder(
+    column: $table.parentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get icon => $composableBuilder(
+    column: $table.icon,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get cover => $composableBuilder(
+    column: $table.cover,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get favorite => $composableBuilder(
+    column: $table.favorite,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get trashedAt => $composableBuilder(
+    column: $table.trashedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$NotesTableAnnotationComposer
@@ -11653,6 +12092,27 @@ class $$NotesTableAnnotationComposer
 
   GeneratedColumn<String> get projectId =>
       $composableBuilder(column: $table.projectId, builder: (column) => column);
+
+  GeneratedColumn<String> get content =>
+      $composableBuilder(column: $table.content, builder: (column) => column);
+
+  GeneratedColumn<String> get parentId =>
+      $composableBuilder(column: $table.parentId, builder: (column) => column);
+
+  GeneratedColumn<String> get icon =>
+      $composableBuilder(column: $table.icon, builder: (column) => column);
+
+  GeneratedColumn<String> get cover =>
+      $composableBuilder(column: $table.cover, builder: (column) => column);
+
+  GeneratedColumn<int> get favorite =>
+      $composableBuilder(column: $table.favorite, builder: (column) => column);
+
+  GeneratedColumn<String> get trashedAt =>
+      $composableBuilder(column: $table.trashedAt, builder: (column) => column);
+
+  GeneratedColumn<double> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
 }
 
 class $$NotesTableTableManager
@@ -11691,6 +12151,13 @@ class $$NotesTableTableManager
                 Value<String> title = const Value.absent(),
                 Value<String> body = const Value.absent(),
                 Value<String?> projectId = const Value.absent(),
+                Value<String?> content = const Value.absent(),
+                Value<String?> parentId = const Value.absent(),
+                Value<String?> icon = const Value.absent(),
+                Value<String?> cover = const Value.absent(),
+                Value<int?> favorite = const Value.absent(),
+                Value<String?> trashedAt = const Value.absent(),
+                Value<double?> sortOrder = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => NotesCompanion(
                 id: id,
@@ -11701,6 +12168,13 @@ class $$NotesTableTableManager
                 title: title,
                 body: body,
                 projectId: projectId,
+                content: content,
+                parentId: parentId,
+                icon: icon,
+                cover: cover,
+                favorite: favorite,
+                trashedAt: trashedAt,
+                sortOrder: sortOrder,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -11713,6 +12187,13 @@ class $$NotesTableTableManager
                 required String title,
                 required String body,
                 Value<String?> projectId = const Value.absent(),
+                Value<String?> content = const Value.absent(),
+                Value<String?> parentId = const Value.absent(),
+                Value<String?> icon = const Value.absent(),
+                Value<String?> cover = const Value.absent(),
+                Value<int?> favorite = const Value.absent(),
+                Value<String?> trashedAt = const Value.absent(),
+                Value<double?> sortOrder = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => NotesCompanion.insert(
                 id: id,
@@ -11723,6 +12204,13 @@ class $$NotesTableTableManager
                 title: title,
                 body: body,
                 projectId: projectId,
+                content: content,
+                parentId: parentId,
+                icon: icon,
+                cover: cover,
+                favorite: favorite,
+                trashedAt: trashedAt,
+                sortOrder: sortOrder,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

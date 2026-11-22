@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+import '../../domain/note_tree.dart';
 import '../local/app_database.dart';
 
 /// Reads and writes the Inbox and the user's preferences. It only ever
@@ -134,6 +135,121 @@ class CaptureRepository {
   Future<void> deleteNote(String id) {
     final timestamp = _timestamp();
     return (_db.update(_db.notes)..where((row) => row.id.equals(id))).write(
+      NotesCompanion(deletedAt: Value(timestamp), updatedAt: Value(timestamp)),
+    );
+  }
+
+  // ----------------------------------------------------------- note pages
+
+  Future<List<Note>> _livePages(String userId) => (_db.select(
+    _db.notes,
+  )..where((row) => row.userId.equals(userId) & row.deletedAt.isNull())).get();
+
+  Future<void> _writePage(String id, NotesCompanion change) =>
+      (_db.update(_db.notes)..where((row) => row.id.equals(id))).write(
+        change.copyWith(updatedAt: Value(_timestamp())),
+      );
+
+  /// Adds an empty page at the end of [parentId]'s pages (or the top
+  /// level) and returns its id. Pages may be untitled, as in Notion.
+  Future<String> createPage({
+    required String userId,
+    String? parentId,
+    String? projectId,
+    String title = '',
+  }) async {
+    final id = _newId();
+    final timestamp = _timestamp();
+    final order = nextSortOrder(await _livePages(userId), parentId);
+    await _db
+        .into(_db.notes)
+        .insert(
+          NotesCompanion.insert(
+            id: id,
+            userId: userId,
+            title: title.trim(),
+            body: '',
+            projectId: Value(projectId),
+            parentId: Value(parentId),
+            sortOrder: Value(order),
+            createdAt: timestamp,
+            updatedAt: timestamp,
+          ),
+        );
+    return id;
+  }
+
+  /// Saves a page's title and blocks. [body] is the plain text of the
+  /// blocks, kept for search and previews.
+  Future<void> savePage(
+    String id, {
+    required String title,
+    required String content,
+    required String body,
+  }) => _writePage(
+    id,
+    NotesCompanion(
+      title: Value(title.trim()),
+      content: Value(content),
+      body: Value(body),
+    ),
+  );
+
+  Future<void> setPageIcon(String id, String? icon) =>
+      _writePage(id, NotesCompanion(icon: Value(icon)));
+
+  Future<void> setPageCover(String id, String? cover) =>
+      _writePage(id, NotesCompanion(cover: Value(cover)));
+
+  Future<void> setFavorite(String id, {required bool favorite}) =>
+      _writePage(id, NotesCompanion(favorite: Value(favorite ? 1 : 0)));
+
+  Future<void> setPageProject(String id, String? projectId) =>
+      _writePage(id, NotesCompanion(projectId: Value(projectId)));
+
+  /// Moves a page inside [parentId] (null: the top level) at [sortOrder].
+  /// A page cannot move inside itself or a page inside it.
+  Future<void> movePage(
+    String id, {
+    required String userId,
+    required String? parentId,
+    required double sortOrder,
+  }) async {
+    if (!canMoveUnder(await _livePages(userId), id, parentId)) {
+      throw ArgumentError.value(parentId, 'parentId', 'A page is inside it');
+    }
+    await _writePage(
+      id,
+      NotesCompanion(parentId: Value(parentId), sortOrder: Value(sortOrder)),
+    );
+  }
+
+  /// Puts a page (and so the pages inside it) in the Trash.
+  Future<void> trashPage(String id) =>
+      _writePage(id, NotesCompanion(trashedAt: Value(_timestamp())));
+
+  /// Takes a page out of the Trash. When the page it sat inside is still
+  /// in the Trash, it comes back at the top level.
+  Future<void> restorePage(String id, {required String userId}) async {
+    final pages = await _livePages(userId);
+    final byId = pagesById(pages);
+    final parent = byId[id]?.parentId;
+    final parentHidden = parent != null && isHidden(byId, parent);
+    await _writePage(
+      id,
+      NotesCompanion(
+        trashedAt: const Value(null),
+        parentId: parentHidden ? const Value(null) : const Value.absent(),
+      ),
+    );
+  }
+
+  /// Deletes a page and every page inside it for good (soft delete, so
+  /// the deletion syncs).
+  Future<void> deleteForever(String id, {required String userId}) async {
+    final ids = {id, ...descendantsOf(await _livePages(userId), id)};
+    final timestamp = _timestamp();
+    await (_db.update(_db.notes)..where((row) => row.id.isIn(ids))).write(
       NotesCompanion(deletedAt: Value(timestamp), updatedAt: Value(timestamp)),
     );
   }
