@@ -284,6 +284,16 @@ class _TitleBar extends ConsumerWidget {
                       ),
               ),
             ),
+            // The running timer stays in view on every page, on the left
+            // (founder), before the search box.
+            if (timer != null)
+              Padding(
+                padding: const EdgeInsets.only(right: 10),
+                child: FocusPill(
+                  timer: timer,
+                  onOpen: () => open(AppPage.focus),
+                ),
+              ),
             ConstrainedBox(
               constraints: const BoxConstraints(minWidth: 240, maxWidth: 480),
               child: _SearchBox(onTap: () => openLauncher(context, ref)),
@@ -292,16 +302,6 @@ class _TitleBar extends ConsumerWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  // The running timer stays in view on every page.
-                  if (timer != null) ...[
-                    Flexible(
-                      child: FocusPill(
-                        timer: timer,
-                        onOpen: () => open(AppPage.focus),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                  ],
                   const _ThemeButton(),
                   const SizedBox(width: 6),
                   _NewButton(
