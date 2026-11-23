@@ -622,21 +622,16 @@ class _ProjectFormState extends ConsumerState<_ProjectForm> {
         const FieldLabel('Deadline (optional)'),
         Row(
           children: [
-            Flexible(
-              child: InkWell(
+            // The same date button as the goal form.
+            Expanded(
+              child: OutlinedButton.icon(
                 key: const Key('project-deadline-pick'),
-                borderRadius: BorderRadius.circular(6),
-                onTap: _pickDeadline,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  child: Text(
-                    _deadline == null
-                        ? 'Pick a date'
-                        : formatLongDay(_deadline!),
-                    style: Ember.item.copyWith(
-                      color: _deadline == null ? Ember.ink2 : Ember.ink,
-                    ),
-                  ),
+                onPressed: _pickDeadline,
+                icon: const Icon(Icons.event_outlined, size: 16),
+                label: Text(
+                  _deadline == null
+                      ? 'Pick a date'
+                      : formatLongDay(_deadline!),
                 ),
               ),
             ),

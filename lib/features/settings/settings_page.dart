@@ -209,9 +209,9 @@ class SettingsPage extends ConsumerWidget {
               title: 'Your day',
             ),
             Text(
-              'The day bar on Today starts when you wake up and runs for 24 '
-              'hours. A red dot marks your bedtime. If you stay up later, '
-              'the bar keeps running.',
+              'The day bar on Today starts when you wake up. A red dot marks '
+              'your bedtime, which is 100%. If you stay up later, the bar '
+              'keeps running: 110%, 120% and so on.',
               style: Ember.meta,
             ),
             const SizedBox(height: 12),

@@ -265,6 +265,8 @@ class _AreaFormState extends ConsumerState<_AreaForm> {
                   backgroundColor: Ember.neutral,
                   side: BorderSide.none,
                   visualDensity: VisualDensity.compact,
+                  // No hidden 48 px tap margin, so the rows sit evenly.
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   onPressed: () => setState(() => _name.text = name),
                 ),
             ],

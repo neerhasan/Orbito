@@ -316,7 +316,7 @@ class _TodayScheduleState extends ConsumerState<TodaySchedule> {
                               left: 0,
                               top: h * _hourHeight - 6,
                               child: Text(
-                                formatTime(timeOf((firstHour + h) * 60)),
+                                _hourLabel(firstHour + h),
                                 style: Ember.text(
                                   11,
                                   13,
@@ -1022,4 +1022,10 @@ class _TaskOptionsState extends State<_TaskOptions> {
       ),
     );
   }
+}
+
+/// A short hour label, as in the design: `9 AM`, `12 PM`.
+String _hourLabel(int hour) {
+  final h = hour % 12 == 0 ? 12 : hour % 12;
+  return '$h ${hour % 24 < 12 ? 'AM' : 'PM'}';
 }

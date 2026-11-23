@@ -2,6 +2,13 @@
 
 Claude Code adds a new entry on top at the end of every session.
 
+### 2026-11-23 Today: Schedule; day bar to 100% at bedtime; motion; alignment
+- Schedule (design `Main.dc.html`): a new Today section (it switches itself on for users who chose sections before it existed; switched off it is stored as `-schedule`). Hour chips jump to an hour; the timeline runs from wake time to bedtime (wider when something lies outside), 60 px per hour, with the orange "now" line and time. It shows the Calendar's events, tasks with a time and length, and habits with a usual time (30 minutes, their ring marks the day done). A task whose focus timer runs is orange-tinted with pause, bar and time. Tasks are dragged from the Tasks list on the right onto a time; a scheduled task can be dragged to another time and made longer or shorter by its bottom edge; a click opens its options (done, start focus, change the time, length 15m to 3h, remove the time, open in Tasks). It follows the day picked in the small calendar.
+- Day bar (founder): wake time to bedtime is 100%; after bedtime it goes on (110%, 120%). The bar itself still covers 24 hours. Settings text updated.
+- Motion (ux-motion review): timings 140/240/400 ms (were 180/340/620); leaving uses ease-in and half the time; hover feedback uses the fast timing; the Quick Launcher opens in 110 ms; jumps on the schedule use ease-in-out.
+- Alignment (pages rendered and checked): Schedule hour labels shortened to fit; Life areas suggestion chips no longer leave large gaps; the project deadline is a date button like the goal's.
+- Test results: flutter analyze: no issues. flutter test --concurrency=1: 230 passed (new: Schedule page test; the Schedule section rules; day bar percent past bedtime).
+
 ### 2026-11-23 Tasks: new add box; tags; the timer on the left
 - Done: the Tasks page's add box follows the founder's reference: closed it is "+ Add Task"; a click opens "What would you like to do?" with Date (Today by default; Today, Tomorrow, Next Monday, pick a date, add a time, no date), Priority (flag: High, Medium, none), Tag (earlier tags or a new one), Project and More (a note, a time, clear the options), and Add. Enter adds, Esc closes; date, project and priority stay for the next task. `supabase/015_task_tags.sql` (applied): tasks get `tags` (comma separated, lower case); up to two show on a task row as #tag. The running focus timer in the top bar moved to the left, before the search box.
 - Test results: flutter analyze: no issues. flutter test --concurrency=1: 228 passed. Windows release built; the add box checked open and closed on screenshots.
