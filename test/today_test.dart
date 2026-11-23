@@ -10,14 +10,33 @@ void main() {
 
   test('the stored text keeps the order and drops unknown or repeated '
       'names', () {
-    expect(readSections('tasks,greeting,unknown,tasks'), [
+    expect(readSections('tasks,greeting,unknown,tasks,-schedule'), [
       TodaySection.tasks,
       TodaySection.greeting,
     ]);
     expect(
       writeSections(const [TodaySection.sleep, TodaySection.goals]),
-      'sleep,goals',
+      'sleep,goals,-schedule',
     );
+  });
+
+  test('the Schedule shows up by itself after the greeting until it is '
+      'switched off', () {
+    // A choice saved before the Schedule existed.
+    expect(readSections('greeting,habits,tasks'), [
+      TodaySection.greeting,
+      TodaySection.schedule,
+      TodaySection.habits,
+      TodaySection.tasks,
+    ]);
+    final off = toggleSection(
+      readSections('greeting,habits'),
+      TodaySection.schedule,
+    );
+    expect(readSections(writeSections(off)), [
+      TodaySection.greeting,
+      TodaySection.habits,
+    ]);
   });
 
   test('a section is switched off, and back on at the end', () {

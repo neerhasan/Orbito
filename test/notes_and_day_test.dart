@@ -9,6 +9,7 @@ import 'package:orbito/app/shell.dart';
 import 'package:orbito/app/theme_mode.dart';
 import 'package:orbito/data/local/app_database.dart';
 import 'package:orbito/data/repositories/capture_repository.dart';
+import 'package:orbito/data/repositories/event_repository.dart';
 import 'package:orbito/data/repositories/plan_repository.dart';
 import 'package:orbito/data/repositories/task_repository.dart';
 import 'package:orbito/domain/today.dart';
@@ -513,6 +514,67 @@ void main() {
       );
       expect(container.read(openProjectRequestProvider), id);
       expect(container.read(currentPageProvider), AppPage.projects);
+    });
+
+    _test('the Schedule shows the day; a task dragged onto it gets a time', (
+      tester,
+    ) async {
+      final events = EventRepository(_db, newId: () => 'event-1');
+      final ids = await _read(tester, () async {
+        await _capture.saveDayTimes(userId: _user, wake: '07:00', bed: '22:00');
+        final timed = await _tasks.addTask(
+          userId: _user,
+          title: 'Write plan',
+          dueDate: '2026-11-11',
+          dueTime: '09:00',
+        );
+        await _tasks.setTaskDuration(timed, 60);
+        final loose = await _tasks.addTask(
+          userId: _user,
+          title: 'Call bank',
+          dueDate: '2026-11-11',
+        );
+        await events.addEvent(
+          userId: _user,
+          title: 'Gym',
+          day: '2026-11-11',
+          startTime: '13:00',
+          endTime: '14:00',
+        );
+        return (timed: timed, loose: loose);
+      });
+      await _pump(tester, AppPage.today);
+      expect(find.byKey(const Key('schedule')), findsOneWidget);
+      expect(find.byKey(Key('schedule-task-${ids.timed}')), findsOneWidget);
+      expect(find.byKey(const Key('schedule-event-event-1')), findsOneWidget);
+      expect(find.byKey(const Key('schedule-now')), findsOneWidget);
+
+      // From the Tasks list on the right onto 3 PM (8 hours below 7 AM).
+      final item = find.byKey(Key('today-task-${ids.loose}'));
+      final slot = find.byKey(const Key('schedule-slot'));
+      await tester.ensureVisible(slot);
+      await tester.pump();
+      final start = tester.getCenter(item);
+      final target = tester.getTopLeft(slot) + const Offset(120, 8 * 60.0 + 4);
+      final gesture = await tester.startGesture(start);
+      await tester.pump();
+      for (var i = 1; i <= 8; i++) {
+        await gesture.moveTo(Offset.lerp(start, target, i / 8)!);
+        await tester.pump();
+      }
+      await gesture.up();
+      await _settle(tester);
+      var tasks = await _read(tester, () => _tasks.watchTasks(_user).first);
+      expect(tasks.firstWhere((t) => t.id == ids.loose).dueTime, '15:00');
+
+      // A click on a scheduled task opens its options: 1h 30m long.
+      await _tap(tester, 'schedule-task-${ids.timed}');
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.byKey(const Key('task-option-focus')), findsOneWidget);
+      await _tap(tester, 'task-option-length-90');
+      await _settle(tester);
+      tasks = await _read(tester, () => _tasks.watchTasks(_user).first);
+      expect(tasks.firstWhere((t) => t.id == ids.timed).durationMinutes, 90);
     });
 
     _test('Today shows the day progress and the bedtime from Settings', (

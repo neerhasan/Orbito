@@ -19,6 +19,11 @@ enum TodaySection {
     'Today’s habits and your day from waking to bedtime',
     TodayColumn.main,
   ),
+  schedule(
+    'Schedule',
+    'Your day hour by hour: events, tasks with a time and habits',
+    TodayColumn.main,
+  ),
   time('Time today', 'Focused time since you woke up', TodayColumn.main),
   sleep('Sleep', 'Last night and the last 7 nights', TodayColumn.main),
   calendar(
@@ -44,6 +49,11 @@ const _none = 'none';
 /// New users see every section, in the design's order.
 const defaultSections = TodaySection.values;
 
+/// Sections added after users had already chosen theirs. They show up by
+/// themselves (after the greeting) until the user switches them off, which
+/// is stored as `-name`.
+const _addedLater = [TodaySection.schedule];
+
 /// The sections that are on, in order, from the stored text.
 List<TodaySection> readSections(String? stored) {
   if (stored == null || stored.trim().isEmpty) return defaultSections;
@@ -51,17 +61,30 @@ List<TodaySection> readSections(String? stored) {
   final byName = {
     for (final section in TodaySection.values) section.name: section,
   };
+  final names = [for (final name in stored.split(',')) name.trim()];
   final seen = <TodaySection>{};
-  return [
-    for (final name in stored.split(','))
-      if (byName[name.trim()] case final section? when seen.add(section))
-        section,
+  final sections = [
+    for (final name in names)
+      if (byName[name] case final section? when seen.add(section)) section,
   ];
+  for (final section in _addedLater) {
+    if (seen.contains(section) || names.contains('-${section.name}')) continue;
+    final greeting = sections.indexOf(TodaySection.greeting);
+    sections.insert(greeting + 1, section);
+  }
+  return sections;
 }
 
 /// The text to store for [sections].
-String writeSections(List<TodaySection> sections) =>
-    sections.isEmpty ? _none : sections.map((s) => s.name).join(',');
+String writeSections(List<TodaySection> sections) {
+  if (sections.isEmpty) return _none;
+  return [
+    for (final section in sections) section.name,
+    // Remember that a later section was switched off on purpose.
+    for (final section in _addedLater)
+      if (!sections.contains(section)) '-${section.name}',
+  ].join(',');
+}
 
 /// [sections] with [section] switched on (added at the end) or off.
 List<TodaySection> toggleSection(

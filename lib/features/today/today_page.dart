@@ -19,6 +19,7 @@ import '../../ui/ember.dart';
 import '../../ui/motion.dart';
 import '../../ui/widgets.dart';
 import '../settings/settings_page.dart' show saveTodaySections;
+import 'today_schedule.dart';
 
 /// The day picked in the calendar. Null means today. The Tasks section
 /// shows the tasks of this day.
@@ -53,6 +54,9 @@ class TodayPage extends ConsumerWidget {
     Widget build(TodaySection section) => switch (section) {
       TodaySection.greeting => _Greeting(now: now, open: open),
       TodaySection.habits => _HabitsSection(now: now, open: open),
+      TodaySection.schedule => TodaySchedule(
+        day: ref.watch(selectedDayProvider) ?? today,
+      ),
       TodaySection.time => const _TimeToday(),
       TodaySection.sleep => _SleepCard(open: open),
       TodaySection.calendar => const _MiniCalendar(),
@@ -951,9 +955,11 @@ class _TodayTasksState extends ConsumerState<_TodayTasks> {
       final project = projects.where((p) => p.id == task.projectId).firstOrNull;
       final done = task.status == TaskStatus.done;
       final late = !done && task.dueDate!.compareTo(today) < 0;
+      // Drag a task onto the Schedule to give it a time.
       return Padding(
         padding: const EdgeInsets.only(bottom: 12),
-        child: Appear(
+        child: _DragTask(
+          task: task,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1310,6 +1316,43 @@ class _GoalsSection extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// A task in the Tasks list that can be dragged onto the Schedule; it
+/// arrives softly like the other rows.
+class _DragTask extends StatelessWidget {
+  const _DragTask({required this.task, required this.child});
+
+  final Task task;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Draggable<Task>(
+      data: task,
+      dragAnchorStrategy: pointerDragAnchorStrategy,
+      feedback: Material(
+        color: Colors.transparent,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 240),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+          decoration: BoxDecoration(
+            color: Ember.surface,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Ember.line),
+          ),
+          child: Text(
+            task.title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Ember.item.copyWith(color: Ember.ink),
+          ),
+        ),
+      ),
+      childWhenDragging: Opacity(opacity: 0.35, child: child),
+      child: Appear(child: child),
     );
   }
 }
