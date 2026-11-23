@@ -7,12 +7,28 @@ import 'package:flutter/material.dart';
 /// When the system asks for less motion (Windows: Settings, Accessibility,
 /// Visual effects, "Animation effects" off), every duration becomes zero.
 abstract final class Motion {
-  static const fast = Duration(milliseconds: 180);
-  static const base = Duration(milliseconds: 340);
-  static const slow = Duration(milliseconds: 620);
+  // Timings follow the ux-motion ranges: hover and press feedback 100 to
+  // 150 ms, UI transitions 150 to 300 ms, large panels up to about 400 ms.
 
-  /// Starts quickly and settles slowly, like a liquid coming to rest.
+  /// Hover, press and small feedback.
+  static const fast = Duration(milliseconds: 140);
+
+  /// Most transitions: a page, a panel, a chosen segment.
+  static const base = Duration(milliseconds: 240);
+
+  /// Bars and charts filling, the largest moves.
+  static const slow = Duration(milliseconds: 400);
+
+  /// Starts quickly and settles slowly, like a liquid coming to rest. For
+  /// things that arrive (ease-out).
   static const soft = Cubic(0.22, 1, 0.36, 1);
+
+  /// For things that leave: they speed up as they go (ease-in).
+  static const exit = Cubic(0.7, 0, 0.84, 0);
+
+  /// For things that move from one place on the screen to another
+  /// (ease-in-out).
+  static const move = Cubic(0.65, 0, 0.35, 1);
 
   /// Like [soft] with a very small overshoot, for things that fill or grow
   /// (a ring being ticked, a check mark).
@@ -99,7 +115,8 @@ class SoftSwitcher extends StatelessWidget {
       duration: Motion.of(context, Motion.base),
       reverseDuration: Motion.of(context, Motion.fast),
       switchInCurve: Motion.soft,
-      switchOutCurve: Curves.easeOut,
+      // Leaving eases in and takes about half the time of arriving.
+      switchOutCurve: Motion.exit,
       layoutBuilder: (current, previous) => Stack(
         alignment: Alignment.topCenter,
         children: [...previous, ?current],

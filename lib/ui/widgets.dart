@@ -227,7 +227,7 @@ class _TileState extends State<Tile> {
       child: Pressable(
         enabled: tappable,
         child: AnimatedContainer(
-          duration: Motion.of(context, Motion.base),
+          duration: Motion.of(context, Motion.fast),
           curve: Motion.soft,
           decoration: BoxDecoration(
             color: color,
@@ -286,7 +286,7 @@ class SoftButton extends StatelessWidget {
     final color = active ? Ember.ink : Ember.ink2;
     return Pressable(
       child: AnimatedContainer(
-        duration: Motion.of(context, Motion.base),
+        duration: Motion.of(context, Motion.fast),
         curve: Motion.soft,
         decoration: BoxDecoration(
           color: active ? Ember.neutral : (background ?? Ember.tile),

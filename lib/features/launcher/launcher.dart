@@ -35,7 +35,9 @@ Future<void> showQuickLauncher(
     barrierDismissible: true,
     barrierLabel: 'Close the Quick Launcher',
     barrierColor: Colors.black.withValues(alpha: 0.45),
-    transitionDuration: Motion.of(context, Motion.base),
+    // Opened many times a day, so it appears almost at once (ux-motion:
+    // frequency of use).
+    transitionDuration: Motion.of(context, const Duration(milliseconds: 110)),
     pageBuilder: (context, _, _) => _QuickLauncher(onFocus: onFocus),
     transitionBuilder: (context, animation, _, child) {
       final curved = CurvedAnimation(parent: animation, curve: Motion.soft);

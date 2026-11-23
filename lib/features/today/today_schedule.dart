@@ -113,7 +113,7 @@ class _TodayScheduleState extends ConsumerState<TodaySchedule> {
     if (Motion.reduced(context)) {
       _scroll.jumpTo(target);
     } else {
-      _scroll.animateTo(target, duration: Motion.base, curve: Motion.soft);
+      _scroll.animateTo(target, duration: Motion.base, curve: Motion.move);
     }
   }
 
