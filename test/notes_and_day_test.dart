@@ -144,7 +144,8 @@ void main() {
       );
       expect(evening.share, 0.5);
       expect(evening.bedShare, closeTo(16 / 24, 1e-9));
-      expect(evening.percent, 50);
+      // Wake to bedtime is 100% (founder): 12 of 16 waking hours.
+      expect(evening.percent, 75);
     });
 
     test('keeps running past bedtime and into the next morning', () {
@@ -164,6 +165,9 @@ void main() {
       );
       expect(night.share, closeTo(20 / 24, 1e-9));
       expect(night.pastBed, isTrue);
+      // Up four hours past bedtime: 20 of 16 waking hours.
+      expect(night.percent, 125);
+      expect(late.percent, 103);
     });
 
     test('puts the bedtime dot right when bedtime is after midnight', () {
@@ -519,8 +523,8 @@ void main() {
         () => _capture.saveDayTimes(userId: _user, wake: '06:00', bed: '22:00'),
       );
       await _pump(tester, AppPage.today);
-      // The clock is 12:00, six hours after waking: 25%.
-      expect(find.text('Day progress · 25%'), findsOneWidget);
+      // The clock is 12:00, six of the 16 waking hours: 38%.
+      expect(find.text('Day progress · 38%'), findsOneWidget);
       expect(find.text('Bedtime 10:00 PM'), findsOneWidget);
     });
 

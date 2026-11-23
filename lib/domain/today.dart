@@ -104,7 +104,12 @@ class DayProgress {
     required this.share,
     required this.bedShare,
     required this.pastBed,
+    required this.awake,
   });
+
+  /// How much of the waking day (wake time to bedtime) has passed: 1 at
+  /// bedtime, more than 1 when the user stays up later.
+  final double awake;
 
   /// 0 to 1: how much of the 24 hours since waking has passed.
   final double share;
@@ -115,8 +120,9 @@ class DayProgress {
   /// True once the bedtime has passed (the user is up late).
   final bool pastBed;
 
-  /// The whole percent shown next to the bar.
-  int get percent => (share * 100).round();
+  /// The whole percent shown next to the bar (founder): 100% at bedtime,
+  /// 110%, 120% and so on after it.
+  int get percent => (awake * 100).round();
 }
 
 /// The day bar for [now], with [wake] and [bed] as `HH:MM`. Before today's
@@ -150,5 +156,6 @@ DayProgress dayProgress(
     share: (elapsed / 1440).clamp(0.0, 1.0),
     bedShare: bedOffset / 1440,
     pastBed: elapsed >= bedOffset,
+    awake: bedOffset == 0 ? 0 : elapsed / bedOffset,
   );
 }
