@@ -2,6 +2,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:orbito/data/local/app_database.dart';
 import 'package:orbito/data/repositories/task_repository.dart';
+import 'package:orbito/domain/tags.dart';
 
 void main() {
   late AppDatabase db;
@@ -168,5 +169,26 @@ void main() {
     await pumpEventQueue();
     await tasks.addTask(userId: 'user-a', title: 'Live');
     await seen;
+  });
+
+  test('tags are kept clean, once each, and can be changed', () async {
+    expect(cleanTag('  #Deep  Work '), 'deep-work');
+    expect(joinTags(['Errand', '#errand', ' ', 'home']), 'errand,home');
+    expect(joinTags(const []), isNull);
+
+    final id = await tasks.addTask(
+      userId: 'user-a',
+      title: 'Visa form',
+      tags: ['Papers', '#papers', 'Korea'],
+      notes: '  Ask D-2  ',
+    );
+    var task = (await tasks.watchTasks('user-a').first).single;
+    expect(tagsOf(task), ['papers', 'korea']);
+    expect(task.notes, 'Ask D-2');
+
+    await tasks.setTaskTags(id, ['home']);
+    task = (await tasks.watchTasks('user-a').first).single;
+    expect(task.tags, 'home');
+    expect(knownTags([task]), ['home']);
   });
 }

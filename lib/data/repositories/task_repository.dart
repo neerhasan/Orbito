@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+import '../../domain/tags.dart';
 import '../local/app_database.dart';
 
 /// Reads and writes tasks. It only ever touches the local database. Sync
@@ -47,9 +48,12 @@ class TaskRepository {
     String? dueDate,
     String? dueTime,
     String priority = TaskPriority.none,
+    List<String> tags = const [],
+    String? notes,
   }) async {
     final id = _newId();
     final timestamp = _timestamp();
+    final note = notes?.trim();
     await _db
         .into(_db.tasks)
         .insert(
@@ -60,6 +64,8 @@ class TaskRepository {
             projectId: Value(projectId),
             dueDate: Value(dueDate),
             dueTime: Value(dueDate == null ? null : dueTime),
+            tags: Value(joinTags(tags)),
+            notes: Value(note == null || note.isEmpty ? null : note),
             priority: _priority(priority),
             status: TaskStatus.open,
             createdAt: timestamp,
@@ -120,6 +126,16 @@ class TaskRepository {
     return (_db.update(_db.tasks)..where((row) => row.id.equals(id))).write(
       TasksCompanion(
         durationMinutes: Value(minutes),
+        updatedAt: Value(_timestamp()),
+      ),
+    );
+  }
+
+  /// Replaces a task's tags.
+  Future<void> setTaskTags(String id, List<String> tags) {
+    return (_db.update(_db.tasks)..where((row) => row.id.equals(id))).write(
+      TasksCompanion(
+        tags: Value(joinTags(tags)),
         updatedAt: Value(_timestamp()),
       ),
     );

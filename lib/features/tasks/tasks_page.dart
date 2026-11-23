@@ -9,12 +9,14 @@ import '../../data/local/app_database.dart';
 import '../../domain/dates.dart';
 import '../../domain/focus.dart';
 import '../../domain/sleep.dart' show formatTime, timeOf;
+import '../../domain/tags.dart';
 import '../../domain/task_view.dart';
 import '../../ui/ember.dart';
 import '../../ui/motion.dart';
 import '../../ui/widgets.dart';
 import '../focus/focus_page.dart' show startFocus;
 import 'completion_chart.dart';
+import 'task_composer.dart';
 
 enum _TasksView { list, month }
 
@@ -39,7 +41,6 @@ class TasksPage extends ConsumerStatefulWidget {
 }
 
 class _TasksPageState extends ConsumerState<TasksPage> {
-  final _newTask = TextEditingController();
   final _newTaskFocus = FocusNode();
   var _range = ChartRange.twoWeeks;
   var _view = _TasksView.list;
@@ -57,30 +58,33 @@ class _TasksPageState extends ConsumerState<TasksPage> {
 
   @override
   void dispose() {
-    _newTask.dispose();
     _newTaskFocus.dispose();
     super.dispose();
   }
 
   /// Adds a task. It takes over the project and priority filters, so
   /// the new task is visible in the list the user is looking at.
-  Future<void> _add() async {
+  /// Saves a task from the add box; false keeps the typed text there.
+  Future<bool> _add(TaskDraft draft) async {
     final userId = ref.read(userIdProvider);
-    final title = _newTask.text.trim();
-    if (userId == null || title.isEmpty) return;
+    if (userId == null) return false;
     try {
       await ref
           .read(taskRepositoryProvider)
           .addTask(
             userId: userId,
-            title: title,
-            projectId: _projectId,
-            priority: _priority ?? TaskPriority.none,
+            title: draft.title,
+            projectId: draft.projectId,
+            dueDate: draft.dueDate,
+            dueTime: draft.dueTime,
+            priority: draft.priority,
+            tags: draft.tags,
+            notes: draft.notes,
           );
-      _newTask.clear();
+      return true;
     } catch (error) {
-      // The typed title stays in the box, so nothing is lost.
       if (mounted) showMessage(context, 'Could not add the task. ($error)');
+      return false;
     }
   }
 
@@ -324,7 +328,15 @@ class _TasksPageState extends ConsumerState<TasksPage> {
               ),
             ),
           ),
-        _AddBox(controller: _newTask, focusNode: _newTaskFocus, onAdd: _add),
+        TaskComposer(
+          focusNode: _newTaskFocus,
+          today: today,
+          projects: projects,
+          knownTags: knownTags(tasks),
+          projectId: projectId,
+          priority: _priority,
+          onAdd: _add,
+        ),
         if (_view == _TasksView.month)
           _MonthView(
             month: month,
@@ -527,63 +539,6 @@ class _MoreMenu extends StatelessWidget {
           borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(Icons.more_vert, size: 20, color: Ember.ink2),
-      ),
-    );
-  }
-}
-
-/// The box to add a task (the design's `.input` with a plus and "Enter").
-class _AddBox extends StatelessWidget {
-  const _AddBox({
-    required this.controller,
-    required this.focusNode,
-    required this.onAdd,
-  });
-
-  final TextEditingController controller;
-  final FocusNode focusNode;
-  final VoidCallback onAdd;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 40,
-      padding: const EdgeInsets.only(left: 12, right: 6),
-      decoration: BoxDecoration(
-        color: Ember.tile,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.add, size: 16, color: Ember.ink2),
-          const SizedBox(width: 8),
-          Expanded(
-            child: TextField(
-              key: const Key('task-new'),
-              controller: controller,
-              focusNode: focusNode,
-              onSubmitted: (_) => onAdd(),
-              style: Ember.text(13, 16, weight: 400, color: Ember.ink),
-              decoration: const InputDecoration(
-                hintText: 'Add a task',
-                filled: false,
-                border: InputBorder.none,
-                focusedBorder: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                contentPadding: EdgeInsets.zero,
-              ),
-            ),
-          ),
-          InkWell(
-            key: const Key('task-add'),
-            borderRadius: BorderRadius.circular(6),
-            onTap: onAdd,
-            child: const Padding(
-              padding: EdgeInsets.all(4),
-              child: Kbd('Enter'),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -805,6 +760,13 @@ class TaskRow extends StatelessWidget {
         ),
       if (task.priority != TaskPriority.none && width >= 320)
         PriorityTag(task.priority),
+      if (width >= 380)
+        for (final tag in tagsOf(task).take(2))
+          Text(
+            '#$tag',
+            key: Key('task-tag-${task.id}-$tag'),
+            style: Ember.meta,
+          ),
       if (project != null && width >= 440)
         ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 160),

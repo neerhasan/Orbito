@@ -1,5 +1,6 @@
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:orbito/app/app.dart';
@@ -336,14 +337,28 @@ void main() {
       expect(find.text('No tasks yet'), findsOneWidget);
       expect(find.text('0 open'), findsOneWidget);
 
+      // Closed, the box is one line; a click opens it with its options.
+      expect(find.byKey(const Key('task-new')), findsNothing);
+      await _tap(tester, 'task-compose');
+      await tester.pump();
+      for (final key in [
+        'compose-date',
+        'compose-priority',
+        'compose-tag',
+        'compose-project',
+        'compose-more',
+      ]) {
+        expect(find.byKey(Key(key)), findsOneWidget);
+      }
       await tester.enterText(find.byKey(const Key('task-new')), 'Buy shoes');
       await _tap(tester, 'task-add');
       await _settle(tester);
 
       expect(find.text('Buy shoes'), findsOneWidget);
       expect(find.text('1 open'), findsOneWidget);
+      // A new task is for today unless another date is picked.
       expect(
-        tester.widget<Text>(find.byKey(const Key('group-No date'))).data,
+        tester.widget<Text>(find.byKey(const Key('group-Today'))).data,
         '1',
       );
 
@@ -351,7 +366,7 @@ void main() {
       await _settle(tester);
 
       expect(find.text('No open tasks'), findsOneWidget);
-      expect(find.text('0 open'), findsOneWidget);
+      expect(find.textContaining('0 open'), findsOneWidget);
       // Completed tasks are hidden; one switch shows them, and hides them again.
       expect(find.text('Buy shoes'), findsNothing);
       await _menu(tester, 'show-completed');
@@ -365,6 +380,63 @@ void main() {
       expect(find.text('Last 14 days · 1 done · 0.1 a day'), findsOneWidget);
       await _tap(tester, 'chart-week');
       expect(find.text('Last 7 days · 1 done · 0.1 a day'), findsOneWidget);
+    });
+
+    _testPage('the add box sets date, priority, tag, project and a note', (
+      tester,
+    ) async {
+      final project = await _read(tester, () async {
+        await _plan.addArea(userId: _user, name: 'Health', color: 'green');
+        return _plan.addProject(userId: _user, name: 'Korea', color: 'blue');
+      });
+      await _pumpPage(tester, AppPage.tasks);
+      await _tap(tester, 'task-compose');
+      await tester.pump();
+      await tester.enterText(find.byKey(const Key('task-new')), 'Visa form');
+
+      Future<void> pick(String menu, String item) async {
+        await _tap(tester, menu);
+        await tester.pump(const Duration(milliseconds: 400));
+        await _tap(tester, item);
+        await tester.pump(const Duration(milliseconds: 400));
+      }
+
+      await pick('compose-date', 'compose-date-tomorrow');
+      await pick('compose-priority', 'compose-priority-high');
+      await pick('compose-project', 'compose-project-$project');
+      await pick('compose-tag', 'compose-tag-new');
+      await tester.enterText(
+        find.byKey(const Key('compose-tag-name')),
+        '#Deep Work',
+      );
+      await _tap(tester, 'compose-tag-save');
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(
+        find.byKey(const Key('compose-tag-chip-deep-work')),
+        findsOneWidget,
+      );
+      await pick('compose-more', 'compose-more-note');
+      await tester.enterText(find.byKey(const Key('compose-note')), 'Ask D-2');
+      await _tap(tester, 'task-add');
+      await _settle(tester);
+
+      final task = (await _read(
+        tester,
+        () => _tasks.watchTasks(_user).first,
+      )).single;
+      expect(task.title, 'Visa form');
+      expect(task.dueDate, '2026-11-12');
+      expect(task.priority, TaskPriority.high);
+      expect(task.projectId, project);
+      expect(task.tags, 'deep-work');
+      expect(task.notes, 'Ask D-2');
+      expect(find.byKey(Key('task-tag-${task.id}-deep-work')), findsOneWidget);
+
+      // The box stays open for the next task, empty; Esc closes it.
+      expect(find.byKey(const Key('task-composer')), findsOneWidget);
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pump();
+      expect(find.byKey(const Key('task-compose')), findsOneWidget);
     });
 
     _testPage('shows project and priority on the tile, filters, and has a '
