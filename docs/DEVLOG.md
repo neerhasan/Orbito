@@ -2,6 +2,11 @@
 
 Claude Code adds a new entry on top at the end of every session.
 
+### 2026-11-23 Calendar: task list by date; project colours
+- Done: the left task list is grouped by date: Overdue, Today, Tomorrow, This week, Next week, Later, No date (weeks start on Sunday, like the calendar). Tasks on the calendar (time blocks, All day chips, month view) show their project's colour with a bar on the left; tasks without a project stay white. A focus block's bar takes its task's project colour.
+- Files changed: `lib/features/calendar/calendar_page.dart`, `test/calendar_test.dart`.
+- Test results: `flutter analyze`: no issues. `flutter test --concurrency=1`: 230 passed.
+
 ### 2026-11-23 Today: Schedule; day bar to 100% at bedtime; motion; alignment
 - Schedule (design `Main.dc.html`): a new Today section (it switches itself on for users who chose sections before it existed; switched off it is stored as `-schedule`). Hour chips jump to an hour; the timeline runs from wake time to bedtime (wider when something lies outside), 60 px per hour, with the orange "now" line and time. It shows the Calendar's events, tasks with a time and length, and habits with a usual time (30 minutes, their ring marks the day done). A task whose focus timer runs is orange-tinted with pause, bar and time. Tasks are dragged from the Tasks list on the right onto a time; a scheduled task can be dragged to another time and made longer or shorter by its bottom edge; a click opens its options (done, start focus, change the time, length 15m to 3h, remove the time, open in Tasks). It follows the day picked in the small calendar.
 - Day bar (founder): wake time to bedtime is 100%; after bedtime it goes on (110%, 120%). The bar itself still covers 24 hours. Settings text updated.

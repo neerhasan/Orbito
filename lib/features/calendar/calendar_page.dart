@@ -487,6 +487,12 @@ class _DayItems {
     final swatch = ProjectColors.of(project.color);
     return (swatch.soft, swatch.text);
   }
+
+  /// The colours of a task's project, or null when it has no project.
+  Swatch? swatchOfTask(Task? task) {
+    final project = projectOf(task?.projectId);
+    return project == null ? null : ProjectColors.of(project.color);
+  }
 }
 
 // ------------------------------------------------------------ month view
@@ -565,8 +571,10 @@ class _MonthGrid extends StatelessWidget {
       for (final task in items.tasksOn(day))
         (
           task.title,
-          Colors.transparent,
-          task.status == TaskStatus.done ? Ember.ink3 : Ember.ink,
+          items.swatchOfTask(task)?.soft ?? Colors.transparent,
+          task.status == TaskStatus.done
+              ? Ember.ink3
+              : items.swatchOfTask(task)?.text ?? Ember.ink,
         ),
     ];
     return InkWell(
@@ -854,15 +862,22 @@ class _AllDay extends StatelessWidget {
     );
   }
 
-  Widget _taskChip(Task task, {Key? key, required VoidCallback onTap}) => _Chip(
-    key: key,
-    label: task.title,
-    background: Ember.surface,
-    foreground: task.status == TaskStatus.done ? Ember.ink3 : Ember.ink,
-    border: true,
-    done: task.status == TaskStatus.done,
-    onTap: onTap,
-  );
+  /// A task in its project's colours, with a bar on the left; white with a
+  /// thin border when it has no project.
+  Widget _taskChip(Task task, {Key? key, required VoidCallback onTap}) {
+    final swatch = items.swatchOfTask(task);
+    final done = task.status == TaskStatus.done;
+    return _Chip(
+      key: key,
+      label: task.title,
+      background: swatch?.soft ?? Ember.surface,
+      foreground: done ? Ember.ink3 : swatch?.text ?? Ember.ink,
+      border: swatch == null,
+      bar: swatch?.dot,
+      done: done,
+      onTap: onTap,
+    );
+  }
 }
 
 class _Chip extends StatelessWidget {
@@ -873,6 +888,7 @@ class _Chip extends StatelessWidget {
     required this.foreground,
     required this.onTap,
     this.border = false,
+    this.bar,
     this.done = false,
   });
 
@@ -881,6 +897,9 @@ class _Chip extends StatelessWidget {
   final Color foreground;
   final VoidCallback onTap;
   final bool border;
+
+  /// A thin bar on the left in this colour (a task's project).
+  final Color? bar;
   final bool done;
 
   @override
@@ -890,6 +909,8 @@ class _Chip extends StatelessWidget {
       child: Material(
         color: background,
         borderRadius: BorderRadius.circular(5),
+        // Keeps the project bar inside the round corners.
+        clipBehavior: Clip.antiAlias,
         child: InkWell(
           borderRadius: BorderRadius.circular(5),
           onTap: onTap,
@@ -899,6 +920,10 @@ class _Chip extends StatelessWidget {
                 ? BoxDecoration(
                     borderRadius: BorderRadius.circular(5),
                     border: Border.all(color: Ember.ring),
+                  )
+                : bar != null
+                ? BoxDecoration(
+                    border: Border(left: BorderSide(color: bar!, width: 3)),
                   )
                 : null,
             child: Text(
@@ -1274,10 +1299,13 @@ class _DayColumnState extends State<_DayColumn> {
     );
   }
 
-  /// A task with a time: white (a raised surface), its title and from-to
-  /// times. Its top and bottom edges change the start and the length.
+  /// A task with a time: in its project's colours with a bar on the left
+  /// (white with a thin border when it has no project), its title and
+  /// from-to times. Its top and bottom edges change the start and the
+  /// length.
   Widget _taskBlock(Task task, TimeBlock block, {required bool handles}) {
     final done = task.status == TaskStatus.done;
+    final swatch = widget.items.swatchOfTask(task);
     final short = block.end - block.start < 45;
     final title = Text(
       task.title,
@@ -1287,7 +1315,7 @@ class _DayColumnState extends State<_DayColumn> {
         11,
         13,
         weight: 600,
-        color: done ? Ember.ink3 : Ember.ink,
+        color: done ? Ember.ink3 : swatch?.text ?? Ember.ink,
       ).copyWith(decoration: done ? TextDecoration.lineThrough : null),
     );
     final times = Text(
@@ -1298,10 +1326,14 @@ class _DayColumnState extends State<_DayColumn> {
     );
     final content = Container(
       padding: const EdgeInsets.fromLTRB(6, 3, 4, 2),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: Ember.ring),
-      ),
+      decoration: swatch == null
+          ? BoxDecoration(
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: Ember.ring),
+            )
+          : BoxDecoration(
+              border: Border(left: BorderSide(color: swatch.dot, width: 3)),
+            ),
       child: ClipRect(
         child: short
             ? Row(
@@ -1332,8 +1364,10 @@ class _DayColumnState extends State<_DayColumn> {
       onDone: (from, to) => widget.actions.onResizeTask(task, from, to),
     );
     return Material(
-      color: Ember.surface,
+      color: swatch?.soft ?? Ember.surface,
       borderRadius: BorderRadius.circular(6),
+      // Keeps the project bar inside the round corners.
+      clipBehavior: Clip.antiAlias,
       child: !handles
           ? content
           : Stack(
@@ -1363,7 +1397,13 @@ class _DayColumnState extends State<_DayColumn> {
         decoration: BoxDecoration(
           color: Ember.neutral,
           borderRadius: BorderRadius.circular(6),
-          border: Border(left: BorderSide(color: Ember.ink, width: 3)),
+          // The bar takes the task's project colour, when it has one.
+          border: Border(
+            left: BorderSide(
+              color: widget.items.swatchOfTask(task)?.dot ?? Ember.ink,
+              width: 3,
+            ),
+          ),
         ),
         child: ClipRect(
           child: Text(
@@ -1433,39 +1473,41 @@ class _CalendarSide extends StatelessWidget {
         if (byDay != 0) return byDay;
         return (a.dueTime ?? '99').compareTo(b.dueTime ?? '99');
       });
+    // Sorted by date: overdue first, then nearer days, tasks without a
+    // date last. Weeks start on Sunday, like the calendar.
+    final tomorrow = addDays(today, 1);
+    final weekEnd = addDays(weekStartOf(today), 6);
+    final nextWeekEnd = addDays(weekEnd, 7);
+    String groupOf(Task task) {
+      final due = task.dueDate;
+      if (due == null) return 'none';
+      if (due.compareTo(today) < 0) return 'overdue';
+      if (due == today) return 'today';
+      if (due == tomorrow) return 'tomorrow';
+      if (due.compareTo(weekEnd) <= 0) return 'week';
+      if (due.compareTo(nextWeekEnd) <= 0) return 'next-week';
+      return 'later';
+    }
+
+    const order = [
+      ('overdue', 'Overdue'),
+      ('today', 'Today'),
+      ('tomorrow', 'Tomorrow'),
+      ('week', 'This week'),
+      ('next-week', 'Next week'),
+      ('later', 'Later'),
+      ('none', 'No date'),
+    ];
     final groups = <(String, String, List<Task>)>[
-      (
-        'none',
-        'No date',
-        [
-          for (final t in open)
-            if (t.dueDate == null) t,
-        ],
-      ),
-      (
-        'overdue',
-        'Overdue',
-        [
-          for (final t in open)
-            if (t.dueDate != null && t.dueDate!.compareTo(today) < 0) t,
-        ],
-      ),
-      (
-        'today',
-        'Today',
-        [
-          for (final t in open)
-            if (t.dueDate == today) t,
-        ],
-      ),
-      (
-        'later',
-        'Later',
-        [
-          for (final t in open)
-            if (t.dueDate != null && t.dueDate!.compareTo(today) > 0) t,
-        ],
-      ),
+      for (final (key, label) in order)
+        (
+          key,
+          label,
+          [
+            for (final t in open)
+              if (groupOf(t) == key) t,
+          ],
+        ),
     ];
     final projectsById = {for (final p in projects) p.id: p};
 

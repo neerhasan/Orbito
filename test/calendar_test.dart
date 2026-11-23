@@ -334,6 +334,27 @@ void main() {
       expect(find.byKey(Key('calendar-task-$task')), findsOneWidget);
       expect(find.byKey(Key('calendar-deadline-$project')), findsOneWidget);
       expect(find.text('Due: Korea'), findsOneWidget);
+
+      // A task of a project shows in the project's colour.
+      final linked = await _read(
+        tester,
+        () => _tasks.addTask(
+          userId: _user,
+          title: 'Book flight',
+          dueDate: '2026-11-12',
+          projectId: project,
+        ),
+      );
+      await _pump(tester);
+      final fill = tester.widget<Material>(
+        find
+            .descendant(
+              of: find.byKey(Key('calendar-task-$linked')),
+              matching: find.byType(Material),
+            )
+            .first,
+      );
+      expect(fill.color, ProjectColors.of('blue').soft);
     });
 
     _test('shows a past focus session as a block', (tester) async {
@@ -462,9 +483,37 @@ void main() {
           dueDate: '2026-11-20',
         ),
       );
+      // One task for each other group (today is Wednesday 11 November).
+      for (final (title, due) in [
+        ('Old bill', '2026-11-10'),
+        ('Gym', '2026-11-11'),
+        ('Dentist', '2026-11-12'),
+        ('Shop', '2026-11-14'),
+        ('Trip', '2026-12-30'),
+      ]) {
+        await _read(
+          tester,
+          () => _tasks.addTask(userId: _user, title: title, dueDate: due),
+        );
+      }
       await _pump(tester);
-      expect(find.byKey(const Key('calendar-group-none')), findsOneWidget);
-      expect(find.byKey(const Key('calendar-group-later')), findsOneWidget);
+      // Sorted by date, tasks without a date last.
+      const order = [
+        'overdue',
+        'today',
+        'tomorrow',
+        'week',
+        'next-week',
+        'later',
+        'none',
+      ];
+      final tops = [
+        for (final key in order)
+          tester.getTopLeft(find.byKey(Key('calendar-group-$key'))).dy,
+      ];
+      for (var i = 1; i < tops.length; i++) {
+        expect(tops[i], greaterThan(tops[i - 1]), reason: order[i]);
+      }
       expect(find.byKey(Key('calendar-list-task-$later')), findsOneWidget);
 
       // Onto Thursday at 10:00: it gets the date and the time.
