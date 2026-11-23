@@ -449,11 +449,11 @@ class _NewButton extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.add, size: 16, color: Ember.ink),
+            Icon(Icons.add, size: 16, color: Palette.light.ink),
             const SizedBox(width: 6),
             Text(
               'New',
-              style: Ember.text(13, 16, weight: 600, color: Ember.ink),
+              style: Ember.text(13, 16, weight: 600, color: Palette.light.ink),
             ),
           ],
         ),

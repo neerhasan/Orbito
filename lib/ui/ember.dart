@@ -172,7 +172,7 @@ abstract final class Ember {
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: ink,
-          foregroundColor: white,
+          foregroundColor: onInk,
           disabledBackgroundColor: neutral,
           disabledForegroundColor: ink3,
           minimumSize: const Size(0, 36),
@@ -184,7 +184,7 @@ abstract final class Ember {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: ink,
-          backgroundColor: white,
+          backgroundColor: surface,
           side: BorderSide(color: line),
           minimumSize: const Size(0, 36),
           padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -203,7 +203,7 @@ abstract final class Ember {
       ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: ink,
-        contentTextStyle: text(13, 16, color: white),
+        contentTextStyle: text(13, 16, color: onInk),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),

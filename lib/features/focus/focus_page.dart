@@ -707,7 +707,7 @@ class _FocusModeViewState extends ConsumerState<FocusModeView>
                                     key: const Key('focus-break'),
                                     style: FilledButton.styleFrom(
                                       backgroundColor: Ember.white,
-                                      foregroundColor: Ember.ink,
+                                      foregroundColor: Palette.light.ink,
                                       minimumSize: const Size(0, 44),
                                     ),
                                     onPressed: () => _stop(
@@ -757,7 +757,7 @@ class _FocusModeViewState extends ConsumerState<FocusModeView>
                                         key: const Key('focus-done'),
                                         style: FilledButton.styleFrom(
                                           backgroundColor: Ember.white,
-                                          foregroundColor: Ember.ink,
+                                          foregroundColor: Palette.light.ink,
                                           minimumSize: const Size(0, 44),
                                         ),
                                         onPressed: () =>
