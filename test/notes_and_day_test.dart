@@ -451,7 +451,7 @@ void main() {
         () => _tasks.addTask(
           userId: _user,
           title: 'Pay rent',
-          dueDate: '2026-11-20',
+          dueDate: '2026-11-12',
         ),
       );
       await _read(
@@ -459,20 +459,22 @@ void main() {
         () => _tasks.addTask(
           userId: _user,
           title: 'Other day',
-          dueDate: '2026-11-21',
+          dueDate: '2026-11-13',
         ),
       );
       await _pump(tester, AppPage.today);
       expect(find.text('Today · 0'), findsOneWidget);
 
       // The Tasks section switches to the clicked day.
-      await _tap(tester, 'today-day-2026-11-20');
+      await _tap(tester, 'today-day-2026-11-12');
       await _settle(tester);
       expect(find.byKey(const Key('today-tasks-back')), findsOneWidget);
       expect(find.text('Pay rent'), findsOneWidget);
       expect(find.text('Other day'), findsNothing);
+      // The Schedule on the right follows the same day.
+      expect(find.text('Thu 12 Nov'), findsOneWidget);
 
-      await _tap(tester, 'today-day-2026-11-22');
+      await _tap(tester, 'today-day-2026-11-14');
       await _settle(tester);
       expect(find.text('No tasks due this day.'), findsOneWidget);
 
@@ -484,7 +486,7 @@ void main() {
       final added = await _read(tester, () => _tasks.watchTasks(_user).first);
       expect(
         added.singleWhere((task) => task.title == 'Gym').dueDate,
-        '2026-11-22',
+        '2026-11-14',
       );
       expect(find.byKey(const Key('today-add-field')), findsNothing);
       expect(find.text('Gym'), findsOneWidget);

@@ -19,21 +19,21 @@ enum TodaySection {
     'Today’s habits and your day from waking to bedtime',
     TodayColumn.main,
   ),
+  calendar(
+    'Calendar',
+    'This week; click a day to see its tasks and schedule',
+    TodayColumn.main,
+  ),
+  tasks('Tasks', 'Overdue and today’s tasks', TodayColumn.main),
+  projects('Projects', 'Progress and focus time', TodayColumn.main),
+  goals('Goals', 'Progress of your goals', TodayColumn.main),
+  sleep('Sleep', 'Last night and the last 15 nights', TodayColumn.main),
+  time('Time today', 'Focused time since you woke up', TodayColumn.side),
   schedule(
     'Schedule',
     'Your day hour by hour: events, tasks with a time and habits',
-    TodayColumn.main,
-  ),
-  time('Time today', 'Focused time since you woke up', TodayColumn.main),
-  sleep('Sleep', 'Last night and the last 7 nights', TodayColumn.main),
-  calendar(
-    'Calendar',
-    'This month, with days that have tasks',
     TodayColumn.side,
-  ),
-  tasks('Tasks', 'Overdue and today’s tasks', TodayColumn.side),
-  projects('Projects', 'Progress and focus time', TodayColumn.side),
-  goals('Goals', 'Progress of your goals', TodayColumn.side);
+  );
 
   const TodaySection(this.label, this.description, this.column);
 

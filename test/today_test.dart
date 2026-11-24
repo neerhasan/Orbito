@@ -39,6 +39,15 @@ void main() {
     ]);
   });
 
+  test('Time today and Schedule are on the right; the rest in the main '
+      'panel', () {
+    final side = [
+      for (final section in defaultSections)
+        if (section.column == TodayColumn.side) section,
+    ];
+    expect(side, [TodaySection.time, TodaySection.schedule]);
+  });
+
   test('a section is switched off, and back on at the end', () {
     final off = toggleSection(defaultSections, TodaySection.greeting);
     expect(off.contains(TodaySection.greeting), isFalse);

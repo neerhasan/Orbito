@@ -104,19 +104,6 @@ class _TodayScheduleState extends ConsumerState<TodaySchedule> {
         ),
   );
 
-  void _jumpTo(int hour, int firstHour) {
-    if (!_scroll.hasClients) return;
-    final target = ((hour - firstHour) * _hourHeight).clamp(
-      0.0,
-      _scroll.position.maxScrollExtent,
-    );
-    if (Motion.reduced(context)) {
-      _scroll.jumpTo(target);
-    } else {
-      _scroll.animateTo(target, duration: Motion.base, curve: Motion.move);
-    }
-  }
-
   /// The task's options, opened where it was clicked (the founder's
   /// "task options").
   Future<void> _options(Task task, Offset at) async {
@@ -254,23 +241,12 @@ class _TodayScheduleState extends ConsumerState<TodaySchedule> {
         SectionHeader(
           icon: Icons.calendar_today_outlined,
           title: 'Schedule',
-          trailing: Tag(isToday ? 'Time blocks' : formatLongDay(day)),
+          // The day it shows, picked in the week strip.
+          trailing: Tag(
+            isToday ? 'Today · ${formatWeekDay(day)}' : formatWeekDay(day),
+            key: const Key('schedule-day'),
+          ),
         ),
-        // Jump to an hour.
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          children: [
-            for (var h = firstHour; h < lastHour; h++)
-              _HourChip(
-                key: Key('schedule-hour-$h'),
-                hour: h,
-                now: isToday && now.hour == h,
-                onTap: () => _jumpTo(h, firstHour),
-              ),
-          ],
-        ),
-        const SizedBox(height: 12),
         SizedBox(
           height: math.min(height + 12, _viewport),
           child: SingleChildScrollView(
@@ -565,50 +541,6 @@ class _TodayScheduleState extends ConsumerState<TodaySchedule> {
   }
 }
 
-class _HourChip extends StatelessWidget {
-  const _HourChip({
-    super.key,
-    required this.hour,
-    required this.now,
-    required this.onTap,
-  });
-
-  final int hour;
-  final bool now;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final label = hour % 12 == 0 ? '12' : '${hour % 12}';
-    return Tooltip(
-      message: formatTime(timeOf(hour * 60)),
-      child: Material(
-        color: now ? Ember.ink : Ember.tile,
-        shape: const CircleBorder(),
-        child: InkWell(
-          customBorder: const CircleBorder(),
-          onTap: onTap,
-          child: SizedBox(
-            width: 30,
-            height: 30,
-            child: Center(
-              child: Text(
-                label,
-                style: Ember.text(
-                  12,
-                  15,
-                  weight: now ? 600 : 500,
-                  color: now ? Ember.onInk : Ember.ink2,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 /// How a task block looks: a done ring, the title and times, its project
 /// and notes; orange with a progress line while its focus timer runs.
 class _TaskBlockLook extends StatelessWidget {
@@ -649,6 +581,7 @@ class _TaskBlockLook extends StatelessWidget {
         ),
         const SizedBox(width: 4),
         Flexible(
+          flex: 3,
           child: Text(
             task.title,
             maxLines: 1,
@@ -662,10 +595,16 @@ class _TaskBlockLook extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        Text(
-          '${formatTime(timeOf(block.start))} to '
-          '${formatTime(timeOf(block.end))}',
-          style: Ember.text(11.5, 14, weight: 400, color: Ember.ink2),
+        // In the narrow right panel the times shorten too.
+        Flexible(
+          flex: 2,
+          child: Text(
+            '${formatTime(timeOf(block.start))} to '
+            '${formatTime(timeOf(block.end))}',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Ember.text(11.5, 14, weight: 400, color: Ember.ink2),
+          ),
         ),
       ],
     );

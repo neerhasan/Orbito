@@ -49,7 +49,7 @@ The design files and the prototype still show the old name "Life System". The ap
 - Common actions take one tap.
 - No streak pressure and no shaming words. (v2: after a missed day, show one small next step and the progress made so far.)
 - (v2, not built in v1) Low, medium and high energy modes each have their own routine. Low mode shows only what matters now.
-- Orange (#FF5A1F) means "now". Do not use it for decoration.
+- Orange (#FF5A1F) means "now". The founder also chose it for focus time (Today's "Time today"). Do not use it for decoration.
 
 ## How to talk to the founder
 The founder is not a programmer. Use simple English. Explain any technical term the first time. At the end of each milestone, say: what is done, how to run it, exactly what to test, and what is still broken. Say clearly which steps the founder must do by hand.

@@ -2,6 +2,12 @@
 
 Claude Code adds a new entry on top at the end of every session.
 
+### 2026-11-24 Today: new layout, week strip, sleep line chart
+- Done (founder's plan): main panel: Greeting, Habits, Calendar, Tasks, Projects, Goals, Sleep; right panel: Time today, Schedule (new defaults in `TodaySection`; a saved choice keeps its order, so the founder may move the Calendar up with the arrows in Settings). Sleep and Goals sit side by side so the Sleep card keeps its size. The month calendar is now a one-row week strip (Sunday to Saturday, today orange, dots on days with tasks); a click on a day shows that day in Tasks and Schedule. The Schedule's hour circles are gone; its tag shows the day ("Today · Tue 24 Nov"). Focused time in "Time today" is orange (founder's choice; CLAUDE.md rule updated). Sleep: a line chart of the hours slept over the last 15 nights with the 15-night average (thin line and number); last night's dot is orange; gaps where a night is not logged. Task blocks in the narrow Schedule shorten their times instead of overflowing.
+- Left for later (founder): back and forward buttons (the week strip shows only the picked day's week for now).
+- Files changed: `lib/domain/today.dart`, `lib/features/today/today_page.dart`, `lib/features/today/today_schedule.dart`, `test/today_test.dart`, `test/notes_and_day_test.dart`, `CLAUDE.md`.
+- Test results: `flutter analyze`: no issues. `flutter test --concurrency=1`: 232 passed. The Today page was checked as a picture rendered off-screen (light mode).
+
 ### 2026-11-24 Focus: mini window above other apps
 - Done: focus mode has a "Mini window" button. It shrinks the Orbito window into a small 320 x 76 window in the bottom-right corner of the screen that stays above every other app (window_manager, no new package). It shows the task, the clock as hours:minutes:seconds (a countdown shows the time left, a stopwatch the time worked; "Paused" or "Time is up" next to it), a pause/resume button and an expand button that puts the window back where it was (maximised again if it was). Drag it anywhere; a double click does nothing. If the timer ends, the full window comes back by itself.
 - Founder's choice: for now the mini window is the app window itself, so the full app is hidden while it is open. Later it becomes a separate window.

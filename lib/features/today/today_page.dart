@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +9,7 @@ import '../../app/providers.dart';
 import '../../app/shell.dart'
     show AppPage, currentPageProvider, openProjectRequestProvider;
 import '../../data/local/app_database.dart';
+import '../../domain/calendar.dart' show weekStartOf;
 import '../../domain/dates.dart';
 import '../../domain/focus.dart';
 import '../../domain/habits.dart';
@@ -59,36 +61,32 @@ class TodayPage extends ConsumerWidget {
       ),
       TodaySection.time => const _TimeToday(),
       TodaySection.sleep => _SleepCard(open: open),
-      TodaySection.calendar => const _MiniCalendar(),
+      TodaySection.calendar => const _WeekStrip(),
       TodaySection.tasks => _TodayTasks(open: open),
       TodaySection.projects => _ProjectsSection(open: open),
       TodaySection.goals => _GoalsSection(open: open),
     };
 
-    // "Time today" and "Sleep" sit side by side when they follow each other.
-    final mainWidgets = <Widget>[];
-    const pair = {TodaySection.time, TodaySection.sleep};
-    for (var i = 0; i < main.length; i++) {
-      final section = main[i];
-      final next = i + 1 < main.length ? main[i + 1] : null;
-      if (pair.contains(section) && next != null && pair.contains(next)) {
-        mainWidgets.add(
-          TileGrid(
+    Widget keyed(TodaySection section) => KeyedSubtree(
+      key: Key('today-section-${section.name}'),
+      child: build(section),
+    );
+
+    // "Sleep" and "Goals" sit side by side (where the first of them is), so
+    // the Sleep card keeps its size.
+    const pair = {TodaySection.sleep, TodaySection.goals};
+    final paired = main.where(pair.contains).toList();
+    final mainWidgets = <Widget>[
+      for (final section in main)
+        if (paired.length < 2 || !pair.contains(section))
+          keyed(section)
+        else if (section == paired.first)
+          _Pair(
             key: const Key('today-pair'),
-            minWidth: 280,
-            children: [build(section), build(next)],
+            first: keyed(paired[0]),
+            second: keyed(paired[1]),
           ),
-        );
-        i++;
-      } else {
-        mainWidgets.add(
-          KeyedSubtree(
-            key: Key('today-section-${section.name}'),
-            child: build(section),
-          ),
-        );
-      }
-    }
+    ];
 
     return PageLayout(
       main: [
@@ -138,15 +136,38 @@ class TodayPage extends ConsumerWidget {
         else
           ...mainWidgets,
       ],
-      rail: side.isEmpty
-          ? null
-          : [
-              for (final section in side)
-                KeyedSubtree(
-                  key: Key('today-section-${section.name}'),
-                  child: build(section),
-                ),
-            ],
+      rail: side.isEmpty ? null : [for (final section in side) keyed(section)],
+    );
+  }
+}
+
+/// Two sections side by side, each half the width, tops lined up; one
+/// under the other when the panel is narrow.
+class _Pair extends StatelessWidget {
+  const _Pair({super.key, required this.first, required this.second});
+
+  final Widget first;
+  final Widget second;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 2 * 280 + 12) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [first, const SizedBox(height: 12), second],
+          );
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: first),
+            const SizedBox(width: 12),
+            Expanded(child: second),
+          ],
+        );
+      },
     );
   }
 }
@@ -556,7 +577,7 @@ class _TimeToday extends ConsumerWidget {
                   if (focused > 0)
                     Expanded(
                       flex: focused,
-                      child: Container(color: Ember.ink),
+                      child: Container(color: Ember.now),
                     ),
                   if (focused > 0 && other > 0) const SizedBox(width: 3),
                   Expanded(
@@ -571,7 +592,7 @@ class _TimeToday extends ConsumerWidget {
           Wrap(
             spacing: 14,
             children: [
-              _Legend(Ember.ink, 'Focused ${formatWorked(focused)}'),
+              _Legend(Ember.now, 'Focused ${formatWorked(focused)}'),
               _Legend(Ember.ring, 'Other ${formatWorked(other)}'),
             ],
           ),
@@ -600,7 +621,11 @@ class _Legend extends StatelessWidget {
   }
 }
 
-/// Last night, how consistent bedtimes are, and the last 7 nights.
+/// How many nights the Sleep card's chart shows.
+const _sleepNights = 15;
+
+/// Last night, how consistent bedtimes are, and a line of the hours slept
+/// over the last 15 nights with their average.
 class _SleepCard extends ConsumerWidget {
   const _SleepCard({required this.open});
 
@@ -610,9 +635,10 @@ class _SleepCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final today = dayKey(ref.watch(clockProvider)());
     final nights = ref.watch(sleepLogsProvider).value ?? const <SleepLog>[];
-    final week = nightsBefore(nights, end: today, count: 7);
+    final recent = nightsBefore(nights, end: today, count: _sleepNights);
     final lastNight = nightOn(nights, today);
     final steady = consistency(nightsBefore(nights, end: today, count: 14));
+    final average = averageMinutes(recent);
     return Tile(
       key: const Key('today-sleep'),
       onTap: () => open(AppPage.sleep),
@@ -671,22 +697,46 @@ class _SleepCard extends ConsumerWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  SizedBox(
-                    height: 36,
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        for (var i = 0; i < week.length; i++) ...[
-                          if (i > 0) const SizedBox(width: 4),
-                          _NightBar(night: week[i], last: i == week.length - 1),
-                        ],
-                      ],
-                    ),
+                  Text(
+                    average == null ? '—' : formatMinutes(average),
+                    key: const Key('today-sleep-average'),
+                    style: Ember.item.copyWith(color: Ember.ink),
                   ),
-                  const SizedBox(height: 4),
-                  Text('Last 7 nights', style: Ember.caption),
+                  const SizedBox(height: 2),
+                  Text('Average', style: Ember.meta),
                 ],
               ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Semantics(
+            label: 'Hours slept over the last $_sleepNights nights',
+            child: SizedBox(
+              key: const Key('today-sleep-chart'),
+              height: 64,
+              child: CustomPaint(
+                painter: _SleepLinePainter(
+                  minutes: [
+                    for (final night in recent)
+                      night == null
+                          ? null
+                          : sleepMinutes(night.bedTime, night.wakeTime),
+                  ],
+                  average: average,
+                  line: Ember.ink2,
+                  guide: Ember.line,
+                  last: Ember.now,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Expanded(
+                child: Text('$_sleepNights nights ago', style: Ember.caption),
+              ),
+              Text('Last night', style: Ember.caption),
             ],
           ),
         ],
@@ -695,71 +745,121 @@ class _SleepCard extends ConsumerWidget {
   }
 }
 
-class _NightBar extends StatelessWidget {
-  const _NightBar({required this.night, required this.last});
+/// The hours slept, night by night, as a line. A night that is not logged
+/// leaves a gap. A thin line marks the average; last night's dot is orange.
+class _SleepLinePainter extends CustomPainter {
+  _SleepLinePainter({
+    required this.minutes,
+    required this.average,
+    required this.line,
+    required this.guide,
+    required this.last,
+  });
 
-  final SleepLog? night;
-  final bool last;
+  final List<int?> minutes;
+  final int? average;
+  final Color line;
+  final Color guide;
+  final Color last;
 
   @override
-  Widget build(BuildContext context) {
-    final night = this.night;
-    final minutes = night == null
-        ? 0
-        : sleepMinutes(night.bedTime, night.wakeTime);
-    final height = night == null
-        ? 3.0
-        : math.max(6.0, minutes / 600 * 36).clamp(3.0, 36.0);
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0, end: height),
-      duration: Motion.of(context, Motion.slow),
-      curve: Motion.soft,
-      builder: (context, value, _) => Container(
-        width: 6,
-        height: value,
-        decoration: BoxDecoration(
-          color: night == null
-              ? Ember.line
-              : last
-              ? Ember.now
-              : Ember.mark,
-          borderRadius: BorderRadius.circular(2),
-        ),
-      ),
-    );
+  void paint(Canvas canvas, Size size) {
+    final logged = minutes.whereType<int>();
+    if (minutes.isEmpty) return;
+    // Fitted to the nights shown, with room above and below and at least
+    // two hours from bottom to top, so changes are easy to see.
+    final shortest = logged.isEmpty ? 420 : logged.reduce(math.min);
+    final longest = logged.isEmpty ? 480 : logged.reduce(math.max);
+    final middle = (shortest + longest) / 2;
+    final half = math.max(60, (longest - shortest) / 2 + 30);
+    final low = middle - half;
+    final high = middle + half;
+    const pad = 4.0;
+    double x(int i) => minutes.length == 1
+        ? size.width / 2
+        : pad + i * (size.width - 2 * pad) / (minutes.length - 1);
+    double y(int value) =>
+        pad + (high - value) / (high - low) * (size.height - 2 * pad);
+
+    final guidePaint = Paint()
+      ..color = guide
+      ..strokeWidth = 1;
+    final mean = average;
+    if (mean != null) {
+      canvas.drawLine(
+        Offset(0, y(mean)),
+        Offset(size.width, y(mean)),
+        guidePaint,
+      );
+    }
+
+    final linePaint = Paint()
+      ..color = line
+      ..strokeWidth = 1.6
+      ..style = PaintingStyle.stroke
+      ..strokeJoin = StrokeJoin.round
+      ..strokeCap = StrokeCap.round;
+    final path = Path();
+    var drawing = false;
+    for (var i = 0; i < minutes.length; i++) {
+      final value = minutes[i];
+      if (value == null) {
+        drawing = false;
+        continue;
+      }
+      if (drawing) {
+        path.lineTo(x(i), y(value));
+      } else {
+        path.moveTo(x(i), y(value));
+        drawing = true;
+      }
+    }
+    canvas.drawPath(path, linePaint);
+
+    final dot = Paint()..color = line;
+    for (var i = 0; i < minutes.length; i++) {
+      final value = minutes[i];
+      if (value == null) continue;
+      final isLast = i == minutes.length - 1;
+      canvas.drawCircle(
+        Offset(x(i), y(value)),
+        isLast ? 3.5 : 2,
+        isLast ? (Paint()..color = last) : dot,
+      );
+    }
   }
-}
-
-/// The month, Sunday first as in the design. Today is an orange circle; a
-/// small dot marks days with open tasks due.
-class _MiniCalendar extends ConsumerStatefulWidget {
-  const _MiniCalendar();
 
   @override
-  ConsumerState<_MiniCalendar> createState() => _MiniCalendarState();
+  bool shouldRepaint(_SleepLinePainter old) =>
+      !listEquals(old.minutes, minutes) ||
+      old.average != average ||
+      old.line != line ||
+      old.guide != guide ||
+      old.last != last;
 }
 
-class _MiniCalendarState extends ConsumerState<_MiniCalendar> {
-  var _offset = 0;
+/// The week (Sunday to Saturday) of the picked day, in one row. Today is an
+/// orange circle; the picked day has a ring; a small dot marks days with
+/// open tasks due. A click on a day makes Tasks and Schedule show that day.
+class _WeekStrip extends ConsumerWidget {
+  const _WeekStrip();
 
   @override
-  Widget build(BuildContext context) {
-    final now = ref.watch(clockProvider)();
-    final today = dayKey(now);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final today = dayKey(ref.watch(clockProvider)());
     final selected = ref.watch(selectedDayProvider);
     final tasks = ref.watch(tasksProvider).value ?? const <Task>[];
-    final month = DateTime(now.year, now.month + _offset);
-    final days = DateTime(month.year, month.month + 1, 0).day;
-    final lead = DateTime(month.year, month.month).weekday % 7;
+    final start = weekStartOf(selected ?? today);
+    final days = [for (var i = 0; i < 7; i++) addDays(start, i)];
+    final first = parseDayKey(days.first)!;
     final due = {
       for (final task in tasks)
         if (task.status != TaskStatus.done && task.dueDate != null)
           task.dueDate!,
     };
 
-    Widget day(int n) {
-      if (n < 1 || n > days) return const SizedBox(height: 36);
-      final key = dayKey(DateTime(month.year, month.month, n));
+    Widget day(String key) {
+      final date = parseDayKey(key)!;
       final isToday = key == today;
       final isSelected = key == selected;
       return InkWell(
@@ -769,13 +869,15 @@ class _MiniCalendarState extends ConsumerState<_MiniCalendar> {
         onTap: () => ref
             .read(selectedDayProvider.notifier)
             .pick(isSelected || isToday ? null : key),
-        child: SizedBox(
-          height: 36,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
           child: Column(
             children: [
+              Text(weekdayShort[date.weekday - 1], style: Ember.caption),
+              const SizedBox(height: 4),
               Container(
-                width: 26,
-                height: 26,
+                width: 30,
+                height: 30,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
@@ -785,20 +887,20 @@ class _MiniCalendarState extends ConsumerState<_MiniCalendar> {
                       : null,
                 ),
                 child: Text(
-                  '$n',
+                  '${date.day}',
                   style: Ember.text(
-                    12,
-                    15,
-                    weight: isToday ? 600 : 400,
+                    13,
+                    16,
+                    weight: isToday || isSelected ? 600 : 400,
                     color: isToday ? Ember.white : Ember.ink,
                   ),
                 ),
               ),
-              if (due.contains(key))
-                Padding(
-                  padding: EdgeInsets.only(top: 2),
-                  child: ColorDot(Ember.ink3, size: 4),
-                ),
+              const SizedBox(height: 3),
+              SizedBox(
+                height: 4,
+                child: due.contains(key) ? ColorDot(Ember.ink3, size: 4) : null,
+              ),
             ],
           ),
         ),
@@ -806,65 +908,16 @@ class _MiniCalendarState extends ConsumerState<_MiniCalendar> {
     }
 
     return Column(
+      key: const Key('today-week'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                '${monthNames[month.month - 1]} ${month.year}',
-                key: const Key('today-month'),
-                style: Ember.h2,
-              ),
-            ),
-            IconButton(
-              key: const Key('today-month-back'),
-              tooltip: 'Previous month',
-              iconSize: 18,
-              color: Ember.ink2,
-              visualDensity: VisualDensity.compact,
-              onPressed: () => setState(() => _offset--),
-              icon: const Icon(Icons.chevron_left),
-            ),
-            IconButton(
-              key: const Key('today-month-next'),
-              tooltip: 'Next month',
-              iconSize: 18,
-              color: Ember.ink2,
-              visualDensity: VisualDensity.compact,
-              onPressed: () => setState(() => _offset++),
-              icon: const Icon(Icons.chevron_right),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            for (final letter in const ['S', 'M', 'T', 'W', 'T', 'F', 'S'])
-              Expanded(
-                child: Text(
-                  letter,
-                  textAlign: TextAlign.center,
-                  style: Ember.caption,
-                ),
-              ),
-          ],
+        Text(
+          '${monthNames[first.month - 1]} ${first.year}',
+          key: const Key('today-month'),
+          style: Ember.h3.copyWith(color: Ember.ink),
         ),
         const SizedBox(height: 6),
-        SoftSwitcher(
-          child: Column(
-            key: ValueKey(month),
-            children: [
-              for (var week = 0; week * 7 < lead + days; week++)
-                Row(
-                  children: [
-                    for (var col = 0; col < 7; col++)
-                      Expanded(child: day(week * 7 + col - lead + 1)),
-                  ],
-                ),
-            ],
-          ),
-        ),
+        Row(children: [for (final key in days) Expanded(child: day(key))]),
       ],
     );
   }
