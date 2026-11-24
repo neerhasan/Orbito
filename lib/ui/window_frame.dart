@@ -2,6 +2,7 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:window_manager/legacy.dart' show calcWindowPosition;
 import 'package:window_manager/window_manager.dart';
 
 import 'ember.dart';
@@ -18,12 +19,15 @@ final bool customWindowFrame =
 Window? get _window =>
     customWindowFrame ? WindowManager.instance.getCurrent() : null;
 
+/// The smallest the full app window can be.
+const _appMinimumSize = Size(960, 600);
+
 /// Hides the system title bar. Called once at start-up.
 void setUpWindow() {
   final window = _window;
   if (window == null) return;
   window.titleBarStyle = TitleBarStyle.hidden;
-  window.minimumSize = const Size(960, 600).toNative();
+  window.minimumSize = _appMinimumSize.toNative();
   window.title = 'Orbito';
 }
 
@@ -33,6 +37,81 @@ void setWindowFullScreen(bool on) {
   final window = _window;
   if (window == null) return;
   if (window.isFullScreen != on) window.isFullScreen = on;
+}
+
+/// The size of the mini focus window.
+const miniWindowSize = Size(320, 76);
+
+/// The gap between the mini window and the screen's corner.
+const _miniWindowMargin = 16.0;
+
+/// Where the window was, and whether it was maximised, before it became the
+/// mini window, so it can go back.
+Rect? _boundsBeforeMini;
+var _maximizedBeforeMini = false;
+
+/// Shrinks the app window into the small mini focus window: it sits in the
+/// bottom-right corner of the screen, above every other app. Does nothing
+/// in tests or where Orbito keeps the system frame.
+Future<void> enterMiniWindow() async {
+  final window = _window;
+  if (window == null) return;
+  final fullScreen = window.isFullScreen;
+  if (fullScreen) window.isFullScreen = false;
+  _maximizedBeforeMini = window.isMaximized;
+  if (_maximizedBeforeMini) window.unmaximize();
+  // Leaving full screen or maximised takes Windows a moment; wait, so the
+  // saved place is the normal window and not the whole screen.
+  if (fullScreen || _maximizedBeforeMini) {
+    await Future<void>.delayed(const Duration(milliseconds: 150));
+  }
+  _boundsBeforeMini = window.bounds.toRect();
+  final corner = await calcWindowPosition(
+    miniWindowSize,
+    Alignment.bottomRight,
+  );
+  window.minimumSize = miniWindowSize.toNative();
+  window.isResizable = false;
+  window.isMaximizable = false;
+  window.bounds =
+      (corner - const Offset(_miniWindowMargin, _miniWindowMargin) &
+              miniWindowSize)
+          .toNative();
+  window.isAlwaysOnTop = true;
+}
+
+/// Turns the mini window back into the full app window, where it was
+/// before. Does nothing in tests or where Orbito keeps the system frame.
+void leaveMiniWindow() {
+  final window = _window;
+  if (window == null) return;
+  window.isAlwaysOnTop = false;
+  window.isResizable = true;
+  window.isMaximizable = true;
+  window.minimumSize = _appMinimumSize.toNative();
+  if (_boundsBeforeMini case final bounds?) window.bounds = bounds.toNative();
+  if (_maximizedBeforeMini) window.maximize();
+  _boundsBeforeMini = null;
+  _maximizedBeforeMini = false;
+}
+
+/// Makes [child] move the mini window when dragged. Unlike
+/// [WindowDragArea], a double click does nothing, so the mini window never
+/// fills the screen by accident.
+class MiniWindowDragArea extends StatelessWidget {
+  const MiniWindowDragArea({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!customWindowFrame) return child;
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onPanStart: (_) => _window?.startDragging(),
+      child: child,
+    );
+  }
 }
 
 /// Makes [child] move the window when dragged, and maximise or restore it

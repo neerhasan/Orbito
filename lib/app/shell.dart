@@ -127,6 +127,17 @@ class AppShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final page = ref.watch(currentPageProvider);
     final timer = ref.watch(focusTimerProvider).value;
+    // When the timer ends, the mini window turns back into the full app.
+    ref.listen(focusTimerProvider, (_, next) {
+      if (next.value == null) ref.read(miniWindowProvider.notifier).close();
+    });
+    // The mini window floats above other apps and shows only the timer.
+    if (ref.watch(miniWindowProvider) && timer != null) {
+      return FocusMiniView(
+        timer: timer,
+        onExpand: () => ref.read(miniWindowProvider.notifier).close(),
+      );
+    }
     // While a timer runs, the Focus page is the full-window focus mode.
     // The app and focus mode flow into each other.
     return SoftSwitcher(

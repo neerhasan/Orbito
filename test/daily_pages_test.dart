@@ -340,6 +340,47 @@ void main() {
       expect(tasks.single.status, TaskStatus.open);
     });
 
+    _testPage('the mini window shows the task and clock, pauses, expands', (
+      tester,
+    ) async {
+      final task = await _read(
+        tester,
+        () => _tasks.addTask(userId: _user, title: 'Write the plan'),
+      );
+      await _pumpApp(tester);
+      await _tap(tester, 'menu-focus');
+      await _settle(tester);
+      await _tap(tester, 'focus-length-45');
+      await _tap(tester, 'focus-start-$task');
+      await _settle(tester);
+      await _wait(tester, const Duration(minutes: 5));
+
+      // The mini window replaces the app: task, clock with hours, pause.
+      await _tap(tester, 'focus-mini-open');
+      await _settle(tester);
+      expect(find.byKey(const Key('focus-mini')), findsOneWidget);
+      expect(find.byKey(const Key('focus-mode')), findsNothing);
+      expect(find.text('Write the plan'), findsOneWidget);
+      expect(find.text('0:40:00'), findsOneWidget);
+
+      await _tap(tester, 'focus-mini-pause');
+      await _settle(tester);
+      expect(find.text('Paused'), findsOneWidget);
+      await _wait(tester, const Duration(minutes: 3));
+      expect(find.text('0:40:00'), findsOneWidget);
+      await _tap(tester, 'focus-mini-pause');
+      await _settle(tester);
+      expect(find.text('Paused'), findsNothing);
+
+      // Expanding brings back focus mode; the timer kept going.
+      await _wait(tester, const Duration(minutes: 1));
+      await _tap(tester, 'focus-mini-expand');
+      await _settle(tester);
+      expect(find.byKey(const Key('focus-mini')), findsNothing);
+      expect(find.byKey(const Key('focus-mode')), findsOneWidget);
+      expect(find.text('39:00'), findsOneWidget);
+    });
+
     _testPage('task done completes the task; notes save from focus mode', (
       tester,
     ) async {

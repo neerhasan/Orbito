@@ -57,6 +57,30 @@ Future<void> startFocus(
   }
 }
 
+/// True while the app window is the small mini focus window, which floats
+/// above every other app. For now it is the app window itself, shrunk; the
+/// full app comes back when the user expands it.
+class MiniWindow extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  /// Shrinks the app into the mini window.
+  void open() {
+    if (state) return;
+    state = true;
+    enterMiniWindow();
+  }
+
+  /// Brings back the full app window.
+  void close() {
+    if (!state) return;
+    leaveMiniWindow();
+    state = false;
+  }
+}
+
+final miniWindowProvider = NotifierProvider<MiniWindow, bool>(MiniWindow.new);
+
 /// How long a break after a countdown lasts.
 const focusBreakLength = Duration(minutes: 5);
 
@@ -511,6 +535,14 @@ class _FocusModeViewState extends ConsumerState<FocusModeView>
     widget.onExit();
   }
 
+  /// Shrinks the app into the small window that floats above other apps.
+  void _openMini() {
+    // The mini window leaves full screen itself, then saves the window's
+    // normal place; this view closes, so only its own note is reset.
+    _fullScreen = false;
+    ref.read(miniWindowProvider.notifier).open();
+  }
+
   Future<void> _togglePause() async {
     try {
       await ref.read(focusRepositoryProvider).togglePause();
@@ -618,6 +650,20 @@ class _FocusModeViewState extends ConsumerState<FocusModeView>
                           style: Ember.text(13, 16, color: Ember.onShell2),
                         ),
                         const Spacer(),
+                        TextButton.icon(
+                          key: const Key('focus-mini-open'),
+                          onPressed: _openMini,
+                          style: TextButton.styleFrom(
+                            backgroundColor: Ember.raised,
+                            foregroundColor: Ember.onShell,
+                          ),
+                          icon: const Icon(
+                            Icons.picture_in_picture_alt_rounded,
+                            size: 16,
+                          ),
+                          label: const Text('Mini window'),
+                        ),
+                        const SizedBox(width: 8),
                         TextButton.icon(
                           key: const Key('focus-fullscreen'),
                           onPressed: () => _setFullScreen(!_fullScreen),
@@ -1265,6 +1311,174 @@ class _FocusPillState extends ConsumerState<FocusPill> with _EverySecond {
                 ],
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The small focus window that floats above every other app: the task, the
+/// clock (hours, minutes, seconds), pause or resume, and a button that
+/// brings back the full app. Dragging it moves it.
+class FocusMiniView extends ConsumerStatefulWidget {
+  const FocusMiniView({super.key, required this.timer, required this.onExpand});
+
+  final FocusTimer timer;
+  final VoidCallback onExpand;
+
+  @override
+  ConsumerState<FocusMiniView> createState() => _FocusMiniViewState();
+}
+
+class _FocusMiniViewState extends ConsumerState<FocusMiniView>
+    with _EverySecond {
+  Future<void> _togglePause() async {
+    try {
+      await ref.read(focusRepositoryProvider).togglePause();
+    } catch (error) {
+      if (mounted) showMessage(context, 'Could not pause. ($error)');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final timer = widget.timer;
+    final tasks = ref.watch(tasksProvider).value ?? const <Task>[];
+    final task = tasks.where((t) => t.id == timer.taskId).firstOrNull;
+    final running = isRunning(timer);
+    final now = ref.watch(clockProvider)();
+    // Like the big clock: a countdown shows the time left, a stopwatch the
+    // time worked.
+    final left = remainingMs(timer, now);
+    final shown = left ?? workedMs(timer, now);
+    final String? note;
+    if (left == 0) {
+      note = 'Time is up';
+    } else if (!running) {
+      note = 'Paused';
+    } else {
+      note = null;
+    }
+    return Scaffold(
+      key: const Key('focus-mini'),
+      backgroundColor: Ember.shell,
+      body: MiniWindowDragArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(14, 8, 8, 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        AnimatedContainer(
+                          duration: Motion.of(context, Motion.base),
+                          width: 7,
+                          height: 7,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: running ? Ember.now : Ember.onShell3,
+                          ),
+                        ),
+                        const SizedBox(width: 7),
+                        Expanded(
+                          child: Text(
+                            task?.title ?? 'Focus',
+                            key: const Key('focus-mini-task'),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Ember.text(12, 16, color: Ember.onShell2),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(
+                          formatClockWithHours(shown),
+                          key: const Key('focus-mini-clock'),
+                          style:
+                              Ember.text(
+                                22,
+                                28,
+                                weight: 600,
+                                color: running ? Ember.onShell : Ember.onShell2,
+                              ).copyWith(
+                                fontFeatures: const [
+                                  FontFeature.tabularFigures(),
+                                ],
+                              ),
+                        ),
+                        if (note != null) ...[
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              note,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Ember.text(12, 16, color: Ember.onShell3),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              // No tooltips here: the window is too small to show them.
+              Semantics(
+                button: true,
+                label: running ? 'Pause' : 'Resume',
+                child: Pressable(
+                  child: Material(
+                    color: Ember.raised,
+                    shape: const CircleBorder(),
+                    clipBehavior: Clip.antiAlias,
+                    child: InkWell(
+                      key: const Key('focus-mini-pause'),
+                      onTap: _togglePause,
+                      child: SizedBox(
+                        width: 40,
+                        height: 40,
+                        child: AnimatedSwitcher(
+                          duration: Motion.of(context, Motion.fast),
+                          transitionBuilder: (child, animation) =>
+                              ScaleTransition(scale: animation, child: child),
+                          child: Icon(
+                            running
+                                ? Icons.pause_rounded
+                                : Icons.play_arrow_rounded,
+                            key: ValueKey(running),
+                            size: 20,
+                            color: Ember.onShell,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Semantics(
+                button: true,
+                label: 'Open Orbito',
+                child: IconButton(
+                  key: const Key('focus-mini-expand'),
+                  onPressed: widget.onExpand,
+                  iconSize: 16,
+                  color: Ember.onShell2,
+                  icon: const Icon(Icons.open_in_full_rounded),
+                ),
+              ),
+            ],
           ),
         ),
       ),

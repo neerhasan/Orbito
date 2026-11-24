@@ -54,6 +54,16 @@ String formatClock(int milliseconds) {
       : '${two(minutes)}:${two(seconds)}';
 }
 
+/// A clock that always shows hours: `0:05:09`, `1:05:09`.
+String formatClockWithHours(int milliseconds) {
+  final total = milliseconds ~/ 1000;
+  final hours = total ~/ 3600;
+  final minutes = (total % 3600) ~/ 60;
+  final seconds = total % 60;
+  String two(int value) => value.toString().padLeft(2, '0');
+  return '$hours:${two(minutes)}:${two(seconds)}';
+}
+
 /// Time worked as words: `1h 20m`, `25m`, `0m`.
 String formatWorked(int seconds) {
   final minutes = seconds ~/ 60;

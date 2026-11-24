@@ -2,6 +2,12 @@
 
 Claude Code adds a new entry on top at the end of every session.
 
+### 2026-11-24 Focus: mini window above other apps
+- Done: focus mode has a "Mini window" button. It shrinks the Orbito window into a small 320 x 76 window in the bottom-right corner of the screen that stays above every other app (window_manager, no new package). It shows the task, the clock as hours:minutes:seconds (a countdown shows the time left, a stopwatch the time worked; "Paused" or "Time is up" next to it), a pause/resume button and an expand button that puts the window back where it was (maximised again if it was). Drag it anywhere; a double click does nothing. If the timer ends, the full window comes back by itself.
+- Founder's choice: for now the mini window is the app window itself, so the full app is hidden while it is open. Later it becomes a separate window.
+- Files changed: `lib/ui/window_frame.dart`, `lib/features/focus/focus_page.dart`, `lib/app/shell.dart`, `lib/domain/focus.dart`, `test/daily_pages_test.dart`, `test/daily_rules_test.dart`.
+- Known problems: the tests cannot see the real window (no window in tests); the resize, always-on-top and restore were not checked on screen yet.
+
 ### 2026-11-23 Calendar: task list by date; project colours
 - Done: the left task list is grouped by date: Overdue, Today, Tomorrow, This week, Next week, Later, No date (weeks start on Sunday, like the calendar). Tasks on the calendar (time blocks, All day chips, month view) show their project's colour with a bar on the left; tasks without a project stay white. A focus block's bar takes its task's project colour.
 - Files changed: `lib/features/calendar/calendar_page.dart`, `test/calendar_test.dart`.

@@ -201,6 +201,8 @@ void main() {
     test('clock and worked time formats', () {
       expect(formatClock(309000), '05:09');
       expect(formatClock(3909000), '1:05:09');
+      expect(formatClockWithHours(309000), '0:05:09');
+      expect(formatClockWithHours(3909000), '1:05:09');
       expect(formatWorked(4800), '1h 20m');
       expect(formatWorked(1500), '25m');
     });
